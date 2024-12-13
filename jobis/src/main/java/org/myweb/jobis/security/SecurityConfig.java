@@ -25,7 +25,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                                 // 현재 프로젝트 안에 뷰페이지를 작업할 때
                                 .requestMatchers("/public/**", "/auth/**", "/css/**", "/js/**").permitAll() // 공개 경로
-                                .requestMatchers("/user/checkuserId").permitAll()
+                                .requestMatchers("/user/**").permitAll()
                                 // jwt 사용시 추가되는 설정임 -------------------------
                                 // 공지사항 관리자용 서비스 요청 설정
                                 .requestMatchers("/**", "/login", "/reissue").permitAll()

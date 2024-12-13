@@ -18,4 +18,14 @@ public class UserService {
     public boolean isUsernameDuplicate(String username) {
         return userRepository.existsByUserName(username);
     }
+
+    public boolean isPhoneNumberDuplicate(String phoneNumber) {
+        // Repository를 통해 DB에서 전화번호 중복 확인
+        return userRepository.existsByUserPhone(phoneNumber);
+    }
+
+    public boolean isEmailDuplicate(String email) {
+        return userRepository.existsByUserDefaultEmail(email);
+    }
+
 }
