@@ -3,12 +3,12 @@ package org.myweb.jobis.user.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.myweb.jobis.email.model.service.EmailService;
+import org.myweb.jobis.user.model.dto.User;
 import org.myweb.jobis.user.model.dto.VerificationCode;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.myweb.jobis.user.model.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.myweb.jobis.user.model.service.UserService;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,6 +22,7 @@ public class UserController {
 
     private final UserService userService;
 
+    // 아이디 중복 확인
     @PostMapping("/checkuserId")
     public ResponseEntity<String> checkUsername(@RequestBody Map<String, String> requestData) {
         System.out.println("아이디 중복확인");
@@ -32,6 +33,7 @@ public class UserController {
                 : new ResponseEntity<>("ok", HttpStatus.OK);
     }
 
+    // 전화번호 중복 확인
     @PostMapping("/checkPhoneNumber")
     public ResponseEntity<String> checkPhoneNumber(@RequestBody Map<String, String> request) {
         String phoneNumber = request.get("phoneNumber");
@@ -46,7 +48,7 @@ public class UserController {
         }
     }
 
-
+    // 이메일 중복 확인
     @PostMapping("/checkEmail")
     public ResponseEntity<String> checkEmail(@RequestBody Map<String, String> request) {
         String email = request.get("email");
@@ -65,8 +67,7 @@ public class UserController {
     private final EmailService emailService;
     private final Map<String, VerificationCode> verificationCodes = new HashMap<>(); // 이메일-코드 매핑 저장
 
-
-
+    // 인증 코드 전송
     @PostMapping("/sendVerificationEmail")
     public ResponseEntity<String> sendVerificationEmail(@RequestBody Map<String, String> request) {
         String email = request.get("email");
@@ -85,7 +86,6 @@ public class UserController {
             return ResponseEntity.status(500).body("이메일 전송 중 오류가 발생했습니다.");
         }
     }
-
 
     // 인증번호 확인
     @PostMapping("/verifyCode")
@@ -119,6 +119,16 @@ public class UserController {
         }
     }
 
+    // 회원가입
+    @PostMapping("/signup")
+    public String signup(@RequestBody User user) {
+        boolean isInserted = userService.insertUser(user);
 
+        if (isInserted) {
+            return "success";
+        } else {
+            return "fail";
+        }
+    }
 
 }
