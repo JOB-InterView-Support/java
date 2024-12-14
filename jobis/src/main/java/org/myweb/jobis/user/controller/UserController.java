@@ -3,6 +3,8 @@ package org.myweb.jobis.user.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.myweb.jobis.email.model.service.EmailService;
+import org.myweb.jobis.user.model.dto.LoginRequest;
+import org.myweb.jobis.user.model.dto.LoginResponse;
 import org.myweb.jobis.user.model.dto.User;
 import org.myweb.jobis.user.model.dto.VerificationCode;
 import org.myweb.jobis.user.model.service.UserService;
@@ -13,6 +15,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.myweb.jobis.security.JwtTokenProvider;
+
+
 @Slf4j
 @RestController
 @RequestMapping("/users")
@@ -21,6 +26,7 @@ import java.util.Map;
 public class UserController {
 
     private final UserService userService;
+    private final JwtTokenProvider jwtTokenProvider;
 
     // 아이디 중복 확인
     @PostMapping("/checkuserId")
@@ -130,5 +136,58 @@ public class UserController {
             return "fail";
         }
     }
+
+    // 로그인 ---------------------------------
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        try {
+            // 사용자 인증
+            User user = userService.authenticate(request.getUserId(), request.getUserPw());
+
+            // JWT 토큰 생성
+            String accessToken = jwtTokenProvider.createAccessToken(
+                    user.getUuid(),
+                    user.getUserId(),
+                    user.getAdminYn(),
+                    user.getUserName()
+            );
+            String refreshToken = jwtTokenProvider.createRefreshToken(user.getUuid());
+
+            // Refresh Token 저장
+            userService.saveRefreshToken(user.getUserId(), refreshToken);
+
+            log.info("로그인 성공: User ID = {}", user.getUserId());
+
+            // 토큰 응답
+            return ResponseEntity.ok(Map.of(
+                    "accessToken", accessToken,
+                    "refreshToken", refreshToken
+            ));
+        } catch (IllegalArgumentException e) {
+            log.warn("로그인 실패: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+        } catch (Exception e) {
+            log.error("로그인 중 오류 발생: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 오류가 발생했습니다.");
+        }
+    }
+
+    // 로그아웃 ---------------------------------------
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(@RequestBody Map<String, String> request) {
+        String userId = request.get("userId");
+
+        try {
+            userService.clearRefreshToken(userId);
+            log.info("로그아웃 성공: User ID = {}", userId);
+            return ResponseEntity.ok("로그아웃 성공");
+        } catch (Exception e) {
+            log.error("로그아웃 중 오류 발생: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("로그아웃 실패");
+        }
+    }
+
+
+
 
 }
