@@ -32,34 +32,39 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
             throws AuthenticationException {
+        if (!"POST".equalsIgnoreCase(request.getMethod())) {
+            // GET 요청에 대해 예외 대신 응답을 설정하고 요청을 종료
+            try {
+                response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED); // 405 상태 반환
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write("{\"error\":\"로그인 요청은 POST 방식만 지원합니다.\"}");
+            } catch (IOException e) {
+                throw new RuntimeException("응답 처리 중 오류 발생", e);
+            }
+            return null;
+        }
+
         String userId = null;
         String userPw = null;
 
         try {
-            // JSON 데이터를 읽기 위해 InputStream 사용
             ObjectMapper objectMapper = new ObjectMapper();
             Map<String, String> requestBody = objectMapper.readValue(request.getInputStream(), Map.class);
-
             userId = requestBody.get("userId");
             userPw = requestBody.get("userPw");
         } catch (IOException e) {
             throw new RuntimeException("요청 데이터를 읽을 수 없습니다.", e);
         }
 
-        System.out.println("전달된 userId: " + userId);
-        System.out.println("전달된 userPw: " + userPw);
-
         if (userId == null || userPw == null) {
             throw new RuntimeException("아이디 또는 비밀번호가 전달되지 않았습니다.");
         }
 
-        // 인증 토큰 생성
         UsernamePasswordAuthenticationToken authenticationToken =
                 new UsernamePasswordAuthenticationToken(userId, userPw);
-
-        // AuthenticationManager에 인증 위임
         return this.getAuthenticationManager().authenticate(authenticationToken);
     }
+
 
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response,

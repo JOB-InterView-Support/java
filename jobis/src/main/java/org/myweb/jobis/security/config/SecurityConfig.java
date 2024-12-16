@@ -66,9 +66,15 @@ public class SecurityConfig {
                 .formLogin(form -> form.disable())
                 .httpBasic(basic -> basic.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/public/**", "/auth/**", "/css/**", "/js/**").permitAll()
-                        .requestMatchers("/**", "/login", "/reissue").permitAll()
-                        .requestMatchers("/login", "/logout", "/reissue").permitAll()
+                        // 정적 리소스 및 인증 제외 경로
+                        .requestMatchers("/", "/**", "/favicon.ico", "/manifest.json", "/public/**", "/auth/**", "/css/**", "/js/**").permitAll()
+                        // .png 파일 인증 없이 허용
+                        .requestMatchers("/*.png").permitAll()
+                        // 로그인, 토큰 재발급은 인증 제외
+                        .requestMatchers("/login","/signup","/users/**", "/reissue", "/users/**").permitAll()
+                        // 로그아웃은 인증된 사용자만 가능
+                        .requestMatchers("/logout").authenticated()
+                        // 나머지 모든 요청은 인증 필요
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JWTFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class)
