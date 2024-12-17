@@ -168,4 +168,7 @@ public class UserService {
         Optional<UserEntity> entityOptional = userRepository.findByUserId(userId);
         return entityOptional.get().toDto();
     }
+
+
+
 }
