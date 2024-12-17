@@ -1,6 +1,7 @@
 package org.myweb.jobis.security.jwt;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.extern.slf4j.Slf4j;
@@ -74,6 +75,9 @@ public class JWTUtil {
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
+        } catch (ExpiredJwtException e) {
+            log.warn("Token has expired: {}", e.getMessage());
+            return e.getClaims(); // 만료된 토큰의 Claims 반환
         } catch (Exception e) {
             log.error("Error parsing token: {}", e.getMessage());
             return null;
@@ -81,9 +85,14 @@ public class JWTUtil {
     }
 
 
+
     // 토큰 만료 여부 확인
     public boolean isTokenExpired(String token) {
-        return getClaimsFromToken(token).getExpiration().before(new Date());
+        Claims claims = getClaimsFromToken(token);
+        if (claims == null) {
+            return true; // Claims가 null이면 만료되거나 잘못된 토큰임
+        }
+        return claims.getExpiration().before(new Date());
     }
 
     // 토큰에서 사용자 ID 추출
