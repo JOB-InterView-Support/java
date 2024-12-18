@@ -36,26 +36,32 @@ public class JWTUtil {
 
     // 토큰 생성 메서드 (공통)
     public String generateToken(String userId, String category, Long expiredMs) {
-        log.info("Generating token with category: {}", category);
+        if (userId == null || userId.trim().isEmpty()) {
+            log.error("토큰 생성 실패: userId가 유효하지 않습니다.");
+            throw new IllegalArgumentException("유효하지 않은 userId입니다.");
+        }
 
-        // 사용자 정보 조회
+        if (expiredMs == null || expiredMs <= 0) {
+            log.error("토큰 생성 실패: 만료 시간이 유효하지 않습니다.");
+            throw new IllegalArgumentException("유효하지 않은 만료 시간입니다.");
+        }
+
+        log.info("토큰 생성 시작 - userId: {}, category: {}, 만료 시간: {}", userId, category, expiredMs);
+
         UserEntity user = userRepository.findByUserId(userId)
                 .orElseThrow(() -> new UsernameNotFoundException("userId: " + userId + " not found."));
 
-        // 사용자 관리자 여부 확인
-        String adminYn = user.getAdminYn();
-
-        // JWT 생성
         return Jwts.builder()
-                .setSubject(userId) // 사용자 ID 설정
-                .claim("category", category) // 카테고리 정보 ("access", "refresh")
-                .claim("userId", user.getUserId()) // 사용자 ID 추가
-                .claim("userName", user.getUserName()) // 사용자 이름 추가
-                .claim("role", adminYn.equals("Y") ? "ADMIN" : "USER") // ROLE 정보 추가
-                .setExpiration(new Date(System.currentTimeMillis() + expiredMs)) // 만료 시간 설정
-                .signWith(SignatureAlgorithm.HS256, secretKey) // 서명
+                .setSubject(userId)
+                .claim("category", category)
+                .claim("userId", user.getUserId())
+                .claim("userName", user.getUserName())
+                .claim("role", user.getAdminYn().equals("Y") ? "ADMIN" : "USER")
+                .setExpiration(new Date(System.currentTimeMillis() + expiredMs))
+                .signWith(SignatureAlgorithm.HS256, secretKey)
                 .compact();
     }
+
 
     // Access Token 생성 메서드
     public String generateAccessToken(String userId) {
@@ -69,54 +75,67 @@ public class JWTUtil {
 
     // 토큰에서 클레임 추출
     public Claims getClaimsFromToken(String token) {
+        log.info("JWTUtil - Claims 추출 시작: {}", token);
+
+        if (token == null || token.trim().isEmpty()) {
+            log.error("토큰이 비어있거나 유효하지 않습니다.");
+            throw new IllegalArgumentException("유효하지 않은 토큰입니다.");
+        }
+
         try {
             return Jwts.parserBuilder()
                     .setSigningKey(secretKey)
                     .build()
-                    .parseClaimsJws(token)
+                    .parseClaimsJws(token.trim())
                     .getBody();
         } catch (ExpiredJwtException e) {
-            log.warn("Token has expired: {}", e.getMessage());
-            return e.getClaims(); // 만료된 토큰의 Claims 반환
+            log.warn("만료된 토큰에서 Claims 추출: {}", e.getClaims());
+            return e.getClaims(); // 만료된 Claims 반환
         } catch (Exception e) {
-            log.error("Error parsing token: {}", e.getMessage());
-            return null;
+            log.error("JWT Claims 추출 중 오류: {}", e.getMessage());
+            throw e; // 명확한 예외를 던져 호출자가 처리하도록 위임
         }
     }
+
 
 
 
     // 토큰 만료 여부 확인
     public boolean isTokenExpired(String token) {
-        log.info("JWTUtil RefreshToken 만료 여부 확인 시작");
+        log.info("JWTUtil - 토큰 만료 여부 확인 시작: {}", token);
+
+        if (token == null || token.trim().isEmpty()) {
+            log.error("토큰이 비어있거나 유효하지 않습니다.");
+            return true; // 만료된 것으로 간주
+        }
+
         try {
             // JWT 파싱 및 Claims 추출
             Claims claims = Jwts.parserBuilder()
                     .setSigningKey(secretKey)
                     .build()
-                    .parseClaimsJws(token)
+                    .parseClaimsJws(token.trim())
                     .getBody();
 
-            // 파싱된 Claims 정보를 로그로 출력
             log.info("JWT 토큰 Claims: {}", claims);
 
             // 만료 여부 확인
             boolean isExpired = claims.getExpiration().before(new Date());
             log.info("JWT 토큰 만료 여부: {}", isExpired ? "만료됨" : "유효함");
-
             return isExpired;
         } catch (ExpiredJwtException e) {
-            // 만료된 토큰 예외 처리
-            log.warn("Token has expired: {}", e.getMessage());
+            log.warn("토큰이 만료되었습니다: {}", e.getMessage());
             log.info("만료된 토큰 Claims: {}", e.getClaims()); // 만료된 Claims 정보 로그 출력
-
             return true; // 만료된 경우 true 반환
-        } catch (Exception e) {
-            // 기타 예외 처리
-            log.error("Error checking token expiration: {}", e.getMessage());
+        } catch (IllegalArgumentException e) {
+            log.error("JWT 파싱 중 오류: 토큰 형식이 잘못되었습니다. {}", e.getMessage());
             return true; // 오류 발생 시 만료로 간주
+        } catch (Exception e) {
+            log.error("JWT 파싱 중 예상치 못한 오류: {}", e.getMessage());
+            return true; // 기타 오류도 만료로 간주
         }
     }
+
 
 
 
