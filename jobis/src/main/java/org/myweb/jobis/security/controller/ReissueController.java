@@ -21,7 +21,7 @@ public class ReissueController {
     private final JWTUtil jwtUtil;
     private final UserService userService;
 
-    private static final long ACCESS_TOKEN_EXPIRATION = 20000L; //
+    private static final long ACCESS_TOKEN_EXPIRATION = 60000L; //
     private static final long REFRESH_TOKEN_EXPIRATION = 120000L; //
 
     @PostMapping("/reissue")
@@ -76,10 +76,13 @@ public class ReissueController {
             }
 
             // 둘 다 만료된 경우
-            if (isAccessTokenExpired && isRefreshTokenExpired) {
+            if (jwtUtil.isTokenExpired(accessToken) && jwtUtil.isTokenExpired(refreshToken)) {
                 log.warn("둘 다 만료됨. 세션 종료.");
+                String userId = jwtUtil.getUserIdFromToken(accessToken);
+                userService.clearRefreshToken(userId);
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Session Expired");
             }
+
 
             // AccessToken 만료, RefreshToken 유효
             if (isAccessTokenExpired && !isRefreshTokenExpired) {
