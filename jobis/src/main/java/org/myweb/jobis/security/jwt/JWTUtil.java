@@ -88,26 +88,57 @@ public class JWTUtil {
 
     // 토큰 만료 여부 확인
     public boolean isTokenExpired(String token) {
-        Claims claims = getClaimsFromToken(token);
-        if (claims == null) {
-            return true; // Claims가 null이면 만료되거나 잘못된 토큰임
+        log.info("JWTUtil RefreshToken 만료 여부 확인 시작");
+        try {
+            // JWT 파싱 및 Claims 추출
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(secretKey)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+
+            // 파싱된 Claims 정보를 로그로 출력
+            log.info("JWT 토큰 Claims: {}", claims);
+
+            // 만료 여부 확인
+            boolean isExpired = claims.getExpiration().before(new Date());
+            log.info("JWT 토큰 만료 여부: {}", isExpired ? "만료됨" : "유효함");
+
+            return isExpired;
+        } catch (ExpiredJwtException e) {
+            // 만료된 토큰 예외 처리
+            log.warn("Token has expired: {}", e.getMessage());
+            log.info("만료된 토큰 Claims: {}", e.getClaims()); // 만료된 Claims 정보 로그 출력
+
+            return true; // 만료된 경우 true 반환
+        } catch (Exception e) {
+            // 기타 예외 처리
+            log.error("Error checking token expiration: {}", e.getMessage());
+            return true; // 오류 발생 시 만료로 간주
         }
-        return claims.getExpiration().before(new Date());
     }
+
+
 
     // 토큰에서 사용자 ID 추출
     public String getUserIdFromToken(String token) {
         try {
-            Claims claims = Jwts.parser()
-                    .setSigningKey(secretKey) // 비밀 키
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(secretKey)
+                    .build()
                     .parseClaimsJws(token)
                     .getBody();
             return claims.getSubject(); // userId를 저장한 위치
+        } catch (ExpiredJwtException e) {
+            log.warn("Token expired, extracting userId: {}", e.getClaims().getSubject());
+            return e.getClaims().getSubject(); // 만료된 토큰에서도 userId 추출
         } catch (Exception e) {
-            log.error("Token parsing error: {}", e.getMessage());
+            log.error("Error extracting userId from token: {}", e.getMessage());
             return null;
         }
     }
+
+
 
 
 
