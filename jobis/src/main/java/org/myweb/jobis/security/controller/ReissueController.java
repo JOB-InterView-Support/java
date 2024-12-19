@@ -21,8 +21,8 @@ public class ReissueController {
     private final JWTUtil jwtUtil;
     private final UserService userService;
 
-    private static final long ACCESS_TOKEN_EXPIRATION = 60000L; //
-    private static final long REFRESH_TOKEN_EXPIRATION = 120000L; //
+    private static final long ACCESS_TOKEN_EXPIRATION = 1800000L; //
+    private static final long REFRESH_TOKEN_EXPIRATION = 86400000L; //
 
     @PostMapping("/reissue")
     public ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response) {
