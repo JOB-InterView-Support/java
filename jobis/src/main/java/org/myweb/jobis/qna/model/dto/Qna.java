@@ -12,7 +12,7 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class qna {
+public class Qna {
     private String qNo;
     private String qTitle;
     private String qContent;
