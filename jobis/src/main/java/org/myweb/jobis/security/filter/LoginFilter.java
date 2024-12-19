@@ -96,6 +96,18 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
                                               AuthenticationException failed) throws IOException, ServletException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json;charset=UTF-8");
-        response.getWriter().write("{\"error\":\"로그인 실패: 아이디 또는 비밀번호를 확인하세요.\"}");
+
+        // 예외 메시지를 기반으로 오류 메시지 설정
+        String errorMessage;
+        if (failed.getMessage().contains("Bad credentials")) {
+            errorMessage = "아이디와 비밀번호를 다시 확인해주세요.";
+        } else if (failed.getMessage().contains("사용자를 찾을 수 없습니다")) {
+            errorMessage = "ID가 없으면 사용자를 찾을 수 없습니다.";
+        } else {
+            errorMessage = "로그인 실패: 알 수 없는 오류가 발생했습니다.";
+        }
+
+        response.getWriter().write(String.format("{\"error\":\"%s\"}", errorMessage));
     }
+
 }

@@ -25,78 +25,75 @@ public class JWTFilter extends OncePerRequestFilter {
         this.jwtUtil = jwtUtil;
     }
 
+    private boolean isExcludedUrl(String requestURI) {
+        return requestURI.endsWith(".png") ||
+                requestURI.equals("/") ||
+                requestURI.equals("/favicon.ico") ||
+                requestURI.equals("/manifest.json") ||
+                requestURI.startsWith("/login") ||
+                requestURI.startsWith("/static") ||
+                requestURI.equals("/users/checkuserId") ||
+                requestURI.equals("/users/checkEmail") ||
+                requestURI.equals("/users/login") ||
+                requestURI.equals("/users/signup") ||
+                requestURI.equals("/users/checkPhoneNumber") ||
+                requestURI.equals("/users/sendVerificationEmail") ||
+                requestURI.equals("/users/verifyCode") ||
+                requestURI.equals("/reissue"); // 추가
+    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        log.info("JWTFilter 실행 중...");
-
         String requestURI = request.getRequestURI();
+        log.info("JWTFilter 실행 중: {}", requestURI);
 
-        // .png 파일 필터링 제외
-        if (requestURI.endsWith(".png") ||
-                requestURI.equals("/") ||
-                requestURI.equals("/favicon.ico") ||
-                requestURI.equals("/manifest.json")) {
+        // 제외 대상 URL 처리
+        if (isExcludedUrl(requestURI)) {
+            log.info("JWTFilter 제외 대상 URL: {}", requestURI);
             filterChain.doFilter(request, response);
             return;
         }
 
-        // 정적 리소스와 특정 URL 필터링 제외
-        if (requestURI.equals("/") ||
-                requestURI.startsWith("/login") ||
-                requestURI.equals("/favicon.ico") ||
-                requestURI.equals("/manifest.json") ||
-                requestURI.startsWith("/static")) {
-            filterChain.doFilter(request, response); // 필터 통과
-            return;
-        }
-
-        if (requestURI.equals("/users/checkuserId") ||
-                requestURI.equals("/users/checkEmail") ||
-                requestURI.equals("/users/login") ||
-                requestURI.equals("/users/signup")||
-                requestURI.equals("/users/checkPhoneNumber")||
-                requestURI.equals("/users/sendVerificationEmail") ||
-                requestURI.equals("/users/verifyCode")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
+        String accessTokenHeader = request.getHeader("AccessToken");
+        String refreshTokenHeader = request.getHeader("Authorization");
 
         try {
-            String authorizationHeader = request.getHeader("Authorization");
+            if (accessTokenHeader != null && refreshTokenHeader != null) {
+                String accessToken = accessTokenHeader.substring("Bearer ".length());
+                String refreshToken = refreshTokenHeader.substring("Bearer ".length());
 
-            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-                log.warn("Authorization 헤더가 비어있거나 잘못된 형식입니다.");
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401 상태 반환
-                response.getWriter().write("Missing or invalid Authorization header");
+                // RefreshToken 만료, AccessToken 유효
+                if (!jwtUtil.isTokenExpired(accessToken) && jwtUtil.isTokenExpired(refreshToken)) {
+                    log.warn("RefreshToken 만료, AccessToken 유효.");
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setHeader("Token-Expired", "RefreshToken"); // 명확한 헤더 추가
+                    response.getWriter().write("{\"error\": \"RefreshToken expired\"}");
+                    return;
+                }
+
+
+                // AccessToken 만료
+                if (jwtUtil.isTokenExpired(accessToken)) {
+                    log.warn("AccessToken 만료.");
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setHeader("Token-Expired", "AccessToken");
+                    response.getWriter().write("{\"error\": \"AccessToken expired\"}");
+                    return;
+                }
+            } else {
+                log.warn("AccessToken 또는 RefreshToken이 제공되지 않았습니다.");
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("{\"error\": \"Missing or invalid tokens\"}");
                 return;
             }
-
-            String token = authorizationHeader.split(" ")[1];
-
-            if (jwtUtil.isTokenExpired(token)) {
-                log.warn("토큰이 만료되었습니다.");
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401 상태 반환
-                response.getWriter().write("Access token expired");
-                return;
-            }
-
-            String userId = jwtUtil.getUserIdFromToken(token);
-            String role = jwtUtil.getRoleFromToken(token);
-
-            // 권한 생성 및 SecurityContext에 설정
-            SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
-            Authentication authentication = new UsernamePasswordAuthenticationToken(
-                    userId, null, Collections.singletonList(authority)
-            );
-            SecurityContextHolder.getContext().setAuthentication(authentication);
 
             filterChain.doFilter(request, response);
 
         } catch (Exception e) {
-            log.error("JWT 처리 중 예외 발생: ", e);
+            log.error("JWT 처리 중 오류 발생: ", e);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().write("Error processing JWT");
+            response.getWriter().write("{\"error\": \"Internal server error\"}");
         }
     }
 

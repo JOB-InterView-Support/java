@@ -24,46 +24,25 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-
-    /**
-     * 아이디 중복 확인
-     *
-     * @param username 사용자 아이디
-     * @return 중복 여부
-     */
+    // 아이디 중복 확인
     public boolean isUsernameDuplicate(String username) {
         log.debug("아이디 중복 확인 요청: {}", username);
         return userRepository.existsByUserName(username);
     }
 
-    /**
-     * 전화번호 중복 확인
-     *
-     * @param phoneNumber 전화번호
-     * @return 중복 여부
-     */
+    // 전화번호 중복 확인
     public boolean isPhoneNumberDuplicate(String phoneNumber) {
         log.debug("전화번호 중복 확인 요청: {}", phoneNumber);
         return userRepository.existsByUserPhone(phoneNumber);
     }
 
-    /**
-     * 이메일 중복 확인
-     *
-     * @param email 이메일 주소
-     * @return 중복 여부
-     */
+    // 이메일 중복 확인
     public boolean isEmailDuplicate(String email) {
         log.debug("이메일 중복 확인 요청: {}", email);
         return userRepository.existsByUserDefaultEmail(email);
     }
 
-    /**
-     * 회원가입 처리
-     *
-     * @param user 회원 정보
-     * @return 성공 여부
-     */
+    // 회원가입 처리
     public boolean insertUser(User user) {
         try {
             log.debug("회원가입 요청 데이터: {}", user);
@@ -103,21 +82,7 @@ public class UserService {
         }
     }
 
-    /**
-     * 로그인 처리
-     *
-     * @param loginRequest 로그인 요청 정보
-     * @return AccessToken, RefreshToken
-     */
-
-
-    /**
-     * 사용자 인증
-     *
-     * @param userId 사용자 ID
-     * @param userPw 사용자 비밀번호
-     * @return 인증된 사용자 정보
-     */
+    // 사용자 인증
     public User authenticate(String userId, String userPw) {
         UserEntity userEntity = userRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalArgumentException("아이디가 존재하지 않습니다."));
@@ -129,46 +94,30 @@ public class UserService {
         return userEntity.toDto();
     }
 
-    /**
-     * 리프레시 토큰 저장
-     *
-     * @param userId 사용자 ID
-     * @param refreshToken 리프레시 토큰
-     */
+    // RefreshToken 저장
     public void saveRefreshToken(String userId, String refreshToken) {
-        UserEntity userEntity = userRepository.findByUserId(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-
-        userEntity.setUserRefreshToken(refreshToken); // 리프레시 토큰 설정
-        userRepository.save(userEntity); // 업데이트된 사용자 엔티티 저장
-        log.info("리프레시 토큰이 데이터베이스에 저장되었습니다. UserId: {}", userId);
+        log.info("Saving new RefreshToken for userId: {}", userId);
+        userRepository.updateRefreshToken(userId, refreshToken); // 매개변수 두 개 전달
+        log.info("RefreshToken 저장 완료: userId = {}", userId);
     }
 
-    /**
-     * UUID 생성
-     *
-     * @return UUID 문자열
-     */
+    // RefreshToken 삭제
+    public void clearRefreshToken(String userId) {
+        log.info("Clearing RefreshToken for userId: {}", userId);
+        userRepository.clearRefreshTokenQuery(userId); // null로 설정
+        log.info("RefreshToken 제거 완료: userId = {}", userId);
+    }
+
+
+    // 사용자 조회
+    public User selectMember(String userId) {
+        UserEntity userEntity = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        return userEntity.toDto();
+    }
+
+    // UUID 생성
     private String generateUuid() {
         return java.util.UUID.randomUUID().toString();
     }
-
-    // 로그아웃 - RefreshToken clear
-    @Transactional
-    public void clearRefreshToken(String userId) {
-        UserEntity userEntity = userRepository.findByUserId(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-
-        userEntity.setUserRefreshToken(null); // 리프레시 토큰 제거
-        userRepository.save(userEntity);
-        log.info("Refresh Token 제거 완료: User ID = {}", userId);
-    }
-
-    public User selectMember(String userId) {
-        Optional<UserEntity> entityOptional = userRepository.findByUserId(userId);
-        return entityOptional.get().toDto();
-    }
-
-
-
 }
