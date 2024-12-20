@@ -31,5 +31,26 @@ public class AdminService {
         return userRepository.findByUuid(uuid); // Repository에서 조회
     }
 
+    public void restrictMember(String uuid, String reason) {
+        // 회원 정보 조회
+        UserEntity user = userRepository.findById(uuid)
+                .orElseThrow(() -> new IllegalArgumentException("해당 회원을 찾을 수 없습니다."));
+
+        // 회원 정보 업데이트
+        user.setUserRestrictionStatus("Y"); // 삭제 상태를 'Y'로 설정
+        user.setUserRestricationReason(reason); // 삭제 사유를 설정
+        userRepository.save(user); // 변경 사항 저장
+    }
+
+    public void liftMemberSanction(String uuid) {
+        UserEntity user = userRepository.findByUuid(uuid);
+        if (user == null) {
+            throw new RuntimeException("사용자를 찾을 수 없습니다.");
+        }
+
+        user.setUserRestrictionStatus("N");
+        user.setUserRestricationReason(null);
+        userRepository.save(user);
+    }
 
 }

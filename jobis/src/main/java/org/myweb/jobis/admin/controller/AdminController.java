@@ -9,9 +9,12 @@ import org.myweb.jobis.user.model.service.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -47,6 +50,33 @@ public class AdminController {
         }
 
         return user.toDto();
+    }
+
+
+    @PostMapping("/memberRestrict")
+    public ResponseEntity<?> restrictMember(@RequestBody User user) {
+        try {
+            adminService.restrictMember(user.getUuid(), user.getUserDeletionReason());
+            return ResponseEntity.ok("회원이 성공적으로 제재되었습니다.");
+        } catch (Exception e) {
+            e.printStackTrace(); // 예외를 로그로 출력
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("제재 요청에 실패했습니다.");
+        }
+    }
+
+    @PostMapping("/memberLiftSanction")
+    public ResponseEntity<?> liftSanction(@RequestBody Map<String, String> request) {
+        String uuid = request.get("uuid");
+        if (uuid == null) {
+            return ResponseEntity.badRequest().body("유효하지 않은 요청입니다.");
+        }
+
+        try {
+            adminService.liftMemberSanction(uuid);
+            return ResponseEntity.ok("제재 해제가 성공적으로 완료되었습니다.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("제재 해제 중 오류 발생.");
+        }
     }
 
 

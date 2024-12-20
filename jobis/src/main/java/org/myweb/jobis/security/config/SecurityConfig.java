@@ -19,11 +19,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 @EnableWebSecurity
-public class SecurityConfig {
+public class SecurityConfig implements WebMvcConfigurer {
 
     private final JWTUtil jwtUtil;
     private final CustomUserDetailsService userDetailsService;
@@ -58,16 +59,34 @@ public class SecurityConfig {
         return authProvider;
     }
 
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOrigins("http://localhost:3000", "http://localhost:8080")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("Authorization", "RefreshToken", "Content-Type", "Accept")
+                .exposedHeaders("Authorization", "RefreshToken")
+                .allowCredentials(true);
+
+    }
+
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationManager authenticationManager, CustomLogoutHandler customLogoutHandler) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                .cors(cors -> {})
+                .cors(cors -> {}) // CORS 설정 활성화
                 .formLogin(form -> form.disable())
                 .httpBasic(basic -> basic.disable())
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/", "/index.html", "/static/**", "/manifest.json", "/favicon.ico", "/**/*.js", "/**/*.css", "/**/*.png", "/**/*.jpg").permitAll()
+                        .requestMatchers("/{spring:[a-zA-Z0-9-_]+}").permitAll()
+                        .requestMatchers("/**/{spring:[a-zA-Z0-9-_]+}").permitAll()
+
                         // 정적 리소스 및 인증 제외 경로
+
                         .requestMatchers("/", "/**", "/favicon.ico", "/manifest.json", "/public/**", "/auth/**", "/css/**", "/js/**").permitAll()
+
                         // .png 파일 인증 없이 허용
                         .requestMatchers("/*.png").permitAll()
                         // 로그인, 토큰 재발급은 인증 제외
@@ -95,5 +114,4 @@ public class SecurityConfig {
 
         return http.build();
     }
-
 }

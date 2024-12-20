@@ -42,11 +42,19 @@ public class JWTFilter extends OncePerRequestFilter {
                 requestURI.equals("/reissue"); // 추가
     }
 
+
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         String requestURI = request.getRequestURI();
         log.info("JWTFilter 실행 중: {}", requestURI);
+
+        log.info("모든 요청 헤더 출력");
+        // 모든 요청 헤더 출력
+        request.getHeaderNames().asIterator()
+                .forEachRemaining(header -> log.info("요청 헤더: {} = {}", header, request.getHeader(header)));
+
 
         // 제외 대상 URL 처리
         if (isExcludedUrl(requestURI)) {
@@ -55,8 +63,15 @@ public class JWTFilter extends OncePerRequestFilter {
             return;
         }
 
-        String accessTokenHeader = request.getHeader("AccessToken");
-        String refreshTokenHeader = request.getHeader("Authorization");
+        String accessTokenHeader = request.getHeader("Authorization");
+        String refreshTokenHeader = request.getHeader("RefreshToken");
+
+        if (accessTokenHeader == null || accessTokenHeader.isEmpty()) {
+            log.warn("Authorization 헤더가 없습니다.");
+        }
+        if (refreshTokenHeader == null || refreshTokenHeader.isEmpty()) {
+            log.warn("RefreshToken 헤더가 없습니다.");
+        }
 
         try {
             if (accessTokenHeader != null && refreshTokenHeader != null) {

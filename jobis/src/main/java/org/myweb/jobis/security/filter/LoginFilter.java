@@ -15,6 +15,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Map;
 
 public class LoginFilter extends UsernamePasswordAuthenticationFilter {
@@ -73,12 +74,30 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         UserEntity user = userRepository.findByUserId(username)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다: " + username));
 
+        // 사용 제한 상태 확인
+        if ("Y".equals(user.getUserRestrictionStatus())) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.getWriter().write("{\"error\":\"정지된 사용자입니다. 관리자에게 문의하세요.\"}");
+            return;
+        }
+
+        // 탈퇴 상태 확인
+        if ("Y".equals(user.getUserDeletionStatus())) {
+            LocalDateTime deletionDate = user.getUserDeletionDate();
+            if (deletionDate != null) {
+                LocalDateTime rejoinDate = deletionDate.plusMonths(6);
+                long daysLeft = java.time.Duration.between(LocalDateTime.now(), rejoinDate).toDays();
+                if (daysLeft > 0) {
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    response.getWriter().write(String.format("{\"error\":\"탈퇴한 사용자입니다. 재가입까지 %d일 남았습니다. 관리자에게 문의하세요.\"}", daysLeft));
+                    return;
+                }
+            }
+        }
+
         // 토큰 생성
         String accessToken = jwtUtil.generateAccessToken(username); // Access Token 생성
         String refreshToken = jwtUtil.generateRefreshToken(username); // Refresh Token 생성
-
-        System.out.println("발급된 AccessToken: " + accessToken);
-        System.out.println("발급된 RefreshToken: " + refreshToken);
 
         // 리프레시 토큰 DB에 저장
         user.setUserRefreshToken(refreshToken);
@@ -87,6 +106,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         response.setContentType("application/json;charset=UTF-8");
         response.getWriter().write(String.format("{\"accessToken\":\"%s\",\"refreshToken\":\"%s\"}", accessToken, refreshToken));
     }
+
 
 
 
