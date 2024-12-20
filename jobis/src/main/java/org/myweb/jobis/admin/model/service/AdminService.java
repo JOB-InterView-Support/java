@@ -27,4 +27,9 @@ public class AdminService {
         return users;
     }
 
+    public UserEntity findUserByUuid(String uuid) {
+        return userRepository.findByUuid(uuid); // Repository에서 조회
+    }
+
+
 }

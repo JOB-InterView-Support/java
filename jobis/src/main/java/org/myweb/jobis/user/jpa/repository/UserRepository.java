@@ -28,4 +28,7 @@ public interface UserRepository extends JpaRepository<UserEntity, String> {
     void clearRefreshTokenQuery(@Param("userId") String userId);
 
 
+    UserEntity findByUuid(String uuid);
+
+
 }

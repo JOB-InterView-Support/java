@@ -9,9 +9,7 @@ import org.myweb.jobis.user.model.service.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -37,8 +35,21 @@ public class AdminController {
 
         return users;
     }
-    
-    //현재테스트
+
+    @GetMapping("/memberDetail") // PathVariable 제거
+    public User getUserDetail(@RequestParam String uuid) { // Query Parameter로 전달
+        log.info("회원 상세 정보 요청: uuid={}", uuid);
+        UserEntity user = adminService.findUserByUuid(uuid);
+
+        if (user == null) {
+            log.warn("해당 uuid를 가진 사용자가 없습니다: {}", uuid);
+            throw new IllegalArgumentException("존재하지 않는 사용자입니다.");
+        }
+
+        return user.toDto();
+    }
+
+
 
 
 

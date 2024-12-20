@@ -6,8 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.myweb.jobis.jobposting.model.dto.JobFavorites;
-
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
 
 @Data
 @AllArgsConstructor
@@ -18,17 +17,21 @@ import java.time.LocalDateTime;
 public class JobFavoritesEntity {
 
     @Id
-    @Column(name = "job_favorites_no", nullable = false, length = 50)
+    @Column(name = "JOB_FAVORITS_NO", nullable = false, length = 50)
     private String jobFavoritesNo;  // 즐겨찾기 ID
-
-    @Column(name = "uuid", nullable = false, length = 50)
+    @Column(name = "UUID", nullable = false, length = 50)
     private String uuid;  // UUID
-
-    @Column(name = "job_posting_id", nullable = false, length = 50)
+    @Column(name = "JOB_POSTING_ID", nullable = false, length = 50)
     private String jobPostingId;  // 공고 ID
+    @Column(name = "JOB_CREATED_DATE", nullable = false)
+    private Timestamp jobCreatedDate;  // 즐겨찾기 추가 날짜
 
-    @Column(name = "job_created_date", nullable = false)
-    private LocalDateTime jobCreatedDate;  // 즐겨찾기 추가 날짜
+    @PrePersist
+    public void onPrePersist() {
+        if (jobCreatedDate == null) {
+            this.jobCreatedDate = new Timestamp(System.currentTimeMillis());  // Set current date + time
+        }
+    }
 
     // Entity에서 DTO로 변환
     public JobFavorites toDto() {
@@ -39,14 +42,5 @@ public class JobFavoritesEntity {
                 .jobCreatedDate(jobCreatedDate)
                 .build();
     }
-
-    // DTO에서 Entity로 변환
-    public static JobFavoritesEntity fromDto(JobFavorites dto) {
-        return JobFavoritesEntity.builder()
-                .jobFavoritesNo(dto.getJobFavoritesNo())
-                .uuid(dto.getUuid())
-                .jobPostingId(dto.getJobPostingId())
-                .jobCreatedDate(dto.getJobCreatedDate())
-                .build();
-    }
 }
+
