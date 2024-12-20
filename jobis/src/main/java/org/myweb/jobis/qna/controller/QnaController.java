@@ -9,7 +9,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("qna")
-public class qnaController {
+public class QnaController {
 
     // test
 }

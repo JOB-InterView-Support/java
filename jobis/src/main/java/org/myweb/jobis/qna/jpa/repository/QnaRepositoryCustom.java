@@ -10,10 +10,10 @@ public interface QnaRepositoryCustom {
     int findLastQnaNo();
     long countSearchTitle(String keyword);
     long countSearchWriter(String keyword);
-    long countSearchDate(Date begin, Date end);
+ //   long countSearchDate(Date begin, Date end);
     List<QnaEntity> findSearchTitle(String keyword, Pageable pageable);
     List<QnaEntity> findSearchWriter(String keyword, Pageable pageable);
-    List<QnaEntity> findSearchDate(Date begin, Date end, Pageable pageable);
+//    List<QnaEntity> findSearchDate(Date begin, Date end, Pageable pageable);
 
 
 }
