@@ -60,7 +60,7 @@ public class User {
                 .userCreateAt(this.userCreateAt)
                 .userUpdateAt(this.userUpdateAt)
                 .userRestrictionStatus(this.userRestrictionStatus)
-                .userRestricationReason(this.userRestrictionReason) // 정지 사유 추가
+                .userRestrictionReason(this.userRestrictionReason) // 정지 사유 추가
                 .userDeletionStatus(this.userDeletionStatus)
                 .userDeletionReason(this.userDeletionReason)
                 .userDeletionDate(this.userDeletionDate)

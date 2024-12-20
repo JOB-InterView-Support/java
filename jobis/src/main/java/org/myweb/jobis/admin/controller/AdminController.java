@@ -56,7 +56,11 @@ public class AdminController {
     @PostMapping("/memberRestrict")
     public ResponseEntity<?> restrictMember(@RequestBody User user) {
         try {
-            adminService.restrictMember(user.getUuid(), user.getUserDeletionReason());
+            log.info("제제 사유 및 사람");
+            log.info(user.getUuid());
+            log.info(user.getUserRestrictionReason());
+            
+            adminService.restrictMember(user.getUuid(), user.getUserRestrictionReason());
             return ResponseEntity.ok("회원이 성공적으로 제재되었습니다.");
         } catch (Exception e) {
             e.printStackTrace(); // 예외를 로그로 출력

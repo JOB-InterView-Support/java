@@ -7,6 +7,7 @@ import org.myweb.jobis.user.jpa.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -31,15 +32,17 @@ public class AdminService {
         return userRepository.findByUuid(uuid); // Repository에서 조회
     }
 
+
+    @Transactional
     public void restrictMember(String uuid, String reason) {
-        // 회원 정보 조회
         UserEntity user = userRepository.findById(uuid)
                 .orElseThrow(() -> new IllegalArgumentException("해당 회원을 찾을 수 없습니다."));
-
-        // 회원 정보 업데이트
-        user.setUserRestrictionStatus("Y"); // 삭제 상태를 'Y'로 설정
-        user.setUserRestricationReason(reason); // 삭제 사유를 설정
-        userRepository.save(user); // 변경 사항 저장
+        log.info("제제 사유 어드민 서비스");
+        log.info(uuid);
+        log.info(reason);
+        user.setUserRestrictionStatus("Y");
+        user.setUserRestrictionReason(reason);
+        userRepository.save(user);
     }
 
     public void liftMemberSanction(String uuid) {
@@ -49,7 +52,7 @@ public class AdminService {
         }
 
         user.setUserRestrictionStatus("N");
-        user.setUserRestricationReason(null);
+        user.setUserRestrictionReason(null);
         userRepository.save(user);
     }
 

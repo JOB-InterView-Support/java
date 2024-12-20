@@ -83,8 +83,8 @@ public class UserEntity {
     private String adminYn = "N";
 
     // 정지 사유
-    @Column(name = "USER_RESTRICATION_REASON", length = 512) // 필드 추가
-    private String userRestricationReason;
+    @Column(name = "USER_RESTRICTION_REASON", length = 512) // 필드 추가
+    private String userRestrictionReason;
 
     @PrePersist
     protected void onCreate() {
@@ -112,7 +112,7 @@ public class UserEntity {
                 .userCreateAt(this.userCreateAt)
                 .userUpdateAt(this.userUpdateAt)
                 .userRestrictionStatus(this.userRestrictionStatus)
-                .userRestrictionReason(this.userRestricationReason) // DTO 변환에 포함
+                .userRestrictionReason(this.userRestrictionReason) // DTO 변환에 포함
                 .userDeletionStatus(this.userDeletionStatus)
                 .userDeletionReason(this.userDeletionReason)
                 .userDeletionDate(this.userDeletionDate)
