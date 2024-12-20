@@ -45,13 +45,14 @@ public class QnaRepositoryCustomImpl implements QnaRepositoryCustom {
                 .fetchCount();
     }
 
-    @Override
-    public long countSearchDate(Date begin, Date end) {
-        return queryFactory
-                .selectFrom(qna)
-            //    .where(qna.qWDate.between(begin.toLocalDate().atStartOfDay(), end.toLocalDate().atStartOfDay()))
-                .fetchCount();
-    }
+    // 날짜로 검색하는 부분 검색 수정중
+//    @Override
+//    public long countSearchDate(Date begin, Date end) {
+//        return queryFactory
+//                .selectFrom(qna)
+//               .where(qna.qWDate.between(begin.toLocalDate().atStartOfDay(), end.toLocalDate().atStartOfDay()))
+//                .fetchCount();
+//    }
 
     @Override
     public List<QnaEntity> findSearchTitle(String keyword, Pageable pageable) {
@@ -75,14 +76,15 @@ public class QnaRepositoryCustomImpl implements QnaRepositoryCustom {
                 .fetch();
     }
 
-    @Override
-    public List<QnaEntity> findSearchDate(Date begin, Date end, Pageable pageable) {
-        return queryFactory
-                .selectFrom(qna)
-            //    .where(qna.qWDate.between(begin.toLocalDate().atStartOfDay(), end.toLocalDate().atStartOfDay()))
-                .orderBy(qna.qNo.desc())
-                .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
-                .fetch();
-    }
+    //날짜 검색 부분 .. 수정중
+//    @Override
+//    public List<QnaEntity> findSearchDate(Date begin, Date end, Pageable pageable) {
+//        return queryFactory
+//                .selectFrom(qna)
+//            //    .where(qna.qWDate.between(begin.toLocalDate().atStartOfDay(), end.toLocalDate().atStartOfDay()))
+//                .orderBy(qna.qNo.desc())
+//                .offset(pageable.getOffset())
+//                .limit(pageable.getPageSize())
+//                .fetch();
+//    }
 }
