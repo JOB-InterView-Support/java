@@ -56,4 +56,31 @@ public class AdminService {
         userRepository.save(user);
     }
 
+
+
+    @Transactional
+    public void liftUnsubscribeStatus(String uuid) {
+        UserEntity user = userRepository.findByUuid(uuid);
+        if (user == null) {
+            throw new RuntimeException("사용자를 찾을 수 없습니다.");
+        }
+
+        // 탈퇴 상태 해제 처리
+        user.setUserDeletionStatus("N"); // 탈퇴 상태 해제
+        user.setUserDeletionReason(null); // 탈퇴 사유 초기화
+        user.setUserDeletionDate(null); // 탈퇴 날짜 초기화
+
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void deleteMember(String uuid) {
+        UserEntity user = userRepository.findByUuid(uuid);
+        if (user == null) {
+            throw new RuntimeException("사용자를 찾을 수 없습니다.");
+        }
+
+        userRepository.delete(user); // 회원 삭제
+    }
+
 }
