@@ -83,4 +83,16 @@ public class AdminService {
         userRepository.delete(user); // 회원 삭제
     }
 
+    public void promoteToAdmin(String uuid) throws Exception {
+        UserEntity user = userRepository.findById(uuid).orElseThrow(() -> new Exception("사용자를 찾을 수 없습니다."));
+        user.setAdminYn("Y");
+        userRepository.save(user);
+    }
+
+    public void demoteToUser(String uuid) throws Exception {
+        UserEntity user = userRepository.findById(uuid).orElseThrow(() -> new Exception("사용자를 찾을 수 없습니다."));
+        user.setAdminYn("N");
+        userRepository.save(user);
+    }
+
 }

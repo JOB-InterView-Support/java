@@ -55,6 +55,7 @@ public class AdminController {
 
     @PostMapping("/memberRestrict")
     public ResponseEntity<?> restrictMember(@RequestBody User user) {
+        log.info("회원 제제 메서드 시작");
         try {
             log.info("제제 사유 및 사람");
             log.info(user.getUuid());
@@ -114,6 +115,28 @@ public class AdminController {
             log.error("회원 삭제 중 오류 발생:", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("회원 삭제에 실패했습니다.");
+        }
+    }
+
+    @PostMapping("/promoteToAdmin")
+    public ResponseEntity<?> promoteToAdmin(@RequestBody Map<String, String> payload) {
+        String uuid = payload.get("uuid");
+        try {
+            adminService.promoteToAdmin(uuid); // 유저 서비스에서 관리자로 승격시키는 메소드 호출
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("관리자로 승격 실패: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/demoteToUser")
+    public ResponseEntity<?> demoteToUser(@RequestBody Map<String, String> payload) {
+        String uuid = payload.get("uuid");
+        try {
+            adminService.demoteToUser(uuid); // 유저 서비스에서 일반 회원으로 강등시키는 메소드 호출
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("일반 회원으로 강등 실패: " + e.getMessage());
         }
     }
 

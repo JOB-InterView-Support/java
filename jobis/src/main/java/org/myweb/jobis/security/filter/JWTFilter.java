@@ -52,13 +52,13 @@ public class JWTFilter extends OncePerRequestFilter {
 
         log.info("모든 요청 헤더 출력");
         // 모든 요청 헤더 출력
-        request.getHeaderNames().asIterator()
-                .forEachRemaining(header -> log.info("요청 헤더: {} = {}", header, request.getHeader(header)));
+//        request.getHeaderNames().asIterator()
+//                .forEachRemaining(header -> log.info("요청 헤더: {} = {}", header, request.getHeader(header)));
 
 
         // 제외 대상 URL 처리
         if (isExcludedUrl(requestURI)) {
-            log.info("JWTFilter 제외 대상 URL: {}", requestURI);
+//            log.info("JWTFilter 제외 대상 URL: {}", requestURI);
             filterChain.doFilter(request, response);
             return;
         }
@@ -82,7 +82,7 @@ public class JWTFilter extends OncePerRequestFilter {
                 if (!jwtUtil.isTokenExpired(accessToken) && jwtUtil.isTokenExpired(refreshToken)) {
                     log.warn("RefreshToken 만료, AccessToken 유효.");
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.setHeader("Token-Expired", "RefreshToken"); // 명확한 헤더 추가
+                    response.setHeader("token-expired", "RefreshToken"); // 명확한 헤더 추가
                     response.getWriter().write("{\"error\": \"RefreshToken expired\"}");
                     return;
                 }
@@ -92,7 +92,7 @@ public class JWTFilter extends OncePerRequestFilter {
                 if (jwtUtil.isTokenExpired(accessToken)) {
                     log.warn("AccessToken 만료.");
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.setHeader("Token-Expired", "AccessToken");
+                    response.setHeader("token-expired", "AccessToken");
                     response.getWriter().write("{\"error\": \"AccessToken expired\"}");
                     return;
                 }
