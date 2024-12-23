@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @CrossOrigin
 public class MypageController {
     private final MypageService mypageService;
-    private final PasswordEncoder passwordEncoder; // 비밀번호 암호화를 위한 Bean
+    private final PasswordEncoder passwordEncoder;
 
     // 회원 정보 불러오기
     @GetMapping("/{userId}")
@@ -24,30 +24,42 @@ public class MypageController {
         return ResponseEntity.ok(userInfo);
     }
 
-    // 회원 정보 수정
+    // 회원 정보 수정 (JSON 형식)
     @PutMapping("/{userId}")
     public ResponseEntity<UserEntity> updateUser(
             @PathVariable String userId,
             @RequestBody UserEntity updatedUser) {
-        UserEntity result;
+        log.info("Received update request for userId: {}", userId);
+        log.info("Received data: {}", updatedUser);
 
-        if (updatedUser.getUserPw() != null && !updatedUser.getUserPw().isEmpty()) {
-            // 비밀번호 암호화
-            updatedUser.setUserPw(passwordEncoder.encode(updatedUser.getUserPw()));
-            result = mypageService.updateUser(
-                    userId, updatedUser.getUserName(), updatedUser.getUserPw(),
-                    updatedUser.getUserPhone(), updatedUser.getUserDefaultEmail());
-        } else {
-            // 비밀번호를 제외한 데이터 업데이트
-            result = mypageService.updateUserWithoutPassword(
-                    userId, updatedUser.getUserName(), updatedUser.getUserPhone(),
-                    updatedUser.getUserDefaultEmail());
+        if (updatedUser == null) {
+            log.error("Request body is missing or invalid.");
+            return ResponseEntity.badRequest().build();
         }
 
-        // 응답 데이터에서 비밀번호 제거
-        result.setUserPw(null); // 비밀번호 필드를 제거하여 클라이언트로 전송
-        log.info("Returning updated user data: {}", result);
+        UserEntity result;
 
+        // 비밀번호가 변경되었을 경우 처리
+        if (updatedUser.getUserPw() != null && !updatedUser.getUserPw().isEmpty()) {
+            updatedUser.setUserPw(passwordEncoder.encode(updatedUser.getUserPw()));
+            result = mypageService.updateUser(
+                    userId,
+                    updatedUser.getUserName(),
+                    updatedUser.getUserPw(),
+                    updatedUser.getUserPhone(),
+                    updatedUser.getUserDefaultEmail()
+            );
+        } else {
+            // 비밀번호 변경 없이 업데이트
+            result = mypageService.updateUserWithoutPassword(
+                    userId,
+                    updatedUser.getUserName(),
+                    updatedUser.getUserPhone(),
+                    updatedUser.getUserDefaultEmail()
+            );
+        }
+
+        log.info("Updated entity: {}", result);
         return ResponseEntity.ok(result);
     }
 }

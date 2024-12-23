@@ -93,6 +93,8 @@ public class SecurityConfig implements WebMvcConfigurer {
                         .requestMatchers("/login","/signup","/users/**", "/reissue", "/users/**").permitAll()
                         // 로그아웃은 인증된 사용자만 가능
                         .requestMatchers("/logout").authenticated()
+                        // /mypage/** 경로는 인증만 필요
+                        .requestMatchers("/mypage/**").authenticated()
                         // /admin으로 시작하는 경로는 ROLE_ADMIN 권한 필요
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         // 나머지 모든 요청은 인증 필요
