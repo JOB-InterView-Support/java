@@ -21,12 +21,13 @@ public class QnaRepositoryCustomImpl implements QnaRepositoryCustom {
     private final QQnaEntity qna = QQnaEntity.qnaEntity; // QueryDSL Q 클래스 매핑
 
     @Override
-    public int findLastQnaNo() {
+    public String findLastQnaNo() {
         QnaEntity qnaEntity = queryFactory
                 .selectFrom(qna)
+                .from(qna)
                 .orderBy(qna.qNo.desc())
                 .fetchFirst(); // 가장 마지막 등록 글 1개 조회
-        return Integer.parseInt(qnaEntity.getQNo());
+        return qnaEntity.getQNo();
     }
 
     @Override

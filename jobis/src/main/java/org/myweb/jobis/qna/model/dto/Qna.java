@@ -5,9 +5,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.myweb.jobis.qna.jpa.entity.QnaEntity;
 
 import java.sql.Timestamp;
 
+// Qna DTO
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -27,14 +29,33 @@ public class Qna {
 
     @JsonFormat(pattern = "yyyy-MM-dd")
     private Timestamp qUpdateDate;
-    private boolean qIsDeleted;
+
+    private char qIsDeleted;
 
     @JsonFormat(pattern = "yyyy-MM-dd")
     private Timestamp qDDate;
     private String uuid;
-    private boolean qAttachmentYN;
-    private boolean qIsSecret;
-    private boolean qUpdateYN;
+    private char qAttachmentYN;
+    private char qIsSecret;
+    private char qUpdateYN;
 
-
+    //entity 변환
+    public QnaEntity toEntity(){
+        return QnaEntity.builder()
+                .qNo(qNo)
+                .qTitle(qTitle)
+                .qContent(qContent)
+                .qWriter(qWriter)
+                .qWDate(qWDate)
+                .qAttachmentTitle(qAttachmentTitle)
+                .qADate(qADate)
+                .qUpdateDate(qUpdateDate)
+                .qIsDeleted(qIsDeleted)
+                .qDDate(qDDate)
+                .uuid(uuid)
+                .qAttachmentYN(qAttachmentYN)
+                .qIsSecret(qIsSecret)
+                .qUpdateYN(qUpdateYN)
+                .build();
+    }
 }

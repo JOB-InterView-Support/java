@@ -7,7 +7,7 @@ import java.sql.Date;
 import java.util.List;
 
 public interface QnaRepositoryCustom {
-    int findLastQnaNo();
+    String findLastQnaNo();
     long countSearchTitle(String keyword);
     long countSearchWriter(String keyword);
  //   long countSearchDate(Date begin, Date end);

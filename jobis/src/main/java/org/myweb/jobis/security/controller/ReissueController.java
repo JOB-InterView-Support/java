@@ -29,8 +29,8 @@ public class ReissueController {
         log.info("ReissueController 실행");
 
         // 헤더 값 가져오기
-        String refreshTokenHeader = request.getHeader("Authorization");
-        String accessTokenHeader = request.getHeader("AccessToken");
+        String accessTokenHeader = request.getHeader("Authorization");
+        String refreshTokenHeader = request.getHeader("RefreshToken");
         String extendLogin = request.getHeader("ExtendLogin");
 
         log.info("Received Authorization Header: {}", refreshTokenHeader);
