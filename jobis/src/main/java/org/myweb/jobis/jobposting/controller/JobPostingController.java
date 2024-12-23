@@ -1,25 +1,32 @@
 package org.myweb.jobis.jobposting.controller;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.*;
+import org.myweb.jobis.jobposting.model.dto.ApiResponse;
+import org.myweb.jobis.jobposting.model.dto.JobPosting;
+import org.myweb.jobis.jobposting.model.service.JobPostingService;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
+import java.util.List;
 
-@Slf4j
 @RestController
-@RequestMapping("/api/job-postings")
+@RequestMapping("/jobPosting")
 public class JobPostingController {
-//
-//    @Autowired
-//    public JobPostingController(JobPostingService jobPostingService) {
-//        this.JobPostingService = jobPostingService;
-//    }
-//
-//    @GetMapping("/search")
-//    public List<JobPosting> searchJobPosting(
-//            @RequestParam(required = false) String keywords,
-//            @RequestParam(required = false) String locCd) {
-//        // 키워드와 지역 코드를 기반으로 채용공고 검색
-//        return JobPostingService.searchJobPosting(keywords, locCd);
-//    }
 
+    private final JobPostingService jobPostingService = new JobPostingService();
+
+    // 채용 공고 목록을 가져오는 엔드포인트
+    @GetMapping("/job-postings")
+    public ApiResponse getJobPostings(
+            @RequestParam String keyword,
+            @RequestParam(required = false) String jobType,
+            @RequestParam(required = false) String location) {
+        return jobPostingService.getJobPostings(keyword, jobType, location);
+    }
 }
