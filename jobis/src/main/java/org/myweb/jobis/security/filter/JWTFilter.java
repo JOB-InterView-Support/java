@@ -36,12 +36,15 @@ public class JWTFilter extends OncePerRequestFilter {
                 requestURI.equals("/users/checkEmail") ||
                 requestURI.equals("/users/login") ||
                 requestURI.equals("/users/signup") ||
+                requestURI.equals("/users/snsSignup") ||
                 requestURI.equals("/users/checkPhoneNumber") ||
                 requestURI.equals("/users/sendVerificationEmail") ||
                 requestURI.equals("/users/verifyCode") ||
-                requestURI.equals("/reissue"); // 추가
-    }
+                requestURI.equals("/reissue") || // 추가
+                requestURI.equals("/kakao/apicode") || // 추가
+                requestURI.equals("/kakaoLogin"); // 추가
 
+    }
 
 
     @Override
@@ -111,8 +114,6 @@ public class JWTFilter extends OncePerRequestFilter {
             response.getWriter().write("{\"error\": \"Internal server error\"}");
         }
     }
-
-
 
 
 }

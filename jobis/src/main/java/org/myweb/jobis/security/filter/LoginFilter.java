@@ -5,6 +5,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.myweb.jobis.security.jwt.JWTUtil;
 import org.myweb.jobis.user.jpa.entity.UserEntity;
 import org.myweb.jobis.user.jpa.repository.UserRepository;
@@ -18,6 +19,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Map;
 
+@Slf4j
 public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
     private final JWTUtil jwtUtil;
@@ -33,43 +35,44 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
             throws AuthenticationException {
-        if (!"POST".equalsIgnoreCase(request.getMethod())) {
-            // GET 요청에 대해 예외 대신 응답을 설정하고 요청을 종료
-            try {
-                response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED); // 405 상태 반환
-                response.setContentType("application/json;charset=UTF-8");
-                response.getWriter().write("{\"error\":\"로그인 요청은 POST 방식만 지원합니다.\"}");
-            } catch (IOException e) {
-                throw new RuntimeException("응답 처리 중 오류 발생", e);
-            }
-            return null;
-        }
-
         String userId = null;
         String userPw = null;
 
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            Map<String, String> requestBody = objectMapper.readValue(request.getInputStream(), Map.class);
-            userId = requestBody.get("userId");
-            userPw = requestBody.get("userPw");
-        } catch (IOException e) {
-            throw new RuntimeException("요청 데이터를 읽을 수 없습니다.", e);
+        // 소셜 로그인 요청인지 확인
+        if (request.getAttribute("userId") != null && request.getAttribute("userPw") != null) {
+            userId = (String) request.getAttribute("userId");
+            userPw = (String) request.getAttribute("userPw");
+            log.info("Social Login Request Detected: ID={}, PW={}", userId, userPw);
+            // 소셜 로그인 시 비밀번호 검증을 스킵
+            return new UsernamePasswordAuthenticationToken(userId, null);
+        } else {
+            // 일반 로그인 처리
+            try {
+                ObjectMapper objectMapper = new ObjectMapper();
+                Map<String, String> requestBody = objectMapper.readValue(request.getInputStream(), Map.class);
+                userId = requestBody.get("userId");
+                userPw = requestBody.get("userPw");
+            } catch (IOException e) {
+                throw new RuntimeException("요청 데이터를 읽을 수 없습니다.", e);
+            }
         }
 
         if (userId == null || userPw == null) {
             throw new RuntimeException("아이디 또는 비밀번호가 전달되지 않았습니다.");
         }
 
+        // 인증 토큰 생성 및 반환
         UsernamePasswordAuthenticationToken authenticationToken =
                 new UsernamePasswordAuthenticationToken(userId, userPw);
         return this.getAuthenticationManager().authenticate(authenticationToken);
     }
 
 
+
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response,
                                             FilterChain chain, Authentication authResult) throws IOException, ServletException {
+        log.info("로그인 성공 로직 실행");
         String username = authResult.getName(); // 사용자 이름
         UserEntity user = userRepository.findByUserId(username)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다: " + username));
@@ -103,9 +106,20 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         user.setUserRefreshToken(refreshToken);
         userRepository.save(user);
 
+        // 사용자 정보 포함한 JSON 응답 생성
+        Map<String, Object> responseBody = Map.of(
+                "accessToken", accessToken,
+                "refreshToken", refreshToken,
+                "userId", user.getUserId(),
+                "userName", user.getUserName(),
+                "role", user.getAdminYn().equals("Y") ? "ADMIN" : "USER", // 관리자 여부
+                "uuid", user.getUuid() // UUID 추가
+        );
+
         response.setContentType("application/json;charset=UTF-8");
-        response.getWriter().write(String.format("{\"accessToken\":\"%s\",\"refreshToken\":\"%s\"}", accessToken, refreshToken));
+        new ObjectMapper().writeValue(response.getWriter(), responseBody); // JSON 형식으로 응답 작성
     }
+
 
 
 

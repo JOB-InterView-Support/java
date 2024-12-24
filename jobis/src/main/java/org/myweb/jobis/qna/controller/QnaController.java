@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.myweb.jobis.qna.jpa.entity.QnaEntity;
 import org.myweb.jobis.qna.jpa.repository.QnaRepository;
 import org.myweb.jobis.qna.model.dto.Qna;
+import org.myweb.jobis.qna.model.dto.QnaReply;
+import org.myweb.jobis.qna.model.service.QnaReplyService;
 import org.myweb.jobis.qna.model.service.QnaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,8 +14,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,8 +36,13 @@ import java.util.Map;
 @CrossOrigin            //다른 port 에서 오는 요청을 처리하기 위함
 public class QnaController {
 
+    private final QnaService qnaService;
+    private final QnaReplyService qnaReplyService;
+
     @Autowired
     private QnaRepository qnaRepository;
+
+
 
     @Value("${file.upload-dir}")
     private String uploadDir;
@@ -57,8 +72,9 @@ public class QnaController {
         response.put("paging", Map.of(
                 "currentPage", qnaPage.getNumber() + 1,
                 "maxPage", qnaPage.getTotalPages(),
-                "startPage", Math.max(1, qnaPage.getNumber() - 2),
-                "endPage", Math.min(qnaPage.getTotalPages(), qnaPage.getNumber() + 3)
+                "startPage", Math.max(1, qnaPage.getNumber() + 1 - 2),
+                "endPage", Math.min(qnaPage.getTotalPages(), qnaPage.getNumber() + 1 + 3),
+                "totalItems", qnaPage.getTotalElements() // 전체 아이템 수 추가
         ));
 
         log.info("Response: {}", response);
@@ -66,4 +82,81 @@ public class QnaController {
     }
 
 
+
+        @PostMapping() // 등록
+        public ResponseEntity<?> createQna(
+                @RequestPart("qTitle") String qTitle,  // 제목
+                @RequestPart("qContent") String qContent,  // 내용
+                @RequestPart("qIsSecret") String qIsSecret,  // 비밀글 여부
+                @RequestPart("qWriter") String qWriter,  // 작성자
+                @RequestPart(value = "file", required = false) MultipartFile file) {  // 첨부 파일 (선택)
+
+        log.info("등록 메서드 시작 : ", qTitle);
+
+            try {
+                log.info("Received qTitle: {}", qTitle);
+                log.info("Received qContent: {}", qContent);
+                log.info("Received qIsSecret: {}", qIsSecret);
+                log.info("Received qWriter: {}", qWriter);
+                log.info("Received file: {}", file != null ? file.getOriginalFilename() : "No file");
+
+
+
+                String attachmentTitle = null;
+
+                // 파일 처리
+                if (file != null && !file.isEmpty()) {
+                    attachmentTitle = file.getOriginalFilename(); // 파일 이름 저장
+                    Path uploadPath = Paths.get("C:/upload", attachmentTitle); // 파일 저장 경로
+                    Files.copy(file.getInputStream(), uploadPath, StandardCopyOption.REPLACE_EXISTING); // 파일 저장
+                }
+
+                // Qna DTO 생성
+                Qna qnaDTO = Qna.builder()
+                        .qNo(null) // 고유 ID는 서비스에서 생성
+                        .qTitle(qTitle)
+                        .qContent(qContent)
+                        .qWriter(qWriter)
+                        .qWDate(new Timestamp(System.currentTimeMillis())) // 작성 시간
+                        .qAttachmentTitle(attachmentTitle) // 첨부 파일 제목
+                        .qAttachmentYN(file != null ? "Y" : "N") // 첨부 여부
+                        .qIsSecret(qIsSecret) // 비밀 여부
+                        .qIsDeleted("N") // 기본값
+                        .build();
+
+                // QnaService 호출
+                qnaService.insertQna(qnaDTO);
+
+                return ResponseEntity.status(HttpStatus.CREATED).body("QnA created successfully"); // 성공 응답
+            } catch (Exception e) {
+                e.printStackTrace();
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal server error"); // 실패 응답
+            }
+        }
+
+    @GetMapping("/detail/{qno}")
+    public ResponseEntity<Map> qnaDetailMethod(@PathVariable String qno) {
+        log.info("상세페이지 qno: {}", qno);
+
+        Qna qna = qnaService.selectQna(qno);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("qna", qna);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+
+
+
+
 }
+
+
+
+
+
+
+
+
+

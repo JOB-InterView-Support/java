@@ -44,7 +44,7 @@ public class QnaEntity {
     private Timestamp qUpdateDate;
 
     @Column(name = "Q_IS_DELETED", length = 1, nullable = false)
-    private char qIsDeleted;
+    private String qIsDeleted; // 변경: char → String
 
     @Column(name = "Q_D_DATE")
     private Timestamp qDDate;
@@ -53,13 +53,13 @@ public class QnaEntity {
     private String uuid;
 
     @Column(name = "Q_ATTACHMENT_YN", length = 1)
-    private char qAttachmentYN;
+    private String qAttachmentYN; // 변경: char → String
 
     @Column(name = "Q_IS_SECRET", length = 1)
-    private char qIsSecret;
+    private String qIsSecret; // 변경: char → String
 
     @Column(name = "Q_UPDATE_YN", length = 1)
-    private char qUpdateYN;
+    private String qUpdateYN; // 변경: char → String
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "UUID", referencedColumnName = "UUID", insertable = false, updatable = false)
