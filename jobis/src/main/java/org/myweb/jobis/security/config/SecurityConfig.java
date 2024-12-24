@@ -20,6 +20,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -50,6 +51,11 @@ public class SecurityConfig implements WebMvcConfigurer {
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
+    }
+
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
     }
 
     @Bean
@@ -87,15 +93,15 @@ public class SecurityConfig implements WebMvcConfigurer {
                         .requestMatchers("/**/{spring:[a-zA-Z0-9-_]+}").permitAll()
 
                         // 정적 리소스 및 인증 제외 경로
-
                         .requestMatchers("/", "/**", "/favicon.ico", "/manifest.json", "/public/**", "/auth/**", "/css/**", "/js/**").permitAll()
-
                         // .png 파일 인증 없이 허용
                         .requestMatchers("/*.png").permitAll()
                         // 로그인, 토큰 재발급은 인증 제외
                         .requestMatchers("/login","/signup","/users/**", "/reissue", "/users/**").permitAll()
                         // 로그아웃은 인증된 사용자만 가능
                         .requestMatchers("/logout").authenticated()
+                        // kakao
+                        .requestMatchers("/kakao/**").permitAll()
                         // /mypage/** 경로는 인증만 필요
                         .requestMatchers("/mypage/**").authenticated()
                         // /admin으로 시작하는 경로는 ROLE_ADMIN 권한 필요
