@@ -30,17 +30,17 @@ public class Qna {
     @JsonFormat(pattern = "yyyy-MM-dd")
     private Timestamp qUpdateDate;
 
-    private char qIsDeleted;
+    private String qIsDeleted; // 변경: char → String
 
     @JsonFormat(pattern = "yyyy-MM-dd")
     private Timestamp qDDate;
     private String uuid;
-    private char qAttachmentYN;
-    private char qIsSecret;
-    private char qUpdateYN;
+    private String qAttachmentYN; // 변경: char → String
+    private String qIsSecret; // 변경: char → String
+    private String qUpdateYN; // 변경: char → String
 
-    //entity 변환
-    public QnaEntity toEntity(){
+    // Entity 변환 메서드
+    public QnaEntity toEntity() {
         return QnaEntity.builder()
                 .qNo(qNo)
                 .qTitle(qTitle)

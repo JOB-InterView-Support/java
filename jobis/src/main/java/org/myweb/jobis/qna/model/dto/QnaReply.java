@@ -15,27 +15,29 @@ import java.sql.Timestamp;
 @Builder
 public class QnaReply {
 
-    private String repNo;           // 답변 번호 (Primary Key)
-    private String repWriter;       // 작성자명
+    private String repno;           // 답변 번호 (Primary Key)
+    private String repwriter;       // 작성자명
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private Timestamp repDate;      // 답변 작성 날짜와 시간
-    private char repIsDeleted;      // 답변 삭제 여부 (Y/N)
+    private Timestamp repdate;      // 답변 작성 날짜와 시간
+    private char repisdeleted;      // 답변 삭제 여부 (Y/N)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private Timestamp repUpdateDate; // 답변 수정 날짜와 시간
+    private Timestamp repupdatedate; // 답변 수정 날짜와 시간
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private Timestamp repDeleteDate; // 답변 삭제 날짜와 시간
+    private Timestamp repdeletedate; // 답변 삭제 날짜와 시간
+    private String repcontent;      // 답변 내용
     private String uuid;            // 작성자 UUID
-    private String qNo;             // 질문 번호 (외래 키)
+    private String qno;             // 질문 번호 (외래 키)
 
     // Entity 변환 메서드
     public QnaReplyEntity toEntity() {
         return QnaReplyEntity.builder()
-                .repNo(repNo)
-                .repWriter(repWriter)
-                .repDate(repDate)
-                .repIsDeleted(repIsDeleted)
-                .repUpdateDate(repUpdateDate)
-                .repDeleteDate(repDeleteDate)
+                .repno(repno)
+                .repwriter(repwriter)
+                .repdate(repdate)
+                .repisdeleted(repisdeleted)
+                .repupdatedate(repupdatedate)
+                .repdeletedate(repdeletedate)
+                .repcontent(repcontent)
                 .uuid(uuid)
                 .build();
     }
@@ -43,14 +45,15 @@ public class QnaReply {
     // Entity -> DTO 변환 메서드
     public static QnaReply fromEntity(QnaReplyEntity entity) {
         return QnaReply.builder()
-                .repNo(entity.getRepNo())
-                .repWriter(entity.getRepWriter())
-                .repDate(entity.getRepDate())
-                .repIsDeleted(entity.getRepIsDeleted())
-                .repUpdateDate(entity.getRepUpdateDate())
-                .repDeleteDate(entity.getRepDeleteDate())
+                .repno(entity.getRepno())
+                .repwriter(entity.getRepwriter())
+                .repdate(entity.getRepdate())
+                .repisdeleted(entity.getRepisdeleted())
+                .repupdatedate(entity.getRepupdatedate())
+                .repdeletedate(entity.getRepdeletedate())
+                .repcontent(entity.getRepcontent())
                 .uuid(entity.getUuid())
-                .qNo(entity.getQna() != null ? entity.getQna().getQNo() : null)
+                .qno(entity.getQna() != null ? entity.getQna().getQNo() : null)
                 .build();
     }
 }
