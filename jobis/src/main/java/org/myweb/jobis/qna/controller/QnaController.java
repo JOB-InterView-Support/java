@@ -84,12 +84,12 @@ public class QnaController {
 
 
         @PostMapping() // 등록
-        public ResponseEntity createQna(
-                @RequestParam("qTitle") String qTitle, // 제목
-                @RequestParam("qContent") String qContent, // 내용
-                @RequestParam("qIsSecret") String qIsSecret, // 비밀글 여부
-                @RequestParam("qWriter") String qWriter, // 작성자
-                @RequestParam(value = "file", required = false) MultipartFile file) { // 첨부 파일 (선택)
+        public ResponseEntity<?> createQna(
+                @RequestPart("qTitle") String qTitle,  // 제목
+                @RequestPart("qContent") String qContent,  // 내용
+                @RequestPart("qIsSecret") String qIsSecret,  // 비밀글 여부
+                @RequestPart("qWriter") String qWriter,  // 작성자
+                @RequestPart(value = "file", required = false) MultipartFile file) {  // 첨부 파일 (선택)
 
         log.info("등록 메서드 시작 : ", qTitle);
 
