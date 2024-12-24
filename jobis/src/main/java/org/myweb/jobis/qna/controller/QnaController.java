@@ -85,11 +85,12 @@ public class QnaController {
 
         @PostMapping() // 등록
         public ResponseEntity<?> createQna(
-                @RequestPart("qTitle") String qTitle,  // 제목
-                @RequestPart("qContent") String qContent,  // 내용
-                @RequestPart("qIsSecret") String qIsSecret,  // 비밀글 여부
-                @RequestPart("qWriter") String qWriter,  // 작성자
-                @RequestPart(value = "file", required = false) MultipartFile file) {  // 첨부 파일 (선택)
+                @RequestParam("qTitle") String qTitle, // 제목
+                @RequestParam("qContent") String qContent, // 내용
+                @RequestParam("qIsSecret") String qIsSecret, // 비밀글 여부
+                @RequestParam("qWriter") String qWriter, // 작성자
+                @RequestParam("uuid") String uuid,  // UUID 매핑 확인
+                @RequestParam(value = "file", required = false) MultipartFile file) { // 첨부 파일 (선택)
 
         log.info("등록 메서드 시작 : ", qTitle);
 
@@ -122,7 +123,13 @@ public class QnaController {
                         .qAttachmentYN(file != null ? "Y" : "N") // 첨부 여부
                         .qIsSecret(qIsSecret) // 비밀 여부
                         .qIsDeleted("N") // 기본값
+                        .uuid(uuid)
                         .build();
+
+                if (uuid == null || uuid.isEmpty()) {
+                    log.error("UUID 가 컨트롤러 등록부분에 없네요 확인바랍니다.");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("UUID 없습니다 등록부분에러부터 보세요 컨트롤러에요");
+                }
 
                 // QnaService 호출
                 qnaService.insertQna(qnaDTO);
