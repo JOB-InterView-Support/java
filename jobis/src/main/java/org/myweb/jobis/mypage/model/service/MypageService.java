@@ -87,4 +87,29 @@ public class MypageService {
         return existingUser;
     }
 
+    public void updateUserSecessionStatus(String userId, String userDeletionReason) {
+        UserEntity existingUser = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+
+        log.info("Before secession update - userId: {}", userId);
+
+        // 탈퇴 상태 및 사유 설정
+        existingUser.setUserDeletionStatus("Y");
+        existingUser.setUserDeletionReason(userDeletionReason); // null 허용
+        existingUser.setUserDeletionDate(java.time.LocalDateTime.now());
+
+        // 변경사항 저장
+        userRepository.save(existingUser);
+        entityManager.flush(); // 영속성 컨텍스트 동기화
+
+        log.info("After secession update - userId: {}, deletion status: {}, reason: {}, date: {}",
+                userId,
+                existingUser.getUserDeletionStatus(),
+                existingUser.getUserDeletionReason(),
+                existingUser.getUserDeletionDate());
+
+        log.info("Returning response with status: 200");
+    }
+
+
 }
