@@ -11,7 +11,7 @@ import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<UserEntity, String> {
-    boolean existsByUserName(String userName); // 사용자 이름 중복 확인
+    boolean existsByUserName(String userId); // 사용자 이름 중복 확인
     boolean existsByUserPhone(String userPhone); // 전화번호 중복 확인
     boolean existsByUserDefaultEmail(String userDefaultEmail); // 이메일 중복 확인
 
@@ -30,6 +30,9 @@ public interface UserRepository extends JpaRepository<UserEntity, String> {
 
     UserEntity findByUuid(String uuid);
 
+    boolean existsByUserKakaoEmail(String userKakaoEmail);
 
+    Optional<UserEntity> findByUserKakaoEmail(String userKakaoEmail);
 
+    boolean existsByUserId(String userId);
 }
