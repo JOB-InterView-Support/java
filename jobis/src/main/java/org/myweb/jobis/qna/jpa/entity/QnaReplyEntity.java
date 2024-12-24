@@ -20,22 +20,25 @@ public class QnaReplyEntity {
 
     @Id
     @Column(name = "REP_NO", length = 50, nullable = false)
-    private String repNo;
+    private String repno;
 
     @Column(name = "REP_WRITER", length = 50, nullable = false)
-    private String repWriter;
+    private String repwriter;
 
     @Column(name = "REP_DATE", nullable = false)
-    private Timestamp repDate;
+    private Timestamp repdate;
 
     @Column(name = "REP_IS_DELETED", length = 1, nullable = false)
-    private char repIsDeleted;
+    private char repisdeleted;
 
     @Column(name = "REP_UPDATE_DATE")
-    private Timestamp repUpdateDate;
+    private Timestamp repupdatedate;
 
     @Column(name = "REP_DELETE_DATE")
-    private Timestamp repDeleteDate;
+    private Timestamp repdeletedate;
+
+    @Column(name = "REP_CONTENT", length = 100, nullable = false)
+    private String repcontent;
 
     @Column(name = "UUID", length = 50, nullable = false)
     private String uuid;
@@ -51,26 +54,28 @@ public class QnaReplyEntity {
     // Entity -> DTO 변환 메서드
     public QnaReply toDto() {
         return QnaReply.builder()
-                .repNo(repNo)
-                .repWriter(repWriter)
-                .repDate(repDate)
-                .repIsDeleted(repIsDeleted)
-                .repUpdateDate(repUpdateDate)
-                .repDeleteDate(repDeleteDate)
+                .repno(repno)
+                .repwriter(repwriter)
+                .repdate(repdate)
+                .repisdeleted(repisdeleted)
+                .repupdatedate(repupdatedate)
+                .repdeletedate(repdeletedate)
+                .repcontent(repcontent)
                 .uuid(uuid)
-                .qNo(qna != null ? qna.getQNo() : null)
+                .qno(qna != null ? qna.getQNo() : null)
                 .build();
     }
 
     // DTO -> Entity 변환 메서드
     public static QnaReplyEntity fromDto(QnaReply reply, QnaEntity qna) {
         return QnaReplyEntity.builder()
-                .repNo(reply.getRepNo())
-                .repWriter(reply.getRepWriter())
-                .repDate(reply.getRepDate())
-                .repIsDeleted(reply.getRepIsDeleted())
-                .repUpdateDate(reply.getRepUpdateDate())
-                .repDeleteDate(reply.getRepDeleteDate())
+                .repno(reply.getRepno())
+                .repwriter(reply.getRepwriter())
+                .repdate(reply.getRepdate())
+                .repisdeleted(reply.getRepisdeleted())
+                .repupdatedate(reply.getRepupdatedate())
+                .repdeletedate(reply.getRepdeletedate())
+                .repcontent(reply.getRepcontent())
                 .uuid(reply.getUuid())
                 .qna(qna)
                 .build();

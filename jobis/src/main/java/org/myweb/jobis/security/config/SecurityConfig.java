@@ -10,6 +10,7 @@ import org.myweb.jobis.user.jpa.repository.UserRepository;
 import org.myweb.jobis.user.model.service.UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -106,6 +107,13 @@ public class SecurityConfig implements WebMvcConfigurer {
                         // /admin으로 시작하는 경로는 ROLE_ADMIN 권한 필요
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         // 나머지 모든 요청은 인증 필요
+
+                        // QnA 경로 설정
+                        .requestMatchers(HttpMethod.GET, "/qna", "/qna/{no}").hasAnyRole("USER", "ADMIN") // 조회는 USER와 ADMIN 허용
+                        .requestMatchers(HttpMethod.POST, "/qna/**").hasAnyRole("USER", "ADMIN") // 등록은 USER와 ADMIN 허용
+                        .requestMatchers(HttpMethod.PUT, "/qna/{no}").hasAnyRole("USER", "ADMIN")// 수정은 USER와 ADMIN 허용
+                        .requestMatchers(HttpMethod.DELETE, "/qna/{no}").hasAnyRole("USER", "ADMIN") // 삭제는 USER와 ADMIN 허용
+
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JWTFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class)
