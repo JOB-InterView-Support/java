@@ -108,6 +108,11 @@ public class SecurityConfig implements WebMvcConfigurer {
                         .requestMatchers(HttpMethod.PUT, "/qna/{no}").hasAnyRole("USER", "ADMIN")// 수정은 USER와 ADMIN 허용
                         .requestMatchers(HttpMethod.DELETE, "/qna/{no}").hasAnyRole("USER", "ADMIN") // 삭제는 USER와 ADMIN 허용
 
+                        // notice
+                        .requestMatchers(HttpMethod.GET, "/notice", "/notice/detail/{no}").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/notice/insert").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/notice/update/{no}").hasRole("ADMIN")
+
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JWTFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class)
