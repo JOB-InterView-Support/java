@@ -4,10 +4,15 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.myweb.jobis.mypage.jpa.entity.SelfIntroduceEntity;
+import org.myweb.jobis.mypage.jpa.repository.SelfIntroduceRepository;
+import org.myweb.jobis.mypage.model.dto.SelfIntroduce;
 import org.myweb.jobis.user.jpa.entity.UserEntity;
 import org.myweb.jobis.user.jpa.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -15,10 +20,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class MypageService {
     private final UserRepository userRepository;
+    private final SelfIntroduceRepository selfIntroduceRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
 
+    // 사용자 정보
     public UserEntity getUserInfo(String userId) {
         return userRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("User not found: " + userId));
@@ -109,6 +116,19 @@ public class MypageService {
                 existingUser.getUserDeletionDate());
 
         log.info("Returning response with status: 200");
+    }
+
+
+    public List<SelfIntroduceEntity> getIntroList(String uuid) {
+        return selfIntroduceRepository.findByUuid(uuid);
+    }
+
+    public SelfIntroduce getIntroDetailByIntroNo(String introNo) {
+        // Repository에서 introNo로 데이터 조회
+        SelfIntroduceEntity entity = selfIntroduceRepository.findByIntroNo(introNo)
+                .orElseThrow(() -> new RuntimeException("자기소개서를 찾을 수 없습니다. introNo: " + introNo));
+
+        return entity.toDto(); // Entity를 DTO로 변환하여 반환
     }
 
 

@@ -1,15 +1,17 @@
 package org.myweb.jobis.qna.jpa.repository;
 
+import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.myweb.jobis.qna.jpa.entity.QQnaEntity;
 import org.myweb.jobis.qna.jpa.entity.QnaEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
-import java.sql.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,6 +24,40 @@ public class QnaRepositoryCustomImpl implements QnaRepositoryCustom {
     private final EntityManager entityManager; // JPQL 용
 
     private final QQnaEntity qna = QQnaEntity.qnaEntity; // QueryDSL Q 클래스 매핑
+
+//    @Override
+//    public Page<QnaEntity> findByQIsDeleted(String qIsDeleted, Pageable pageable) {
+//        String query = "SELECT q FROM QnaEntity q WHERE q.qIsDeleted = :qIsDeleted";
+//        List<QnaEntity> resultList = entityManager.createQuery(query, QnaEntity.class)
+//                .setParameter("qIsDeleted", qIsDeleted)
+//                .setFirstResult((int) pageable.getOffset())
+//                .setMaxResults(pageable.getPageSize())
+//                .getResultList();
+//
+//        String countQuery = "SELECT COUNT(q) FROM QnaEntity q WHERE q.qIsDeleted = :qIsDeleted";
+//        Long totalCount = entityManager.createQuery(countQuery, Long.class)
+//                .setParameter("qIsDeleted", qIsDeleted)
+//                .getSingleResult();
+//
+//        return new PageImpl<>(resultList, pageable, totalCount);
+//    }
+
+    @Override
+    public Page<QnaEntity> findByQIsDeleted(String qIsDeleted, Pageable pageable) {
+        JPAQuery<QnaEntity> query = queryFactory.selectFrom(qna)
+                .where(qna.qIsDeleted.eq(qIsDeleted))
+                .orderBy(qna.qWDate.desc()); // 내림차순 정렬
+
+        long total = query.fetchCount(); // 총 데이터 개수 계산
+        List<QnaEntity> content = query
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        return new PageImpl<>(content, pageable, total);
+    }
+
+
 
     @Override
     public String findLastQnaNo() {
@@ -48,6 +84,8 @@ public class QnaRepositoryCustomImpl implements QnaRepositoryCustom {
                 .where(qna.qWriter.containsIgnoreCase(keyword))
                 .fetchCount();
     }
+
+
 
     // 날짜로 검색하는 부분 검색 수정중
 //    @Override
