@@ -83,63 +83,75 @@ public class QnaController {
 
 
 
-        @PostMapping() // 등록
-        public ResponseEntity<?> createQna(
-                @RequestParam("qTitle") String qTitle, // 제목
-                @RequestParam("qContent") String qContent, // 내용
-                @RequestParam("qIsSecret") String qIsSecret, // 비밀글 여부
-                @RequestParam("qWriter") String qWriter, // 작성자
-                @RequestParam("uuid") String uuid,  // UUID 매핑 확인
-                @RequestParam(value = "file", required = false) MultipartFile file) { // 첨부 파일 (선택)
+    @PostMapping() // 등록
+    public ResponseEntity<?> createQna(
+            @RequestParam("qTitle") String qTitle, // 제목
+            @RequestParam("qContent") String qContent, // 내용
+            @RequestParam("qIsSecret") String qIsSecret, // 비밀글 여부
+            @RequestParam("qWriter") String qWriter, // 작성자
+            @RequestParam("uuid") String uuid,  // UUID 매핑 확인
+            @RequestParam(value = "file", required = false) MultipartFile file) { // 첨부 파일 (선택)
 
-        log.info("등록 메서드 시작 : ", qTitle);
+        log.info("등록 메서드 시작 : {}", qTitle);
 
-            try {
-                log.info("Received qTitle: {}", qTitle);
-                log.info("Received qContent: {}", qContent);
-                log.info("Received qIsSecret: {}", qIsSecret);
-                log.info("Received qWriter: {}", qWriter);
-                log.info("Received file: {}", file != null ? file.getOriginalFilename() : "No file");
+        try {
+            log.info("Received qTitle: {}", qTitle);
+            log.info("Received qContent: {}", qContent);
+            log.info("Received qIsSecret: {}", qIsSecret);
+            log.info("Received qWriter: {}", qWriter);
+            log.info("Received file: {}", file != null ? file.getOriginalFilename() : "No file");
 
+            String attachmentTitle = null;
 
+            // 파일 처리
+            if (file != null && !file.isEmpty()) {
+                attachmentTitle = file.getOriginalFilename(); // 파일 이름 저장
+                Path uploadPath = Paths.get("C:/upload_files"); // 파일 저장 경로 (디렉터리)
 
-                String attachmentTitle = null;
-
-                // 파일 처리
-                if (file != null && !file.isEmpty()) {
-                    attachmentTitle = file.getOriginalFilename(); // 파일 이름 저장
-                    Path uploadPath = Paths.get("C:/upload", attachmentTitle); // 파일 저장 경로
-                    Files.copy(file.getInputStream(), uploadPath, StandardCopyOption.REPLACE_EXISTING); // 파일 저장
+                // 디렉터리 존재 여부 확인 및 생성
+                if (!Files.exists(uploadPath)) {
+                    try {
+                        Files.createDirectories(uploadPath);
+                        log.info("업로드 디렉터리 생성: {}", uploadPath.toString());
+                    } catch (Exception e) {
+                        log.error("업로드 디렉터리 생성 실패", e);
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("업로드 디렉터리 생성 실패");
+                    }
                 }
 
-                // Qna DTO 생성
-                Qna qnaDTO = Qna.builder()
-                        .qNo(null) // 고유 ID는 서비스에서 생성
-                        .qTitle(qTitle)
-                        .qContent(qContent)
-                        .qWriter(qWriter)
-                        .qWDate(new Timestamp(System.currentTimeMillis())) // 작성 시간
-                        .qAttachmentTitle(attachmentTitle) // 첨부 파일 제목
-                        .qAttachmentYN(file != null ? "Y" : "N") // 첨부 여부
-                        .qIsSecret(qIsSecret) // 비밀 여부
-                        .qIsDeleted("N") // 기본값
-                        .uuid(uuid)
-                        .build();
-
-                if (uuid == null || uuid.isEmpty()) {
-                    log.error("UUID 가 컨트롤러 등록부분에 없네요 확인바랍니다.");
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("UUID 없습니다 등록부분에러부터 보세요 컨트롤러에요");
-                }
-
-                // QnaService 호출
-                qnaService.insertQna(qnaDTO);
-
-                return ResponseEntity.status(HttpStatus.CREATED).body("QnA created successfully"); // 성공 응답
-            } catch (Exception e) {
-                e.printStackTrace();
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal server error"); // 실패 응답
+                // 파일 저장
+                Files.copy(file.getInputStream(), uploadPath.resolve(attachmentTitle), StandardCopyOption.REPLACE_EXISTING);
             }
+
+            // Qna DTO 생성
+            Qna qnaDTO = Qna.builder()
+                    .qNo(null) // 고유 ID는 서비스에서 생성
+                    .qTitle(qTitle)
+                    .qContent(qContent)
+                    .qWriter(qWriter)
+                    .qWDate(new Timestamp(System.currentTimeMillis())) // 작성 시간
+                    .qAttachmentTitle(attachmentTitle) // 첨부 파일 제목
+                    .qAttachmentYN(file != null ? "Y" : "N") // 첨부 여부
+                    .qIsSecret(qIsSecret) // 비밀 여부
+                    .qIsDeleted("N") // 기본값
+                    .uuid(uuid) // UUID 추가
+                    .build();
+
+            if (uuid == null || uuid.isEmpty()) {
+                log.error("UUID가 없습니다. 확인 바랍니다.");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("UUID가 없습니다.");
+            }
+
+            // QnaService 호출
+            qnaService.insertQna(qnaDTO);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body("QnA created successfully"); // 성공 응답
+        } catch (Exception e) {
+            log.error("QnA 등록 중 에러 발생", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal server error"); // 실패 응답
         }
+    }
+
 
     @GetMapping("/detail/{qno}")
     public ResponseEntity<Map> qnaDetailMethod(@PathVariable String qno) {
