@@ -51,32 +51,28 @@ public class QnaController {
     public Map<String, Object> getQnaList(
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "size", defaultValue = "10") int size) {
-        // 페이징 처리
+        // 최신 날짜가 위로 오도록 정렬 조건 추가
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "qWDate"));
-        Page<QnaEntity> qnaPage = qnaRepository.findAll(pageable);
+        Page<QnaEntity> qnaPage = qnaRepository.findByQIsDeleted("N", pageable);
 
-        log.info("요청 받은 페이지: {}", page); // 요청 받은 페이지 로그 출력
-        log.info("QnA 데이터: {}", qnaPage.getContent()); // 응답할 데이터 로그 출력
-
-        // QnaEntity -> Qna DTO 변환
         List<Qna> qnaList = qnaPage.getContent().stream()
-                .map(QnaEntity::toDto) // Entity -> DTO 변환
+                .map(QnaEntity::toDto)
                 .toList();
 
-        // 응답 데이터 구성
         Map<String, Object> response = new HashMap<>();
-        response.put("list", qnaList); // DTO 목록으로 변경
+        response.put("list", qnaList);
         response.put("paging", Map.of(
                 "currentPage", qnaPage.getNumber() + 1,
                 "maxPage", qnaPage.getTotalPages(),
                 "startPage", Math.max(1, qnaPage.getNumber() + 1 - 2),
                 "endPage", Math.min(qnaPage.getTotalPages(), qnaPage.getNumber() + 1 + 3),
-                "totalItems", qnaPage.getTotalElements() // 전체 아이템 수 추가
+                "totalItems", qnaPage.getTotalElements()
         ));
-
-        log.info("Response: {}", response);
         return response;
     }
+
+
+
 
 
 
@@ -192,6 +188,29 @@ public class QnaController {
             return ResponseEntity.internalServerError().build();
         }
     }
+
+    @PutMapping("/{qno}/delete")
+    public ResponseEntity<?> markQnaAsDeleted(@PathVariable String qno) {
+        try {
+            log.info("삭제 요청 받은 QnA 번호: {}", qno);
+
+            Optional<QnaEntity> qnaEntityOptional = qnaRepository.findById((qno));
+            if (qnaEntityOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("QnA not found");
+            }
+
+            QnaEntity qnaEntity = qnaEntityOptional.get();
+            qnaEntity.setQIsDeleted("Y"); // qIsDeleted 필드를 "Y"로 변경
+            qnaRepository.save(qnaEntity);
+
+            log.info("QnA가 삭제 처리됨 (qIsDeleted = 'Y'): {}", qno);
+            return ResponseEntity.ok("QnA marked as deleted");
+        } catch (Exception e) {
+            log.error("QnA 삭제 처리 중 에러 발생:", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error marking QnA as deleted");
+        }
+    }
+
 
 
 
