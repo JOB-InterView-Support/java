@@ -120,6 +120,12 @@ public class SecurityConfig implements WebMvcConfigurer {
                         .requestMatchers(HttpMethod.POST, "/qna/**").hasAnyRole("USER", "ADMIN") // 등록은 USER와 ADMIN 허용
                         .requestMatchers(HttpMethod.PUT, "/qna/{no}").hasAnyRole("USER", "ADMIN")// 수정은 USER와 ADMIN 허용
                         .requestMatchers(HttpMethod.DELETE, "/qna/{no}").hasAnyRole("USER", "ADMIN") // 삭제는 USER와 ADMIN 허용
+
+                        // notice
+                        .requestMatchers(HttpMethod.GET, "/notice", "/notice/detail/{no}").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/notice/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/notice/update/{no}").hasAnyRole("ADMIN")
+
                         .anyRequest().authenticated()
 
                 )
