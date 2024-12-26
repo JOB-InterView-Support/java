@@ -1,5 +1,6 @@
 package org.myweb.jobis.qna.jpa.repository;
 
+import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +12,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
-import java.sql.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,22 +25,39 @@ public class QnaRepositoryCustomImpl implements QnaRepositoryCustom {
 
     private final QQnaEntity qna = QQnaEntity.qnaEntity; // QueryDSL Q 클래스 매핑
 
+//    @Override
+//    public Page<QnaEntity> findByQIsDeleted(String qIsDeleted, Pageable pageable) {
+//        String query = "SELECT q FROM QnaEntity q WHERE q.qIsDeleted = :qIsDeleted";
+//        List<QnaEntity> resultList = entityManager.createQuery(query, QnaEntity.class)
+//                .setParameter("qIsDeleted", qIsDeleted)
+//                .setFirstResult((int) pageable.getOffset())
+//                .setMaxResults(pageable.getPageSize())
+//                .getResultList();
+//
+//        String countQuery = "SELECT COUNT(q) FROM QnaEntity q WHERE q.qIsDeleted = :qIsDeleted";
+//        Long totalCount = entityManager.createQuery(countQuery, Long.class)
+//                .setParameter("qIsDeleted", qIsDeleted)
+//                .getSingleResult();
+//
+//        return new PageImpl<>(resultList, pageable, totalCount);
+//    }
+
     @Override
     public Page<QnaEntity> findByQIsDeleted(String qIsDeleted, Pageable pageable) {
-        String query = "SELECT q FROM QnaEntity q WHERE q.qIsDeleted = :qIsDeleted";
-        List<QnaEntity> resultList = entityManager.createQuery(query, QnaEntity.class)
-                .setParameter("qIsDeleted", qIsDeleted)
-                .setFirstResult((int) pageable.getOffset())
-                .setMaxResults(pageable.getPageSize())
-                .getResultList();
+        JPAQuery<QnaEntity> query = queryFactory.selectFrom(qna)
+                .where(qna.qIsDeleted.eq(qIsDeleted))
+                .orderBy(qna.qWDate.desc()); // 내림차순 정렬
 
-        String countQuery = "SELECT COUNT(q) FROM QnaEntity q WHERE q.qIsDeleted = :qIsDeleted";
-        Long totalCount = entityManager.createQuery(countQuery, Long.class)
-                .setParameter("qIsDeleted", qIsDeleted)
-                .getSingleResult();
+        long total = query.fetchCount(); // 총 데이터 개수 계산
+        List<QnaEntity> content = query
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
 
-        return new PageImpl<>(resultList, pageable, totalCount);
+        return new PageImpl<>(content, pageable, total);
     }
+
+
 
     @Override
     public String findLastQnaNo() {

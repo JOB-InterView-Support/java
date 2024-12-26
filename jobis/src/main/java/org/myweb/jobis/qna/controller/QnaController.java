@@ -51,9 +51,11 @@ public class QnaController {
     public Map<String, Object> getQnaList(
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "size", defaultValue = "10") int size) {
-        // 최신 날짜가 위로 오도록 정렬 조건 추가
-        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "qWDate"));
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "qWDate")); // 내림차순 정렬 설정
         Page<QnaEntity> qnaPage = qnaRepository.findByQIsDeleted("N", pageable);
+
+        // 로그로 쿼리 결과를 확인
+        log.info("QnA 목록 데이터: {}", qnaPage.getContent());
 
         List<Qna> qnaList = qnaPage.getContent().stream()
                 .map(QnaEntity::toDto)
@@ -70,10 +72,6 @@ public class QnaController {
         ));
         return response;
     }
-
-
-
-
 
 
     @PostMapping() // 등록
