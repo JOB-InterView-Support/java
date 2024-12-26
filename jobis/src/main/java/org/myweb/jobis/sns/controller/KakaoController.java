@@ -27,6 +27,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -48,6 +49,9 @@ public class KakaoController {
 
     @Value("${kakao.redirect-uri}")
     private String kakaoRedirectUri;
+
+    @Value("${kakao.link-redirect-uri}")
+    private String kakaoLinkRedirectUri;
 
     @PostMapping("/apicode")
     public ResponseEntity<Map<String, String>> kakaoApi(@RequestBody Map<String, String> body, HttpServletRequest request, HttpServletResponse response) {
@@ -134,5 +138,107 @@ public class KakaoController {
             return null;
         }
     }
+
+    @PostMapping("/link")
+    public ResponseEntity<Map<String, String>> kakaoLink(@RequestBody Map<String, String> body) {
+        log.info("카카오 이메일 연동 시작");
+        String kakaoCode = body.get("code");
+        String uuid = body.get("uuid");
+        log.info("Received Kakao code: {}, uuid: {}", kakaoCode, uuid);
+
+        try {
+            // Kakao Token 요청
+            String kakaoTokenUrl = "https://kauth.kakao.com/oauth/token";
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+            MultiValueMap<String, String> kakaoParams = new LinkedMultiValueMap<>();
+            kakaoParams.add("grant_type", "authorization_code");
+            kakaoParams.add("client_id", kakaoClientId);
+            kakaoParams.add("redirect_uri", kakaoLinkRedirectUri);
+            kakaoParams.add("code", kakaoCode);
+
+            HttpEntity<MultiValueMap<String, String>> kakaoRequest = new HttpEntity<>(kakaoParams, headers);
+            ResponseEntity<String> kakaoResponse = restTemplate.postForEntity(kakaoTokenUrl, kakaoRequest, String.class);
+
+            log.info("Kakao Token Response: {}", kakaoResponse.getBody());
+
+            // Kakao 이메일 추출
+            JSONParser parser = new JSONParser();
+            JSONObject tokenJson = (JSONObject) parser.parse(kakaoResponse.getBody());
+            String accessToken = (String) tokenJson.get("access_token");
+
+            String kakaoUserInfoUrl = "https://kapi.kakao.com/v2/user/me";
+            HttpHeaders userInfoHeaders = new HttpHeaders();
+            userInfoHeaders.setBearerAuth(accessToken);
+
+            HttpEntity<Void> userInfoRequest = new HttpEntity<>(userInfoHeaders);
+            ResponseEntity<String> userInfoResponse = restTemplate.exchange(kakaoUserInfoUrl, HttpMethod.GET, userInfoRequest, String.class);
+
+            log.info("Kakao User Info Response: {}", userInfoResponse.getBody());
+
+            JSONObject userInfoJson = (JSONObject) parser.parse(userInfoResponse.getBody());
+            JSONObject kakaoAccount = (JSONObject) userInfoJson.get("kakao_account");
+            String kakaoEmail = (String) kakaoAccount.get("email");
+
+            log.info("Extracted Kakao Email: {}", kakaoEmail);
+
+            // uuid로 사용자 찾기
+            Optional<UserEntity> userOptional = userRepository.findById(uuid);
+            if (userOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "사용자를 찾을 수 없습니다."));
+            }
+
+            // 사용자 정보 업데이트
+            UserEntity user = userOptional.get();
+            user.setUserKakaoEmail(kakaoEmail);
+            userRepository.save(user);
+            log.info("Updated Kakao Email for UUID: {}", uuid);
+
+            Map<String, String> response = new HashMap<>();
+            response.put("success", "true");
+            response.put("message", "카카오 이메일이 성공적으로 연동되었습니다.");
+
+            return ResponseEntity.ok(response);
+
+
+
+        } catch (Exception e) {
+            log.error("Error during Kakao linking process: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "카카오 연동 처리 중 오류 발생"));
+        }
+    }
+
+    @PostMapping("/unlink")
+    public ResponseEntity<Map<String, String>> unlinkKakaoEmail(@RequestBody Map<String, String> body) {
+        String uuid = body.get("uuid");
+        log.info("Received request to unlink Kakao email for UUID: {}", uuid);
+
+        try {
+            // uuid로 사용자 찾기
+            Optional<UserEntity> userOptional = userRepository.findById(uuid);
+            if (userOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "사용자를 찾을 수 없습니다."));
+            }
+
+            // Kakao 이메일 해제
+            UserEntity user = userOptional.get();
+            user.setUserKakaoEmail(null);
+            userRepository.save(user);
+
+            log.info("Successfully unlinked Kakao email for UUID: {}", uuid);
+
+            return ResponseEntity.ok(Map.of("message", "카카오 이메일 연동이 해제되었습니다."));
+        } catch (Exception e) {
+            log.error("Error unlinking Kakao email: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "카카오 이메일 해제 처리 중 오류가 발생했습니다."));
+        }
+    }
+
+
 
 }
