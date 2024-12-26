@@ -39,4 +39,7 @@ public interface UserRepository extends JpaRepository<UserEntity, String> {
     boolean existsByUserGoogleEmail(String email);
 
     Optional<UserEntity> findByUserGoogleEmail(String email);
+
+    // 네이버 이메일로 사용자 찾기
+    Optional<UserEntity> findByUserNaverEmail(String userNaverEmail);
 }

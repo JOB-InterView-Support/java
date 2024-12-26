@@ -107,8 +107,8 @@ public class SecurityConfig implements WebMvcConfigurer {
                         .requestMatchers("/kakao/**").permitAll()
                         // google
                         .requestMatchers("/google/**").permitAll()
-                        // google
-                        .requestMatchers("/google/**").permitAll()
+                        // naver
+                        .requestMatchers("/naver/**").permitAll()
                         // /mypage/** 경로는 인증만 필요
                         .requestMatchers("/mypage/**").authenticated()
                         // /admin으로 시작하는 경로는 ROLE_ADMIN 권한 필요
@@ -120,6 +120,15 @@ public class SecurityConfig implements WebMvcConfigurer {
                         .requestMatchers(HttpMethod.POST, "/qna/**").hasAnyRole("USER", "ADMIN") // 등록은 USER와 ADMIN 허용
                         .requestMatchers(HttpMethod.PUT, "/qna/{no}").hasAnyRole("USER", "ADMIN")// 수정은 USER와 ADMIN 허용
                         .requestMatchers(HttpMethod.DELETE, "/qna/{no}").hasAnyRole("USER", "ADMIN") // 삭제는 USER와 ADMIN 허용
+
+                        // notice
+                        .requestMatchers(HttpMethod.GET, "/notice", "/notice/detail/{no}").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/notice/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/notice/update/{no}").hasAnyRole("ADMIN")
+
+                        // 채용공고
+                        .requestMatchers(HttpMethod.GET,"/jobPostings/**").hasAnyRole("USER", "ADMIN") // 조회는 USER와 ADMIN 허용
+
                         .anyRequest().authenticated()
 
                 )
