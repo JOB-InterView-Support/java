@@ -75,13 +75,21 @@ public class AdminService {
 
     @Transactional
     public void deleteMember(String uuid) {
-        UserEntity user = userRepository.findByUuid(uuid);
-        if (user == null) {
-            throw new RuntimeException("사용자를 찾을 수 없습니다.");
-        }
+        log.info("회원삭제 서비스 시작");
+        try {
+            UserEntity user = userRepository.findByUuid(uuid);
+            if (user == null) {
+                throw new RuntimeException("사용자를 찾을 수 없습니다.");
+            }
 
-        userRepository.delete(user); // 회원 삭제
+            userRepository.delete(user); // 회원 삭제
+            log.info("회원 삭제 완료");
+        } catch (Exception e) {
+            log.error("회원 삭제 중 예외 발생: ", e);
+            throw e; // 예외를 다시 던져 컨트롤러로 전달
+        }
     }
+
 
     public void promoteToAdmin(String uuid) throws Exception {
         UserEntity user = userRepository.findById(uuid).orElseThrow(() -> new Exception("사용자를 찾을 수 없습니다."));

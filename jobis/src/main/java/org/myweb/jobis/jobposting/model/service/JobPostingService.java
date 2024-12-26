@@ -1,44 +1,39 @@
 package org.myweb.jobis.jobposting.model.service;
-import lombok.extern.slf4j.Slf4j;
-import org.myweb.jobis.jobposting.model.dto.ApiResponse;
+
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
-@Slf4j
 @Service
+@RequiredArgsConstructor
 public class JobPostingService {
-
-    // application.properties에서 URL을 주입받음
-    @Value("${saramins.api.url}")
-    private String apiUrl;
 
     @Value("${saramins.api.key}")
     private String apiKey;
 
-    // 채용 공고 목록을 가져오는 메소드
-    public ApiResponse getJobPostings(String keyword, String jobType, String location) {
-        String url = buildApiUrl(keyword, jobType, location);
-        RestTemplate restTemplate = new RestTemplate();
+    @Value("${saramins.api.url}")
+    private String apiUrl;
 
-        // API 요청
-        ResponseEntity<ApiResponse> response = restTemplate.exchange(url, HttpMethod.GET, null, ApiResponse.class);
+    private final RestTemplate restTemplate = new RestTemplate();
 
-        return response.getBody(); // ApiResponse 반환
-    }
+    public Object searchJobPostings(String indCd, String locCd, String eduLv, String jobType,
+                                    String count, String start, String sort) {
 
-    // API URL을 구성하는 메소드
-    private String buildApiUrl(String keyword, String jobType, String location) {
-        StringBuilder urlBuilder = new StringBuilder(apiUrl);
-        urlBuilder.append("?access-key=").append(apiKey);
-        urlBuilder.append("&keywords=").append(keyword); // 키워드 검색
+        // URI 생성
+        String fullUri = UriComponentsBuilder.fromHttpUrl(apiUrl)
+                .queryParam("access-key", apiKey)
+                .queryParam("ind_cd", indCd)
+                .queryParam("loc_cd", locCd)
+                .queryParam("edu_lv", eduLv)
+                .queryParam("job_cd", jobType)
+                .queryParam("count", count)
+                .queryParam("start", start)
+                .queryParam("sort", sort)
+                .toUriString();
 
-        if (jobType != null) urlBuilder.append("&jobType=").append(jobType); // 직무 종류
-        if (location != null) urlBuilder.append("&location=").append(location); // 근무지
-        urlBuilder.append("&count=10"); // 페이지당 결과 수
-
-        return urlBuilder.toString();
+        // API 호출
+        return restTemplate.getForObject(fullUri, Object.class);
     }
 }

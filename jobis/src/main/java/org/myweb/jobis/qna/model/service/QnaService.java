@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Slf4j
@@ -41,9 +42,19 @@ public class QnaService {
     }
 
     public Qna selectQna(String qno) {
-        Optional<QnaEntity> optionalQna = qnaRepository.findById(qno);
-        return optionalQna.orElseThrow(() -> new RuntimeException("QnA not found")).toDto();
+        try {
+            QnaEntity entity = qnaRepository.findByQno(qno)
+                    .orElseThrow(() -> new NoSuchElementException("QnA not found with id: " + qno));
+            log.info("Entity에서 변환된 DTO: {}", entity.toDto()); // 변환된 DTO 확인
+            return entity.toDto();
+        } catch (Exception e) {
+            log.error("selectQna 메서드에서 예기치 못한 오류 발생:", e);
+            throw e; // 예외 재던짐
+        }
     }
+
+
+
 }
 
 

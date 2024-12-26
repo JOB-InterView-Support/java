@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @Slf4j
 @RestController
 @RequestMapping("/mypage")
@@ -23,7 +25,6 @@ public class MypageController {
         UserEntity userInfo = mypageService.getUserInfo(userId);
         return ResponseEntity.ok(userInfo);
     }
-
     // 회원 정보 수정 (JSON 형식)
     @PutMapping("/{userId}")
     public ResponseEntity<UserEntity> updateUser(
@@ -90,6 +91,26 @@ public class MypageController {
         log.info("Updated entity: {}", result);
         return ResponseEntity.ok(result);
     }
+
+    @PutMapping("/secession/{userId}")
+    public ResponseEntity<String> updateUserSecessionStatus(
+            @PathVariable String userId,
+            @RequestBody Map<String, String> requestBody) {
+        log.info("Received secession request for userId: {}", userId);
+
+        // 탈퇴 사유 가져오기 (null 가능)
+        String userDeletionReason = requestBody.get("userDeletionReason");
+
+        try {
+            mypageService.updateUserSecessionStatus(userId, userDeletionReason);
+            log.info("회원 탈퇴 처리가 완료되었습니다. userId: {}", userId);
+            return ResponseEntity.ok("회원 탈퇴가 성공적으로 처리되었습니다.");
+        } catch (RuntimeException e) {
+            log.error("회원 탈퇴 처리 중 오류 발생: {}", e.getMessage());
+            return ResponseEntity.status(500).body("회원 탈퇴 처리 중 문제가 발생했습니다.");
+        }
+    }
+
 
 
 

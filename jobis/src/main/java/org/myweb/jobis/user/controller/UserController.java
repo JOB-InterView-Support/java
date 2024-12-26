@@ -1,9 +1,11 @@
 package org.myweb.jobis.user.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.myweb.jobis.email.model.service.EmailService;
 import org.myweb.jobis.user.model.dto.LoginRequest;
+import org.myweb.jobis.user.model.dto.SignupRequest;
 import org.myweb.jobis.user.model.dto.User;
 import org.myweb.jobis.user.model.dto.VerificationCode;
 import org.myweb.jobis.user.model.service.UserService;
@@ -136,9 +138,22 @@ public class UserController {
         }
     }
 
+    @PostMapping("/snsSignup")
+    public ResponseEntity<String> snsSignup(@RequestBody SignupRequest signupRequest) {
+        User user = signupRequest.getUser();
+        String snsType = signupRequest.getSnsType();
 
-
-
+        try {
+            boolean result = userService.snsSignup(user, snsType);
+            if (result) {
+                return ResponseEntity.ok("success");
+            } else {
+                return ResponseEntity.status(400).body("회원가입 실패");
+            }
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(400).body(e.getMessage());
+        }
+    }
 
 
 }

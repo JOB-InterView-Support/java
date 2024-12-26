@@ -1,6 +1,8 @@
 package org.myweb.jobis.config;
 
+
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.config.annotation.*;
 
 @Configuration // Spring에서 이 클래스를 설정 클래스로 인식하게 함
@@ -15,6 +17,10 @@ public class WebConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/static/**")
                 .addResourceLocations("classpath:/static/static/");
+
+        // 첨부파일을 정적으로 서빙
+        registry.addResourceHandler("/attachments/**")
+                .addResourceLocations("file:/C:/upload_files/"); // 파일 경로
     }
 
     @Override
@@ -36,6 +42,9 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addViewController("/**/{spring:[a-zA-Z0-9-_]+}").setViewName("forward:/");
         registry.addViewController("/{spring:[a-zA-Z0-9-_]+}/**{spring:?!(\\.js|\\.css|\\.png|\\.jpg|\\.jpeg|\\.gif)$}").setViewName("forward:/");
     }
+
+
+
 
 
 

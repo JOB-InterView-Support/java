@@ -103,20 +103,27 @@ public class AdminController {
 
     @DeleteMapping("/deleteMember")
     public ResponseEntity<String> deleteMember(@RequestBody Map<String, String> request) {
+        log.info("회원 삭제 시작");
+
         String uuid = request.get("uuid");
+        log.info("삭제할 UUID: {}", uuid);
+
         if (uuid == null || uuid.isEmpty()) {
+            log.error("UUID가 제공되지 않음");
             return ResponseEntity.badRequest().body("UUID가 제공되지 않았습니다.");
         }
 
         try {
             adminService.deleteMember(uuid);
+            log.info("회원 삭제 완료");
             return ResponseEntity.ok("회원 정보가 성공적으로 삭제되었습니다.");
         } catch (Exception e) {
-            log.error("회원 삭제 중 오류 발생:", e);
+            log.error("회원 삭제 중 오류 발생: ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("회원 삭제에 실패했습니다.");
         }
     }
+
 
     @PostMapping("/promoteToAdmin")
     public ResponseEntity<?> promoteToAdmin(@RequestBody Map<String, String> payload) {

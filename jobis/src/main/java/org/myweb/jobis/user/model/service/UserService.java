@@ -25,9 +25,9 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     // 아이디 중복 확인
-    public boolean isUsernameDuplicate(String username) {
-        log.debug("아이디 중복 확인 요청: {}", username);
-        return userRepository.existsByUserName(username);
+    public boolean isUsernameDuplicate(String userId) {
+        log.debug("아이디 중복 확인 요청: {}", userId);
+        return userRepository.existsByUserId(userId);
     }
 
     // 전화번호 중복 확인
@@ -81,6 +81,78 @@ public class UserService {
             return false;
         }
     }
+
+    @Transactional
+    public boolean snsSignup(User user, String snsType) {
+        try {
+            // UUID 생성 및 기본 값 설정
+            if (user.getUuid() == null) {
+                user.setUuid(generateUuid());
+                log.debug("UUID 생성: {}", user.getUuid());
+            }
+
+            // 중복 검사: userId
+            if (userRepository.existsByUserId(user.getUserId())) {
+                log.error("중복된 아이디로 SNS 회원가입 요청: {}", user.getUserId());
+                throw new IllegalArgumentException("이미 존재하는 아이디입니다.");
+            }
+
+            // 중복 검사: 이메일
+            if (userRepository.existsByUserDefaultEmail(user.getUserDefaultEmail())) {
+                log.error("중복된 이메일로 SNS 회원가입 요청: {}", user.getUserDefaultEmail());
+                throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
+            }
+
+            // 비밀번호 암호화
+            String encryptedPassword = passwordEncoder.encode(user.getUserPw());
+            user.setUserPw(encryptedPassword);
+            log.debug("암호화된 비밀번호: {}", encryptedPassword);
+
+            // 기본 값 설정
+            user.setUserCreateAt(LocalDateTime.now());
+            user.setUserRestrictionStatus("N");
+            user.setUserDeletionStatus("N");
+            user.setUserFaceIdStatus("N");
+            user.setAdminYn("N");
+
+            // DTO -> Entity 변환
+            UserEntity userEntity = user.toEntity();
+
+            // SNS 타입에 따라 이메일 저장
+            switch (snsType.toLowerCase()) {
+                case "kakao":
+                    userEntity.setUserKakaoEmail(user.getUserDefaultEmail());
+                    break;
+                case "naver":
+                    userEntity.setUserNaverEmail(user.getUserDefaultEmail());
+                    break;
+                case "google":
+                    userEntity.setUserGoogleEmail(user.getUserDefaultEmail());
+                    break;
+                default:
+                    log.error("지원하지 않는 SNS 타입 요청: {}", snsType);
+                    throw new IllegalArgumentException("지원하지 않는 SNS 타입입니다: " + snsType);
+            }
+
+            // UserEntity 저장
+            userRepository.save(userEntity);
+
+            log.info("SNS 회원가입 성공: {}", user.getUserId());
+            return true;
+
+        } catch (IllegalArgumentException e) {
+            // 잘못된 요청 처리
+            log.error("유효하지 않은 요청: {}", e.getMessage());
+            return false;
+
+        } catch (Exception e) {
+            // 일반적인 예외 처리
+            log.error("SNS 회원가입 중 오류 발생: {}", e.getMessage(), e);
+            return false;
+        }
+    }
+
+
 
     // 사용자 인증
     public User authenticate(String userId, String userPw) {
