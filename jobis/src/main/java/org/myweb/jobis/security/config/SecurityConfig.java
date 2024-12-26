@@ -92,6 +92,9 @@ public class SecurityConfig implements WebMvcConfigurer {
                         .requestMatchers("/{spring:[a-zA-Z0-9-_]+}").permitAll()
                         .requestMatchers("/**/{spring:[a-zA-Z0-9-_]+}").permitAll()
 
+                        // 첨부파일 경로 인증 제외
+                        .requestMatchers("/attachments/**").permitAll()
+
                         // 정적 리소스 및 인증 제외 경로
                         .requestMatchers("/", "/**", "/favicon.ico", "/manifest.json", "/public/**", "/auth/**", "/css/**", "/js/**").permitAll()
                         // .png 파일 인증 없이 허용
@@ -115,8 +118,8 @@ public class SecurityConfig implements WebMvcConfigurer {
                         .requestMatchers(HttpMethod.POST, "/qna/**").hasAnyRole("USER", "ADMIN") // 등록은 USER와 ADMIN 허용
                         .requestMatchers(HttpMethod.PUT, "/qna/{no}").hasAnyRole("USER", "ADMIN")// 수정은 USER와 ADMIN 허용
                         .requestMatchers(HttpMethod.DELETE, "/qna/{no}").hasAnyRole("USER", "ADMIN") // 삭제는 USER와 ADMIN 허용
+                         .anyRequest().authenticated()
 
-                        .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JWTFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class)
                 .addFilterAt(new LoginFilter(authenticationManager, jwtUtil, userRepository), UsernamePasswordAuthenticationFilter.class)

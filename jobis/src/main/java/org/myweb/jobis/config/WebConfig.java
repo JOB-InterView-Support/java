@@ -1,6 +1,6 @@
 package org.myweb.jobis.config;
 
-import org.springframework.context.annotation.Bean;
+
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.config.annotation.*;
@@ -17,6 +17,10 @@ public class WebConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/static/**")
                 .addResourceLocations("classpath:/static/static/");
+
+        // 첨부파일을 정적으로 서빙
+        registry.addResourceHandler("/attachments/**")
+                .addResourceLocations("file:/C:/upload_files/"); // 파일 경로
     }
 
     @Override
