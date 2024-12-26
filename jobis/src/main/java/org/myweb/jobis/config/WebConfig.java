@@ -31,7 +31,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedHeaders("*")
                 .exposedHeaders("Token-Expired", "Authorization", "RefreshToken")
                 .allowCredentials(true)
-                ;
+        ;
     }
 
 
