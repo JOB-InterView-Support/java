@@ -2,12 +2,15 @@ package org.myweb.jobis.mypage.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.myweb.jobis.mypage.jpa.entity.SelfIntroduceEntity;
+import org.myweb.jobis.mypage.model.dto.SelfIntroduce;
 import org.myweb.jobis.mypage.model.service.MypageService;
 import org.myweb.jobis.user.jpa.entity.UserEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -111,8 +114,27 @@ public class MypageController {
         }
     }
 
+    @GetMapping("/intro/{uuid}")
+    public ResponseEntity<List<SelfIntroduce>> getIntroList(@PathVariable String uuid) {
+        List<SelfIntroduce> introList = mypageService.getIntroList(uuid)
+                .stream()
+                .map(SelfIntroduceEntity::toDto) // Entity를 DTO로 변환
+                .toList();
+        log.info("자기소개서 리스트 반환: {}", introList);
+        return ResponseEntity.ok(introList);
+    }
 
-
+    @GetMapping("/intro/detail/{introNo}")
+    public ResponseEntity<SelfIntroduce> getIntroDetail(@PathVariable String introNo) {
+        try {
+            // Service 호출
+            SelfIntroduce detail = mypageService.getIntroDetailByIntroNo(introNo);
+            return ResponseEntity.ok(detail); // 성공적으로 데이터 반환
+        } catch (RuntimeException e) {
+            log.error("자기소개서 상세 정보를 가져오는 중 오류 발생: {}", e.getMessage());
+            return ResponseEntity.status(404).body(null); // 데이터가 없으면 404 반환
+        }
+    }
 
 
 }
