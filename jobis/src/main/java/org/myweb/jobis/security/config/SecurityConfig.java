@@ -102,6 +102,8 @@ public class SecurityConfig implements WebMvcConfigurer {
                         .requestMatchers("/logout").authenticated()
                         // kakao
                         .requestMatchers("/kakao/**").permitAll()
+                        // google
+                        .requestMatchers("/google/**").permitAll()
                         // /mypage/** 경로는 인증만 필요
                         .requestMatchers("/mypage/**").authenticated()
                         // /admin으로 시작하는 경로는 ROLE_ADMIN 권한 필요
