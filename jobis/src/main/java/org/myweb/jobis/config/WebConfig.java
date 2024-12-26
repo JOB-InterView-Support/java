@@ -17,6 +17,10 @@ public class WebConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/static/**")
                 .addResourceLocations("classpath:/static/static/");
+
+        // 첨부파일을 정적으로 서빙
+        registry.addResourceHandler("/attachments/**")
+                .addResourceLocations("file:/C:/upload_files/"); // 파일 경로
     }
 
     @Override

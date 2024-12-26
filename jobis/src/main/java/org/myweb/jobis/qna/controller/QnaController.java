@@ -5,15 +5,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.myweb.jobis.qna.jpa.entity.QnaEntity;
 import org.myweb.jobis.qna.jpa.repository.QnaRepository;
 import org.myweb.jobis.qna.model.dto.Qna;
-import org.myweb.jobis.qna.model.dto.QnaReply;
 import org.myweb.jobis.qna.model.service.QnaReplyService;
 import org.myweb.jobis.qna.model.service.QnaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,10 +26,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j    //log 객체 선언임, 별도의 로그객체 선언 필요없음, 제공되는 레퍼런스는 log 임
 @RequiredArgsConstructor
@@ -56,10 +55,8 @@ public class QnaController {
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "qWDate"));
         Page<QnaEntity> qnaPage = qnaRepository.findAll(pageable);
 
-        log.info("QCurrent Page: {}", qnaPage.getNumber() + 1);
-        log.info("QTotal Pages: {}", qnaPage.getTotalPages());
-        log.info("QTotal Items: {}", qnaPage.getTotalElements());
-        log.info("QContent: {}", qnaPage.getContent());
+        log.info("요청 받은 페이지: {}", page); // 요청 받은 페이지 로그 출력
+        log.info("QnA 데이터: {}", qnaPage.getContent()); // 응답할 데이터 로그 출력
 
         // QnaEntity -> Qna DTO 변환
         List<Qna> qnaList = qnaPage.getContent().stream()
@@ -105,7 +102,7 @@ public class QnaController {
 
             // 파일 처리
             if (file != null && !file.isEmpty()) {
-                attachmentTitle = file.getOriginalFilename(); // 파일 이름 저장
+                attachmentTitle = "Q_" + file.getOriginalFilename(); // 파일 이름 저장
                 Path uploadPath = Paths.get("C:/upload_files"); // 파일 저장 경로 (디렉터리)
 
                 // 디렉터리 존재 여부 확인 및 생성
@@ -154,22 +151,58 @@ public class QnaController {
 
 
     @GetMapping("/detail/{qno}")
-    public ResponseEntity<Map> qnaDetailMethod(@PathVariable String qno) {
-        log.info("상세페이지 qno: {}", qno);
+    public ResponseEntity<Map<String, Object>> qnaDetailMethod(@PathVariable String qno) {
+        try {
+            log.info("상세페이지 qno: {}", qno);
 
-        Qna qna = qnaService.selectQna(qno);
+            Qna qna = qnaService.selectQna(qno);
+            log.info("조회된 Qna DTO: {}", qna);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("qna", qna);
+            Map<String, Object> response = new HashMap<>();
+            response.put("qna", qna);
 
-        return new ResponseEntity<>(response, HttpStatus.OK);
+            return ResponseEntity.ok(response);
+        } catch (NoSuchElementException e) {
+            log.error("QnA not found: {}", qno);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "QnA not found for id: " + qno));
+        } catch (Exception e) {
+            log.error("Unexpected error occurred:", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Internal server error"));
+        }
+    }
+
+
+    @GetMapping("/attachments/{filename}")
+    public ResponseEntity<Resource> getFile(@PathVariable String filename) {
+        try {
+            Path filePath = Paths.get("C:/upload_files").resolve(filename).normalize();
+            Resource resource = new UrlResource(filePath.toUri());
+
+            if (resource.exists()) {
+                return ResponseEntity.ok()
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                        .body(resource);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            log.error("File not found: {}", filename, e);
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
 
 
 
-
 }
+
+
+
+
+
+
 
 
 

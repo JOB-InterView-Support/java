@@ -3,6 +3,7 @@ package org.myweb.jobis.qna.jpa.repository;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.myweb.jobis.qna.jpa.entity.QQnaEntity;
 import org.myweb.jobis.qna.jpa.entity.QnaEntity;
 import org.springframework.data.domain.Pageable;
@@ -10,7 +11,9 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.Date;
 import java.util.List;
+import java.util.Optional;
 
+@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class QnaRepositoryCustomImpl implements QnaRepositoryCustom {
@@ -77,6 +80,20 @@ public class QnaRepositoryCustomImpl implements QnaRepositoryCustom {
                 .fetch();
     }
 
+    @Override
+    public Optional<QnaEntity> findByQno(String qno) {
+        QnaEntity result = queryFactory
+                .selectFrom(qna)
+                .where(qna.qNo.eq(qno)
+                        .and(qna.qIsDeleted.eq("N"))) // 삭제되지 않은 데이터만 조회
+                .fetchOne();
+        log.info("findByQno result for qNo {}: {}", qno, result); // 디버깅 로그 추가
+        return Optional.ofNullable(result);
+    }
+
+
+}
+
     //날짜 검색 부분 .. 수정중
 //    @Override
 //    public List<QnaEntity> findSearchDate(Date begin, Date end, Pageable pageable) {
@@ -88,4 +105,4 @@ public class QnaRepositoryCustomImpl implements QnaRepositoryCustom {
 //                .limit(pageable.getPageSize())
 //                .fetch();
 //    }
-}
+
