@@ -126,6 +126,9 @@ public class SecurityConfig implements WebMvcConfigurer {
                         .requestMatchers(HttpMethod.POST, "/notice/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/notice/update/{no}").hasAnyRole("ADMIN")
 
+                        // 채용공고
+                        .requestMatchers(HttpMethod.GET,"/jobPostings/**").hasAnyRole("USER", "ADMIN") // 조회는 USER와 ADMIN 허용
+
                         .anyRequest().authenticated()
 
                 )
