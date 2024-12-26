@@ -1,6 +1,7 @@
 package org.myweb.jobis.qna.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,6 +11,7 @@ import org.myweb.jobis.qna.jpa.entity.QnaEntity;
 import java.sql.Timestamp;
 
 // Qna DTO
+@JsonInclude(JsonInclude.Include.NON_NULL) // null 값 제외
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

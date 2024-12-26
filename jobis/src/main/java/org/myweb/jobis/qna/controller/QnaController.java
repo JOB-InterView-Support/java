@@ -5,15 +5,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.myweb.jobis.qna.jpa.entity.QnaEntity;
 import org.myweb.jobis.qna.jpa.repository.QnaRepository;
 import org.myweb.jobis.qna.model.dto.Qna;
-import org.myweb.jobis.qna.model.dto.QnaReply;
 import org.myweb.jobis.qna.model.service.QnaReplyService;
 import org.myweb.jobis.qna.model.service.QnaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,10 +26,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j    //log 객체 선언임, 별도의 로그객체 선언 필요없음, 제공되는 레퍼런스는 log 임
 @RequiredArgsConstructor
@@ -52,34 +51,28 @@ public class QnaController {
     public Map<String, Object> getQnaList(
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "size", defaultValue = "10") int size) {
-        // 페이징 처리
+        // 최신 날짜가 위로 오도록 정렬 조건 추가
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "qWDate"));
-        Page<QnaEntity> qnaPage = qnaRepository.findAll(pageable);
+        Page<QnaEntity> qnaPage = qnaRepository.findByQIsDeleted("N", pageable);
 
-        log.info("QCurrent Page: {}", qnaPage.getNumber() + 1);
-        log.info("QTotal Pages: {}", qnaPage.getTotalPages());
-        log.info("QTotal Items: {}", qnaPage.getTotalElements());
-        log.info("QContent: {}", qnaPage.getContent());
-
-        // QnaEntity -> Qna DTO 변환
         List<Qna> qnaList = qnaPage.getContent().stream()
-                .map(QnaEntity::toDto) // Entity -> DTO 변환
+                .map(QnaEntity::toDto)
                 .toList();
 
-        // 응답 데이터 구성
         Map<String, Object> response = new HashMap<>();
-        response.put("list", qnaList); // DTO 목록으로 변경
+        response.put("list", qnaList);
         response.put("paging", Map.of(
                 "currentPage", qnaPage.getNumber() + 1,
                 "maxPage", qnaPage.getTotalPages(),
                 "startPage", Math.max(1, qnaPage.getNumber() + 1 - 2),
                 "endPage", Math.min(qnaPage.getTotalPages(), qnaPage.getNumber() + 1 + 3),
-                "totalItems", qnaPage.getTotalElements() // 전체 아이템 수 추가
+                "totalItems", qnaPage.getTotalElements()
         ));
-
-        log.info("Response: {}", response);
         return response;
     }
+
+
+
 
 
 
@@ -105,7 +98,7 @@ public class QnaController {
 
             // 파일 처리
             if (file != null && !file.isEmpty()) {
-                attachmentTitle = file.getOriginalFilename(); // 파일 이름 저장
+                attachmentTitle = "Q_" + file.getOriginalFilename(); // 파일 이름 저장
                 Path uploadPath = Paths.get("C:/upload_files"); // 파일 저장 경로 (디렉터리)
 
                 // 디렉터리 존재 여부 확인 및 생성
@@ -154,15 +147,68 @@ public class QnaController {
 
 
     @GetMapping("/detail/{qno}")
-    public ResponseEntity<Map> qnaDetailMethod(@PathVariable String qno) {
-        log.info("상세페이지 qno: {}", qno);
+    public ResponseEntity<Map<String, Object>> qnaDetailMethod(@PathVariable String qno) {
+        try {
+            log.info("상세페이지 qno: {}", qno);
 
-        Qna qna = qnaService.selectQna(qno);
+            Qna qna = qnaService.selectQna(qno);
+            log.info("조회된 Qna DTO: {}", qna);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("qna", qna);
+            Map<String, Object> response = new HashMap<>();
+            response.put("qna", qna);
 
-        return new ResponseEntity<>(response, HttpStatus.OK);
+            return ResponseEntity.ok(response);
+        } catch (NoSuchElementException e) {
+            log.error("QnA not found: {}", qno);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "QnA not found for id: " + qno));
+        } catch (Exception e) {
+            log.error("Unexpected error occurred:", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Internal server error"));
+        }
+    }
+
+
+    @GetMapping("/attachments/{filename}")
+    public ResponseEntity<Resource> getFile(@PathVariable String filename) {
+        try {
+            Path filePath = Paths.get("C:/upload_files").resolve(filename).normalize();
+            Resource resource = new UrlResource(filePath.toUri());
+
+            if (resource.exists()) {
+                return ResponseEntity.ok()
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                        .body(resource);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            log.error("File not found: {}", filename, e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @PutMapping("/{qno}/delete")
+    public ResponseEntity<?> markQnaAsDeleted(@PathVariable String qno) {
+        try {
+            log.info("삭제 요청 받은 QnA 번호: {}", qno);
+
+            Optional<QnaEntity> qnaEntityOptional = qnaRepository.findById((qno));
+            if (qnaEntityOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("QnA not found");
+            }
+
+            QnaEntity qnaEntity = qnaEntityOptional.get();
+            qnaEntity.setQIsDeleted("Y"); // qIsDeleted 필드를 "Y"로 변경
+            qnaRepository.save(qnaEntity);
+
+            log.info("QnA가 삭제 처리됨 (qIsDeleted = 'Y'): {}", qno);
+            return ResponseEntity.ok("QnA marked as deleted");
+        } catch (Exception e) {
+            log.error("QnA 삭제 처리 중 에러 발생:", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error marking QnA as deleted");
+        }
     }
 
 
@@ -170,6 +216,12 @@ public class QnaController {
 
 
 }
+
+
+
+
+
+
 
 
 

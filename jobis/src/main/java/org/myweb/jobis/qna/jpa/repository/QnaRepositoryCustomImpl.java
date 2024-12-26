@@ -3,14 +3,19 @@ package org.myweb.jobis.qna.jpa.repository;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.myweb.jobis.qna.jpa.entity.QQnaEntity;
 import org.myweb.jobis.qna.jpa.entity.QnaEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Date;
 import java.util.List;
+import java.util.Optional;
 
+@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class QnaRepositoryCustomImpl implements QnaRepositoryCustom {
@@ -19,6 +24,23 @@ public class QnaRepositoryCustomImpl implements QnaRepositoryCustom {
     private final EntityManager entityManager; // JPQL 용
 
     private final QQnaEntity qna = QQnaEntity.qnaEntity; // QueryDSL Q 클래스 매핑
+
+    @Override
+    public Page<QnaEntity> findByQIsDeleted(String qIsDeleted, Pageable pageable) {
+        String query = "SELECT q FROM QnaEntity q WHERE q.qIsDeleted = :qIsDeleted";
+        List<QnaEntity> resultList = entityManager.createQuery(query, QnaEntity.class)
+                .setParameter("qIsDeleted", qIsDeleted)
+                .setFirstResult((int) pageable.getOffset())
+                .setMaxResults(pageable.getPageSize())
+                .getResultList();
+
+        String countQuery = "SELECT COUNT(q) FROM QnaEntity q WHERE q.qIsDeleted = :qIsDeleted";
+        Long totalCount = entityManager.createQuery(countQuery, Long.class)
+                .setParameter("qIsDeleted", qIsDeleted)
+                .getSingleResult();
+
+        return new PageImpl<>(resultList, pageable, totalCount);
+    }
 
     @Override
     public String findLastQnaNo() {
@@ -45,6 +67,8 @@ public class QnaRepositoryCustomImpl implements QnaRepositoryCustom {
                 .where(qna.qWriter.containsIgnoreCase(keyword))
                 .fetchCount();
     }
+
+
 
     // 날짜로 검색하는 부분 검색 수정중
 //    @Override
@@ -77,6 +101,20 @@ public class QnaRepositoryCustomImpl implements QnaRepositoryCustom {
                 .fetch();
     }
 
+    @Override
+    public Optional<QnaEntity> findByQno(String qno) {
+        QnaEntity result = queryFactory
+                .selectFrom(qna)
+                .where(qna.qNo.eq(qno)
+                        .and(qna.qIsDeleted.eq("N"))) // 삭제되지 않은 데이터만 조회
+                .fetchOne();
+        log.info("findByQno result for qNo {}: {}", qno, result); // 디버깅 로그 추가
+        return Optional.ofNullable(result);
+    }
+
+
+}
+
     //날짜 검색 부분 .. 수정중
 //    @Override
 //    public List<QnaEntity> findSearchDate(Date begin, Date end, Pageable pageable) {
@@ -88,4 +126,4 @@ public class QnaRepositoryCustomImpl implements QnaRepositoryCustom {
 //                .limit(pageable.getPageSize())
 //                .fetch();
 //    }
-}
+
