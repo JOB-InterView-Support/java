@@ -7,6 +7,7 @@ import org.myweb.jobis.mypage.model.dto.SelfIntroduce;
 import org.myweb.jobis.mypage.model.service.MypageService;
 import org.myweb.jobis.user.jpa.entity.UserEntity;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.method.P;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -148,5 +149,27 @@ public class MypageController {
         }
     }
 
+    @PutMapping("/intro/update/{introNo}")
+    public ResponseEntity<String> updateIntro(@PathVariable String introNo, @RequestBody SelfIntroduce updateIntro) {
+        try {
+            mypageService.updateIntroduction(introNo, updateIntro);
+            log.info("자기소개서 업데이트 : {}", updateIntro);
+            return ResponseEntity.ok("수정 성공");
+        } catch (RuntimeException e){
+            log.error("자기소개서 업데이트 중 오류 발생: {}", e.getMessage());
+            return ResponseEntity.status(404).body("수정 실패");
+        }
+    }
+
+    @PutMapping("/intro/delete/{introNo}")
+    public ResponseEntity<String> deleteIntro(@PathVariable String introNo) {
+        try{
+            mypageService.deleteSelfIntroduction(introNo);
+            return ResponseEntity.ok("삭제성공");
+        } catch (RuntimeException e) {
+            log.error("자기소개서 삭제 중 오류 발생: {}", e.getMessage());
+            return ResponseEntity.status(404).body("삭제 실패");
+        }
+    }
 
 }

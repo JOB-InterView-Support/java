@@ -52,11 +52,10 @@ public class JWTFilter extends OncePerRequestFilter {
                 requestURI.equals("/googleLink") ||
 
                 requestURI.equals("/jobPostings") || // 추가
-
+                requestURI.equals("/review") || // 추가
                 requestURI.equals("/notice")||
 
-
-                requestURI.equals("payments/success")||
+        requestURI.equals("payments/success")||
                 requestURI.equals("payments/fail"); // 12.27 추가
     }
 

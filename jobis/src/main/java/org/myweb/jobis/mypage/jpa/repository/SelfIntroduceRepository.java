@@ -10,6 +10,7 @@ import java.util.Optional;
 @Repository
 public interface SelfIntroduceRepository extends JpaRepository<SelfIntroduceEntity, String> {
     List<SelfIntroduceEntity> findByUuid(String uuid);
+    List<SelfIntroduceEntity> findByUuidAndIntroIsDeleted(String uuid, String introIsDeleted);
 
     Optional<SelfIntroduceEntity> findByIntroNo(String introNo);
 }

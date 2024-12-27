@@ -17,7 +17,6 @@ import java.sql.Timestamp;
 @Table(name="REVIEW")
 @Entity
 public class ReviewEntity {
-
     @Id
     @Column(name = "R_NO", length = 50, nullable = false)
     private String rNo;
@@ -44,7 +43,7 @@ public class ReviewEntity {
     private Timestamp rUpdateDate;
 
     @Column(name = "R_IS_DELETED", length = 1, nullable = false)
-    private char rIsDeleted;
+    private String rIsDeleted;
 
     @Column(name = "UUID", length = 50, nullable = false)
     private String uuid;
@@ -54,12 +53,11 @@ public class ReviewEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="UUID", referencedColumnName = "UUID", insertable = false, updatable = false)
-    private UserEntity User;
+    private UserEntity user;
 
+    @Builder.Default
     @Column(name = "R_COUNT", nullable = false, columnDefinition = "NUMBER DEFAULT 1")
-    private int rCount;
-//    @Column(name = "R_COUNT", nullable = false, columnDefinition = "1")
-//    private int rCount;
+    private int rCount = 1;
 
     public Review toDto() {
         return Review.builder()
@@ -84,6 +82,7 @@ public class ReviewEntity {
                 .rTitle(review.getRTitle())
                 .rContent(review.getRContent())
                 .rWriter(review.getRWriter())
+                .rWriter(review.getRWriter())
                 .rWDate(review.getRWDate())
                 .rAttachmentTitle(review.getRAttachmentTitle())
                 .rADate(review.getRADate())
@@ -94,40 +93,5 @@ public class ReviewEntity {
                 .rCount(review.getRCount())
                 .build();
     }
-
-//    public Review toDto() {
-//        return Review.builder()
-//                .rNo(rNo)
-//                .rTitle(rTitle)
-//                .rContent(rContent)
-//                .rWriter(rWriter)
-//                .rWriter(rWriter)
-//                .rWDate(rWDate)
-//                .rAttachmentTitle(rAttachmentTitle)
-//                .rADate(rADate)
-//                .rUpdateDate(rUpdateDate)
-//                .rIsDeleted(rIsDeleted)
-//                .rDDate(rDDate)
-//                .uuid(uuid)
-//                .rCount(rCount)
-//                .build();
-//    }
-//
-//    public static ReviewEntity fromDto(Review review) {
-//        return ReviewEntity.builder()
-//                .rNo(review.getRNo())
-//                .rTitle(review.getRTitle())
-//                .rContent(review.getRContent())
-//                .rWriter(review.getRWriter())
-//                .rWriter(review.getRWriter())
-//                .rWDate(review.getRWDate())
-//                .rAttachmentTitle(review.getRAttachmentTitle())
-//                .rADate(review.getRADate())
-//                .rUpdateDate(review.getRUpdateDate())
-//                .rIsDeleted(review.getRIsDeleted())
-//                .rDDate(review.getRDDate())
-//                .uuid(review.getUuid())
-//                .rCount(review.getRCount())
-//                .build();
-//    }
 }
+

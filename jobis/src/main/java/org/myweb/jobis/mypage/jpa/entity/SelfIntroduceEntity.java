@@ -45,6 +45,7 @@ public class SelfIntroduceEntity {
     @Column(name = "CERTIFICATE", length = 255)
     private String certificate; // 보유 자격증
 
+    @Builder.Default
     @Column(name = "INTRO_IS_DELETED", length = 1, nullable = false)
     private String introIsDeleted = "N"; // 자기소개서 삭제 여부 (기본값 'N')
 

@@ -1,6 +1,6 @@
 package org.myweb.jobis.payment.jpa.repository;
 
-import org.myweb.jobis.jobposting.jpa.entity.JobFavoritesEntity;
+//import org.myweb.jobis.jobposting.jpa.entity.JobFavoritesEntity;
 import org.myweb.jobis.payment.jpa.entity.PaymentEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
