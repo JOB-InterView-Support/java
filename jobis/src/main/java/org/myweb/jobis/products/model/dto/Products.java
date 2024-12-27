@@ -17,13 +17,9 @@ public class Products {
     private int prodNumber;
     private String prodDescription;
     private int prodAmount;
-
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    private Timestamp prodPeriod;
-
+    private String prodPeriod;
     private String prodSellable;
-
-
+    private String prodName;
 
     // Entity 객체로 변환하는 메서드
     public ProductsEntity toEntity() {
@@ -33,6 +29,7 @@ public class Products {
                 .prodAmount(prodAmount)
                 .prodPeriod(prodPeriod)
                 .prodSellable(prodSellable)
+                .prodName(prodName)
                 .build();
     }
 }
