@@ -120,7 +120,7 @@ public class MypageService {
 
 
     public List<SelfIntroduceEntity> getIntroList(String uuid) {
-        return selfIntroduceRepository.findByUuid(uuid);
+        return selfIntroduceRepository.findByUuidAndIntroIsDeleted(uuid, "N");
     }
 
     public SelfIntroduce getIntroDetailByIntroNo(String introNo) {
@@ -168,7 +168,16 @@ public class MypageService {
 
         selfIntroduceRepository.save(existingEntity);
     }
+    public void deleteSelfIntroduction(String introNo){
+        SelfIntroduceEntity existingEntity = selfIntroduceRepository.findByIntroNo(introNo)
+                .orElseThrow(() -> new RuntimeException("자기소개서를 찾을 수 없습니다. " + introNo));
 
+        existingEntity.setIntroIsDeleted("Y");
+        existingEntity.setIntroDeletedDate(java.time.LocalDateTime.now());
+
+        selfIntroduceRepository.save(existingEntity);
+        entityManager.flush();
+    }
 
 
 }

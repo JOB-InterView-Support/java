@@ -161,5 +161,15 @@ public class MypageController {
         }
     }
 
+    @PutMapping("/intro/delete/{introNo}")
+    public ResponseEntity<String> deleteIntro(@PathVariable String introNo) {
+        try{
+            mypageService.deleteSelfIntroduction(introNo);
+            return ResponseEntity.ok("삭제성공");
+        } catch (RuntimeException e) {
+            log.error("자기소개서 삭제 중 오류 발생: {}", e.getMessage());
+            return ResponseEntity.status(404).body("삭제 실패");
+        }
+    }
 
 }
