@@ -55,6 +55,7 @@ public class ReviewEntity {
     @JoinColumn(name="UUID", referencedColumnName = "UUID", insertable = false, updatable = false)
     private UserEntity user;
 
+    @Builder.Default
     @Column(name = "R_COUNT", nullable = false, columnDefinition = "NUMBER DEFAULT 1")
     private int rCount = 1;
 

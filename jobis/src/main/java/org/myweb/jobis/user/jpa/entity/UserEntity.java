@@ -52,9 +52,11 @@ public class UserEntity {
     @Column(name = "USER_UPDATE_AT")
     private LocalDateTime userUpdateAt;
 
+    @Builder.Default
     @Column(name = "USER_RESTRICTION_STATUS", length = 1, nullable = false)
     private String userRestrictionStatus = "N";
 
+    @Builder.Default
     @Column(name = "USER_DELETION_STATUS", length = 1, nullable = false)
     private String userDeletionStatus = "N";
 
@@ -76,9 +78,11 @@ public class UserEntity {
     @Column(name = "USER_REFRESH_TOKEN", length = 512)
     private String userRefreshToken;
 
+    @Builder.Default
     @Column(name = "USER_FACEID_STATUS", length = 1, nullable = false)
     private String userFaceIdStatus = "N";
 
+    @Builder.Default
     @Column(name = "ADMIN_YN", length = 1, nullable = false)
     private String adminYn = "N";
 
