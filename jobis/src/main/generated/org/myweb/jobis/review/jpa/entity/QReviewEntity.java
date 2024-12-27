@@ -32,7 +32,7 @@ public class QReviewEntity extends EntityPathBase<ReviewEntity> {
 
     public final DateTimePath<java.sql.Timestamp> rDDate = createDateTime("rDDate", java.sql.Timestamp.class);
 
-    public final ComparablePath<Character> rIsDeleted = createComparable("rIsDeleted", Character.class);
+    public final StringPath rIsDeleted = createString("rIsDeleted");
 
     public final StringPath rNo = createString("rNo");
 
@@ -44,7 +44,7 @@ public class QReviewEntity extends EntityPathBase<ReviewEntity> {
 
     public final StringPath rWriter = createString("rWriter");
 
-    public final org.myweb.jobis.user.jpa.entity.QUserEntity User;
+    public final org.myweb.jobis.user.jpa.entity.QUserEntity user;
 
     public final StringPath uuid = createString("uuid");
 
@@ -66,7 +66,7 @@ public class QReviewEntity extends EntityPathBase<ReviewEntity> {
 
     public QReviewEntity(Class<? extends ReviewEntity> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
-        this.User = inits.isInitialized("User") ? new org.myweb.jobis.user.jpa.entity.QUserEntity(forProperty("User")) : null;
+        this.user = inits.isInitialized("user") ? new org.myweb.jobis.user.jpa.entity.QUserEntity(forProperty("user")) : null;
     }
 
 }

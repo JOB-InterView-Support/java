@@ -146,6 +146,7 @@ public class QnaController {
 
     @GetMapping("/detail/{qno}")
     public ResponseEntity<Map<String, Object>> qnaDetailMethod(@PathVariable String qno) {
+
         try {
             log.info("상세페이지 qno: {}", qno);
 

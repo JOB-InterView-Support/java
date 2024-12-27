@@ -30,7 +30,7 @@ public class Review {
     @JsonFormat(pattern = "yyyy-MM-dd")
     private Timestamp rUpdateDate;
 
-    private char rIsDeleted;
+    private String rIsDeleted;
 
     @JsonFormat(pattern = "yyyy-MM-dd")
     private Timestamp rDDate;
