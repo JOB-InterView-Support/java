@@ -131,5 +131,19 @@ public class MypageService {
         return entity.toDto(); // Entity를 DTO로 변환하여 반환
     }
 
+    public void createIntroduction(SelfIntroduce newIntro) {
+        SelfIntroduceEntity entity = new SelfIntroduceEntity();
+        entity.setIntroTitle(newIntro.getIntroTitle());
+        entity.setApplicationCompanyName(newIntro.getApplicationCompanyName());
+        entity.setWorkType(newIntro.getWorkType());
+        entity.setCertificate(newIntro.getCertificate());
+        entity.setIntroContents(newIntro.getIntroContents());
+        entity.setUuid(newIntro.getUuid()); // UUID 설정
+        entity.setIntroDate(java.time.LocalDateTime.now()); // 작성일 설정
+        selfIntroduceRepository.save(entity);
+        log.info("새 자기소개서가 저장되었습니다. Entity: {}", entity);
+    }
+
+
 
 }

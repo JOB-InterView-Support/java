@@ -136,5 +136,17 @@ public class MypageController {
         }
     }
 
+    @PutMapping("/intro/insert")
+    public ResponseEntity<String> createIntroduction(@RequestBody SelfIntroduce newIntro) {
+        try {
+            mypageService.createIntroduction(newIntro);
+            log.info("새 자기소개서가 저장되었습니다: {}", newIntro);
+            return ResponseEntity.ok("저장 성공");
+        } catch (Exception e) {
+            log.error("자기소개서 저장 중 오류 발생: {}", e.getMessage());
+            return ResponseEntity.status(500).body("저장 실패");
+        }
+    }
+
 
 }
