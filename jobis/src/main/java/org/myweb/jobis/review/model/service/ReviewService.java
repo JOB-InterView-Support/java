@@ -30,7 +30,8 @@ public class ReviewService {
                 .rAttachmentTitle(reviewDTO.getRAttachmentTitle())
                 .rADate(reviewDTO.getRADate())
                 .rUpdateDate(reviewDTO.getRUpdateDate())
-                .rIsDeleted(reviewDTO.getRIsDeleted() != '\0' ? reviewDTO.getRIsDeleted() : 'N') // char 기본값 처리
+                .rIsDeleted(reviewDTO.getRIsDeleted() != null ? reviewDTO.getRIsDeleted() : "N")
+
                 .rDDate(reviewDTO.getRDDate())
                 .uuid(reviewDTO.getUuid())
                 .rCount(reviewDTO.getRCount() != 0 ? reviewDTO.getRCount() : 0)
@@ -40,11 +41,10 @@ public class ReviewService {
     }
 
     // 리뷰 상세 조회 메서드
-    public Review selectReview(String rNo) {
+    public Review selectReview(String rno) {
         try {
-            // rNo는 String으로 가정. Repository의 findById와 타입이 맞아야 함.
-            ReviewEntity entity = reviewRepository.findById(rNo)
-                    .orElseThrow(() -> new NoSuchElementException("Review not found with id: " + rNo));
+            ReviewEntity entity = reviewRepository.findByrNo(rno)
+                    .orElseThrow(() -> new NoSuchElementException("리뷰를 찾을 수 없습니다. : " + rno));
             log.info("Entity에서 변환된 DTO: {}", entity.toDto());
             return entity.toDto();
         } catch (Exception e) {
@@ -52,4 +52,15 @@ public class ReviewService {
             throw e;
         }
     }
+
+
+    public Review getReviewDetail(String rno) {
+        // 리뷰 엔티티 조회
+        ReviewEntity reviewEntity = reviewRepository.findById(rno)
+                .orElseThrow(() -> new NoSuchElementException("리뷰를 찾을 수 없습니다. rno: " + rno));
+
+        // 엔티티 -> DTO 변환
+        return reviewEntity.toDto();
+    }
+
 }
