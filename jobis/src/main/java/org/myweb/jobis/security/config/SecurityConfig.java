@@ -115,6 +115,11 @@ public class SecurityConfig implements WebMvcConfigurer {
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         // 나머지 모든 요청은 인증 필요
 
+                        .requestMatchers("/payments/**").hasAnyRole("USER", "ADMIN")
+                        // 나머지 모든 요청은 인증 필요
+
+
+
                         // QnA 경로 설정
                         .requestMatchers(HttpMethod.GET, "/qna", "/qna/{no}").hasAnyRole("USER", "ADMIN") // 조회는 USER와 ADMIN 허용
                         .requestMatchers(HttpMethod.POST, "/qna/**").hasAnyRole("USER", "ADMIN") // 등록은 USER와 ADMIN 허용

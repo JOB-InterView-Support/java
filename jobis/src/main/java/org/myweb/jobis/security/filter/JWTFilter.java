@@ -53,7 +53,11 @@ public class JWTFilter extends OncePerRequestFilter {
 
                 requestURI.equals("/jobPostings") || // 추가
 
-                requestURI.equals("/notice");
+                requestURI.equals("/notice")||
+
+
+                requestURI.equals("payments/success")||
+                requestURI.equals("payments/fail"); // 12.27 추가
     }
 
 

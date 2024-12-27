@@ -1,6 +1,7 @@
 package org.myweb.jobis.config;
 
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.config.annotation.*;
@@ -42,14 +43,6 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addViewController("/**/{spring:[a-zA-Z0-9-_]+}").setViewName("forward:/");
         registry.addViewController("/{spring:[a-zA-Z0-9-_]+}/**{spring:?!(\\.js|\\.css|\\.png|\\.jpg|\\.jpeg|\\.gif)$}").setViewName("forward:/");
     }
-
-
-
-
-
-
-
-
 
 
 }
