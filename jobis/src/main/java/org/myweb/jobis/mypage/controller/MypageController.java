@@ -7,6 +7,7 @@ import org.myweb.jobis.mypage.model.dto.SelfIntroduce;
 import org.myweb.jobis.mypage.model.service.MypageService;
 import org.myweb.jobis.user.jpa.entity.UserEntity;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.method.P;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -133,6 +134,30 @@ public class MypageController {
         } catch (RuntimeException e) {
             log.error("자기소개서 상세 정보를 가져오는 중 오류 발생: {}", e.getMessage());
             return ResponseEntity.status(404).body(null); // 데이터가 없으면 404 반환
+        }
+    }
+
+    @PutMapping("/intro/insert")
+    public ResponseEntity<String> createIntroduction(@RequestBody SelfIntroduce newIntro) {
+        try {
+            mypageService.createIntroduction(newIntro);
+            log.info("새 자기소개서가 저장되었습니다: {}", newIntro);
+            return ResponseEntity.ok("저장 성공");
+        } catch (Exception e) {
+            log.error("자기소개서 저장 중 오류 발생: {}", e.getMessage());
+            return ResponseEntity.status(500).body("저장 실패");
+        }
+    }
+
+    @PutMapping("/intro/update/{introNo}")
+    public ResponseEntity<String> updateIntro(@PathVariable String introNo, @RequestBody SelfIntroduce updateIntro) {
+        try {
+            mypageService.updateIntroduction(introNo, updateIntro);
+            log.info("자기소개서 업데이트 : {}", updateIntro);
+            return ResponseEntity.ok("수정 성공");
+        } catch (RuntimeException e){
+            log.error("자기소개서 업데이트 중 오류 발생: {}", e.getMessage());
+            return ResponseEntity.status(404).body("수정 실패");
         }
     }
 

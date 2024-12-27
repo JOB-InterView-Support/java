@@ -21,7 +21,7 @@ import java.time.LocalDateTime;
 public class SelfIntroduceEntity {
 
     @Id
-    @Column(name = "INTRO_NO", length = 50, nullable = false, updatable = false)
+    @Column(name = "INTRO_NO", length = 255, nullable = false, updatable = false)
     private String introNo; // 자기소개서 번호
 
     @Column(name = "UUID", length = 50, nullable = false)

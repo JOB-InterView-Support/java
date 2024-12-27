@@ -13,8 +13,8 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@Table(name="PRODUCTS")
 @Entity
-@Table(name="Products")
 public class ProductsEntity {
     @Id
     @Column(name = "PROD_NUMBER", length = 50, nullable = true )
@@ -27,10 +27,13 @@ public class ProductsEntity {
     private int prodAmount;
 
     @Column(name = "PROD_PERIOD", nullable = true )
-    private Timestamp prodPeriod;
+    private String prodPeriod;
 
     @Column(name = "PROD_SELLABLE", length = 2, nullable = true )
     private String prodSellable;
+
+    @Column(name = "PROD_NAME", length = 20, nullable = true )
+    private String prodName;
 
     // Entity에서 DTO로 변환
     public Products toDto() {
@@ -40,6 +43,7 @@ public class ProductsEntity {
                 .prodAmount(prodAmount)
                 .prodPeriod(prodPeriod)
                 .prodSellable(prodSellable)
+                .prodName(prodName)
                 .build();
     }
 
