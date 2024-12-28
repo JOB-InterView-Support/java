@@ -50,6 +50,9 @@ public class JWTFilter extends OncePerRequestFilter {
                 requestURI.equals("/google/apicode") || // 추가
                 requestURI.equals("/googleLogin") ||
                 requestURI.equals("/googleLink") ||
+                requestURI.equals("/faceRegistration") ||
+                requestURI.equals("/mypage/faceId/**") ||
+                requestURI.equals("/updateUser") ||
 
                 requestURI.equals("/jobPostings") || // 추가
                 requestURI.equals("/review") || // 추가

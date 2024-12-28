@@ -179,5 +179,14 @@ public class MypageService {
         entityManager.flush();
     }
 
+    @Transactional
+    public void updateFaceIdStatusToN(String uuid) {
+        // findByUuid 직접 사용
+        UserEntity user = userRepository.findByUuid(uuid);
+        if (user == null) {
+            throw new IllegalArgumentException("User not found with UUID: " + uuid);
+        }
 
+        user.setUserFaceIdStatus("N");
+    }
 }

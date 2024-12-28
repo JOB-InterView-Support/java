@@ -172,4 +172,11 @@ public class MypageController {
         }
     }
 
+
+    @PutMapping("/faceId/{uuid}")
+    public ResponseEntity<String> resetFaceIdStatus(@PathVariable String uuid) {
+        mypageService.updateFaceIdStatusToN(uuid);
+        return ResponseEntity.ok("USER_FACEID_STATUS has been reset to 'N'.");
+    }
+
 }
