@@ -1,4 +1,4 @@
-package org.myweb.jobis.jobposting.controller;
-
-public class JobFavoritesController {
-}
+//package org.myweb.jobis.jobposting.controller;
+//
+//public class JobFavoritesController {
+//}
