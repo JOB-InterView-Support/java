@@ -2,6 +2,7 @@ package org.myweb.jobis.mypage.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.myweb.jobis.faceid.model.service.FaceIdService;
 import org.myweb.jobis.mypage.jpa.entity.SelfIntroduceEntity;
 import org.myweb.jobis.mypage.model.dto.SelfIntroduce;
 import org.myweb.jobis.mypage.model.service.MypageService;
@@ -22,6 +23,7 @@ import java.util.Map;
 public class MypageController {
     private final MypageService mypageService;
     private final PasswordEncoder passwordEncoder;
+    private final FaceIdService faceIdService;
 
     // 회원 정보 불러오기
     @GetMapping("/{userId}")
@@ -175,8 +177,13 @@ public class MypageController {
 
     @PutMapping("/faceId/{uuid}")
     public ResponseEntity<String> resetFaceIdStatus(@PathVariable String uuid) {
+        // 1. USER_FACEID_STATUS를 "N"으로 업데이트
         mypageService.updateFaceIdStatusToN(uuid);
-        return ResponseEntity.ok("USER_FACEID_STATUS has been reset to 'N'.");
+
+        // 2. FACEID 데이터의 IMAGE_PATH 파일 삭제 및 데이터 삭제
+        faceIdService.deleteImageAndDataByUuid(uuid);
+
+        return ResponseEntity.ok("USER_FACEID_STATUS has been reset to 'N' and image file deleted.");
     }
 
 }
