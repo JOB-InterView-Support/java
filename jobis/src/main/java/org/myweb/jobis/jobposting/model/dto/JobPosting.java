@@ -1,7 +1,11 @@
 package org.myweb.jobis.jobposting.model.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
+@NoArgsConstructor
+@AllArgsConstructor
 @Data
 public class JobPosting {
     private String id; // 공고 번호

@@ -140,7 +140,7 @@ public class SecurityConfig implements WebMvcConfigurer {
 
                         // 채용공고
                         .requestMatchers(HttpMethod.GET,"/jobPostings/**").hasAnyRole("USER", "ADMIN") // 조회는 USER와 ADMIN 허용
-
+                        .requestMatchers(HttpMethod.GET,"/favorites/**").hasAnyRole("USER", "ADMIN") // 조회는 USER와 ADMIN 허용
                         .anyRequest().authenticated()
 
                 )

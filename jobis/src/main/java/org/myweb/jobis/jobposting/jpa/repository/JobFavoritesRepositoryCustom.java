@@ -1,8 +1,5 @@
-//package org.myweb.jobis.jobposting.jpa.repository;
-//
-//import org.myweb.jobis.jobposting.jpa.entity.JobFavoritesEntity;
-//import java.util.List;
-//
-//public interface JobFavoritesRepositoryCustom {
-//
-//}
+package org.myweb.jobis.jobposting.jpa.repository;
+
+public interface JobFavoritesRepositoryCustom {
+    // 추가적인 쿼리 메서드를 정의할 수 있습니다.
+}
