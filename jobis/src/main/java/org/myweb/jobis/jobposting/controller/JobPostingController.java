@@ -1,29 +1,40 @@
 package org.myweb.jobis.jobposting.controller;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.myweb.jobis.jobposting.model.dto.JobPosting;
 import org.myweb.jobis.jobposting.model.service.JobPostingService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/jobpostings")
+@RequestMapping("/jobposting")
 @RequiredArgsConstructor
+@Slf4j
 public class JobPostingController {
 
     private final JobPostingService jobPostingService;
 
     @GetMapping("/search")
-    public Object searchJobPostings(
-            @RequestParam(required = false) String indCd,
-            @RequestParam(required = false) String locCd,
-            @RequestParam(required = false) String eduLv,
-            @RequestParam(required = false) String jobType,
-            @RequestParam(defaultValue = "10") int count,  // 페이지 크기 (기본값 10)
-            @RequestParam(defaultValue = "1") int start,  // 페이지 번호 (기본값 0)
-            @RequestParam(defaultValue = "pd") String sort) {
+    public ResponseEntity<Object> searchJobPostings(
+            @RequestParam(required = false) String indCd, // 산업 코드
+            @RequestParam(required = false) String locCd, // 지역 코드
+            @RequestParam(required = false) String eduLv, // 학력 조건
+            @RequestParam(required = false) String jobCd, //  직무 코드
+            @RequestParam(defaultValue = "110") int count, // 검색 횟수
+            @RequestParam(defaultValue = "0") int start, // 시작 페이지
+            @RequestParam(defaultValue = "1") int page, // 페이지 수
+            @RequestParam(defaultValue = "10") int size, // 페이지 크기
+            @RequestParam(defaultValue = "pd") String sort)  // 정렬 기준
+    {
 
-        return jobPostingService.searchJobPostings(indCd, locCd, eduLv, jobType, count, start, sort);
+        Object result = jobPostingService.searchJobPostings(indCd, locCd, eduLv, jobCd, count, start, sort);
+        return ResponseEntity.ok(result);
+    }
+
+    // 채용공고 상세 조회
+    @GetMapping("/{id}")
+    public JobPosting getJobPosting(@PathVariable Long id) {
+        return jobPostingService.getJobPostingById(id);
     }
 }

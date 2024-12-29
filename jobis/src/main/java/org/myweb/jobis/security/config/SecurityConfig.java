@@ -111,6 +111,7 @@ public class SecurityConfig implements WebMvcConfigurer {
                         .requestMatchers("/naver/**").permitAll()
                         // /mypage/** 경로는 인증만 필요
                         .requestMatchers("/mypage/**").authenticated()
+                        .requestMatchers("/updateUser").authenticated()
                         // /admin으로 시작하는 경로는 ROLE_ADMIN 권한 필요
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         // 나머지 모든 요청은 인증 필요
@@ -139,7 +140,7 @@ public class SecurityConfig implements WebMvcConfigurer {
 
                         // 채용공고
                         .requestMatchers(HttpMethod.GET,"/jobPostings/**").hasAnyRole("USER", "ADMIN") // 조회는 USER와 ADMIN 허용
-
+                        .requestMatchers(HttpMethod.GET,"/favorites/**").hasAnyRole("USER", "ADMIN") // 조회는 USER와 ADMIN 허용
                         .anyRequest().authenticated()
 
                 )
