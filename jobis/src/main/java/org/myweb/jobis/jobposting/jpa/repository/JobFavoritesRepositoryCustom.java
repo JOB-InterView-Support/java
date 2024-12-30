@@ -13,4 +13,7 @@ public interface JobFavoritesRepositoryCustom {
 
     // UUID와 공고 ID 중복 여부 확인 (JPQL)
     boolean existsFavoriteByUuidAndJobPostingId(String uuid, String jobPostingId);
+
+    // 시퀀스를 이용한 job_favorites_no 값 생성
+    String getNextJobFavoritesNo();
 }

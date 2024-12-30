@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.myweb.jobis.jobposting.model.dto.JobFavorites;
+import org.myweb.jobis.user.jpa.entity.UserEntity;
 
 import java.sql.Timestamp;
 
@@ -18,13 +19,11 @@ import java.sql.Timestamp;
 public class JobFavoritesEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // ID 자동 생성
-    private Long id;
-
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // 또는 GenerationType.AUTO
     @Column(name = "JOB_FAVORITES_NO", length = 50, nullable = false)
     private String jobFavoritesNo; // 즐겨찾기 ID
 
-    @Column(name = "UUID", length = 50, nullable = false)
+    @Column(name = "uuid", length = 50, nullable = false)
     private String uuid; // 사용자 UUID
 
     @Column(name = "JOB_POSTING_ID", length = 50, nullable = false)
@@ -32,6 +31,10 @@ public class JobFavoritesEntity {
 
     @Column(name = "JOB_CREATED_DATE", nullable = false)
     private Timestamp jobCreatedDate; // 즐겨찾기 추가 날짜
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "UUID", referencedColumnName = "UUID", insertable = false, updatable = false)
+    private UserEntity user;
 
     // Entity -> DTO 변환 메서드
     public JobFavorites toDto() {
