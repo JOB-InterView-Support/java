@@ -1,8 +1,10 @@
 package org.myweb.jobis.review.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.myweb.jobis.qna.jpa.entity.QnaEntity;
+
+
 import org.myweb.jobis.review.jpa.entity.ReviewEntity;
 import org.myweb.jobis.review.jpa.repository.ReviewRepository;
 import org.myweb.jobis.review.model.dto.Review;
@@ -20,13 +22,16 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.*;
 
@@ -39,9 +44,9 @@ public class ReviewController {
 
     private final ReviewService reviewService;
     @Autowired
-    private final ReviewRepository reviewRepository;
+    private ReviewRepository reviewRepository;
 
-    @Value("C:/upload_files")
+    @Value("${file.upload-dir}")
     private String uploadDir;
 
     // 목록 조회
@@ -50,8 +55,8 @@ public class ReviewController {
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "size", defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "rWDate"));
-        Page<ReviewEntity> reviewPage = reviewRepository.findAll(pageable);
-        //Page<ReviewEntity> reviewPage = reviewRepository.findByrIsDeleted("N", pageable);
+        //Page<ReviewEntity> reviewPage = reviewRepository.findAll(pageable);
+        Page<ReviewEntity> reviewPage = reviewRepository.findByRIsDeleted("N", pageable);
 
         //log.info("요청 받은 페이지: {}", page);
         log.info("Review 데이터: {}", reviewPage.getContent());
@@ -66,7 +71,7 @@ public class ReviewController {
                 "currentPage", reviewPage.getNumber() + 1,
                 "maxPage", reviewPage.getTotalPages(),
                 "startPage", Math.max(1, reviewPage.getNumber() + 1 - 2),
-                "endPage", Math.min(reviewPage.getTotalPages(), reviewPage.getNumber() + 1 + 3),
+                "endPage", Math.min(reviewPage.getTotalPages(), reviewPage.getNumber() +1+ 3),
                 "totalItems", reviewPage.getTotalElements()
         ));
 
@@ -178,26 +183,28 @@ public class ReviewController {
             return ResponseEntity.internalServerError().build();
         }
     }
-        @PutMapping("/{rno}/delete")
-        public ResponseEntity<?> markReviewAsDeleted(@PathVariable String rno) {
-            try {
-                log.info("삭제 요청 받은 QnA 번호: {}", rno);
 
-                Optional<ReviewEntity> reviewEntityOptional = reviewRepository.findById((rno));
-                if (reviewEntityOptional.isEmpty()) {
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Review not found");
-                }
+    @PutMapping("/{rno}/delete")
+    public ResponseEntity<?> markReviewAsDeleted(@PathVariable String rno) {
+        try {
+            log.info("삭제 요청 받은 리뷰 번호: {}", rno);
 
-                ReviewEntity reviewEntity = reviewEntityOptional.get();
-                reviewEntity.setRIsDeleted("Y");
-
-                reviewRepository.save(reviewEntity);
-
-                log.info("QnA가 삭제 처리됨 (qIsDeleted = 'Y'): {}", rno);
-                return ResponseEntity.ok("QnA marked as deleted");
-            } catch (Exception e) {
-                log.error("QnA 삭제 처리 중 에러 발생:", e);
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error marking QnA as deleted");
+            Optional<ReviewEntity> reviewEntityOptional = reviewRepository.findById(rno);
+            if (reviewEntityOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Review not found");
             }
+
+            ReviewEntity reviewEntity = reviewEntityOptional.get();
+            reviewEntity.setRIsDeleted("Y"); // rIsDeleted 필드를 "Y"로 변경
+            reviewRepository.save(reviewEntity);
+
+            log.info("리뷰가 삭제 처리됨 (rIsDeleted = 'Y'): {}", rno);
+            return ResponseEntity.ok("Review marked as deleted");
+        } catch (Exception e) {
+            log.error("리뷰 삭제 처리 중 에러 발생:", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error marking review as deleted");
+        }
     }
+
+
 }

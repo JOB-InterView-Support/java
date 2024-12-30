@@ -123,6 +123,15 @@ public class MypageService {
         return selfIntroduceRepository.findByUuidAndIntroIsDeleted(uuid, "N");
     }
 
+    public List<SelfIntroduceEntity> getIntroListFiltered(String uuid, String introIsEdited) {
+        return selfIntroduceRepository.findByUuidAndIntroIsDeletedAndIntroIsEdited(uuid, "N", introIsEdited);
+    }
+
+    public boolean canCreateMoreIntroductions(String uuid, int maxCount) {
+        long currentCount = selfIntroduceRepository.countByUuidAndIntroIsDeletedAndIntroIsEdited(uuid, "N", "N");
+        return currentCount < maxCount;
+    }
+
     public SelfIntroduce getIntroDetailByIntroNo(String introNo) {
         // Repository에서 introNo로 데이터 조회
         SelfIntroduceEntity entity = selfIntroduceRepository.findByIntroNo(introNo)

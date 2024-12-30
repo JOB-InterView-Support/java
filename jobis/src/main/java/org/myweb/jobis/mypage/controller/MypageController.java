@@ -118,13 +118,26 @@ public class MypageController {
     }
 
     @GetMapping("/intro/{uuid}")
-    public ResponseEntity<List<SelfIntroduce>> getIntroList(@PathVariable String uuid) {
-        List<SelfIntroduce> introList = mypageService.getIntroList(uuid)
+    public ResponseEntity<List<SelfIntroduce>> getIntroList(
+            @PathVariable String uuid,
+            @RequestParam(required = false, defaultValue = "N") String introIsEdited) {
+        List<SelfIntroduce> introList = mypageService.getIntroListFiltered(uuid, introIsEdited)
                 .stream()
                 .map(SelfIntroduceEntity::toDto) // Entity를 DTO로 변환
                 .toList();
         log.info("자기소개서 리스트 반환: {}", introList);
         return ResponseEntity.ok(introList);
+    }
+
+    // 작성가능 수 10개 제한 로직
+    @GetMapping("/intro/check-limit/{uuid}")
+    public ResponseEntity<String> checkIntroductionLimit(@PathVariable String uuid) {
+        int maxCount = 10; // 최대 작성 가능 수
+        if (mypageService.canCreateMoreIntroductions(uuid, maxCount)) {
+            return ResponseEntity.ok("작성 가능");
+        } else {
+            return ResponseEntity.badRequest().body("자기소개서는 최대 10개까지만 작성할 수 있습니다.");
+        }
     }
 
     @GetMapping("/intro/detail/{introNo}")
