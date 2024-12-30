@@ -3,8 +3,10 @@ package org.myweb.jobis.qna.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.myweb.jobis.qna.jpa.entity.QnaEntity;
+import org.myweb.jobis.qna.jpa.entity.QnaReplyEntity;
 import org.myweb.jobis.qna.jpa.repository.QnaRepository;
 import org.myweb.jobis.qna.model.dto.Qna;
+import org.myweb.jobis.qna.model.dto.QnaReply;
 import org.myweb.jobis.qna.model.service.QnaReplyService;
 import org.myweb.jobis.qna.model.service.QnaService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -292,6 +294,86 @@ public class QnaController {
         }
     }
 
+//    /**
+//     * 댓글 등록
+//     */
+//    @PostMapping("/{qno}")
+//    public ResponseEntity<?> createReply(
+//            @PathVariable String qno,
+//            @RequestBody QnaReply reply) {
+//        try {
+//            QnaEntity qnaEntity = qnaService.findQnaEntityByQno(qno); // QnA 게시글 존재 확인
+//            QnaReplyEntity replyEntity = QnaReplyEntity.fromDto(reply, qnaEntity);
+//
+//            replyEntity.setRepdate(new Timestamp(System.currentTimeMillis())); // 등록 시간 설정
+//            replyEntity.setRepisdeleted('N'); // 삭제 여부 기본값 설정
+//
+//            qnaReplyService.saveReply(replyEntity);
+//
+//            return ResponseEntity.status(HttpStatus.CREATED).body("댓글이 등록되었습니다.");
+//        } catch (NoSuchElementException e) {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("해당 게시글을 찾을 수 없습니다.");
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("댓글 등록 중 오류가 발생했습니다.");
+//        }
+//    }
+//
+//    /**
+//     * 댓글 조회
+//     */
+//    @GetMapping("/{qno}")
+//    public ResponseEntity<List<QnaReply>> getReplies(@PathVariable String qno) {
+//        try {
+//            List<QnaReply> replies = qnaReplyService.findRepliesByQno(qno);
+//            return ResponseEntity.ok(replies);
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.emptyList());
+//        }
+//    }
+//
+//    /**
+//     * 댓글 수정
+//     */
+//    @PutMapping("/{repno}")
+//    public ResponseEntity<?> updateReply(
+//            @PathVariable String repno,
+//            @RequestBody QnaReply updatedReply) {
+//        try {
+//            QnaReplyEntity replyEntity = qnaReplyService.findReplyByRepno(repno);
+//
+//            replyEntity.setRepcontent(updatedReply.getRepcontent()); // 내용 수정
+//            replyEntity.setRepupdatedate(new Timestamp(System.currentTimeMillis())); // 수정 시간 설정
+//
+//            qnaReplyService.saveReply(replyEntity);
+//
+//            return ResponseEntity.ok("댓글이 수정되었습니다.");
+//        } catch (NoSuchElementException e) {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("해당 댓글을 찾을 수 없습니다.");
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("댓글 수정 중 오류가 발생했습니다.");
+//        }
+//    }
+//
+//    /**
+//     * 댓글 삭제
+//     */
+//    @DeleteMapping("/{repno}")
+//    public ResponseEntity<?> deleteReply(@PathVariable String repno) {
+//        try {
+//            QnaReplyEntity replyEntity = qnaReplyService.findReplyByRepno(repno);
+//
+//            replyEntity.setRepisdeleted('Y'); // 삭제 여부 변경
+//            replyEntity.setRepdeletedate(new Timestamp(System.currentTimeMillis())); // 삭제 시간 설정
+//
+//            qnaReplyService.saveReply(replyEntity);
+//
+//            return ResponseEntity.ok("댓글이 삭제되었습니다.");
+//        } catch (NoSuchElementException e) {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("해당 댓글을 찾을 수 없습니다.");
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("댓글 삭제 중 오류가 발생했습니다.");
+//        }
+    }
 
 
 
@@ -299,7 +381,6 @@ public class QnaController {
 
 
 
-}
 
 
 
