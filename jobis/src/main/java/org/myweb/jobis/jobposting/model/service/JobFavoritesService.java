@@ -1,5 +1,6 @@
 package org.myweb.jobis.jobposting.model.service;
 
+import lombok.RequiredArgsConstructor;
 import org.myweb.jobis.jobposting.jpa.entity.JobFavoritesEntity;
 import org.myweb.jobis.jobposting.jpa.repository.JobFavoritesRepository;
 import org.myweb.jobis.jobposting.model.dto.JobFavorites;
@@ -9,30 +10,30 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class JobFavoritesService {
 
     private final JobFavoritesRepository jobFavoritesRepository;
 
-    public JobFavoritesService(JobFavoritesRepository jobFavoritesRepository) {
-        this.jobFavoritesRepository = jobFavoritesRepository;
+    public void addFavorite(JobFavorites jobFavorites) {
+        boolean exists = jobFavoritesRepository.existsFavoriteByUuidAndJobPostingId(
+                jobFavorites.getUuid(), jobFavorites.getJobPostingId()
+        );
+        if (exists) {
+            throw new IllegalStateException("이미 즐겨찾기에 추가된 공고입니다.");
+        }
+        JobFavoritesEntity entity = JobFavoritesEntity.fromDto(jobFavorites);
+        jobFavoritesRepository.save(entity);
     }
 
-    // 즐겨찾기 추가
-    public JobFavorites addFavorite(JobFavorites jobFavorites) {
-        JobFavoritesEntity entity = jobFavorites.toEntity();
-        JobFavoritesEntity savedEntity = jobFavoritesRepository.save(entity);
-        return savedEntity.toDto();
+    public void removeFavorite(String uuid, String jobPostingId) {
+        JobFavoritesEntity entity = jobFavoritesRepository.findFavoriteByUuidAndJobPostingId(uuid, jobPostingId);
+        jobFavoritesRepository.delete(entity);
     }
 
-    // 즐겨찾기 삭제
-    public void removeFavorite(String jobFavoritesNo) {
-        jobFavoritesRepository.deleteById(jobFavoritesNo);
-    }
-
-    // 즐겨찾기 조회
-    public List<JobFavorites> listFavorites(String uuid) {
-        List<JobFavoritesEntity> entities = jobFavoritesRepository.findByUuid(uuid);
-        return entities.stream()
+    public List<JobFavorites> getFavorites(String uuid) {
+        return jobFavoritesRepository.findFavoritesByUuid(uuid)
+                .stream()
                 .map(JobFavoritesEntity::toDto)
                 .collect(Collectors.toList());
     }

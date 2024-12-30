@@ -18,6 +18,9 @@ import java.sql.Timestamp;
 public class JobFavoritesEntity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // ID 자동 생성
+    private Long id;
+
     @Column(name = "JOB_FAVORITES_NO", length = 50, nullable = false)
     private String jobFavoritesNo; // 즐겨찾기 ID
 

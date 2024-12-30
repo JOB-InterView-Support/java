@@ -1,8 +1,9 @@
 package org.myweb.jobis.jobposting.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.myweb.jobis.jobposting.model.dto.JobFavorites;
 import org.myweb.jobis.jobposting.model.service.JobFavoritesService;
-import org.myweb.jobis.jobposting.model.service.JobPostingService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,32 +11,37 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/favorites")
+@RequiredArgsConstructor
 public class JobFavoritesController {
 
     private final JobFavoritesService jobFavoritesService;
 
-    public JobFavoritesController(JobFavoritesService jobFavoritesService) {
-        this.jobFavoritesService = jobFavoritesService;
+    @PostMapping("/insert")
+    public ResponseEntity<?> insertFavorite(@RequestBody JobFavorites jobFavorites) {
+        try {
+            jobFavoritesService.addFavorite(jobFavorites);
+            return ResponseEntity.ok("즐겨찾기에 추가되었습니다.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("즐겨찾기 추가 실패: " + e.getMessage());
+        }
     }
 
-    // 즐겨찾기 추가
-    @PostMapping()
-    public ResponseEntity<JobFavorites> addFavorite(@RequestBody JobFavorites jobFavorites) {
-        JobFavorites addedFavorite = jobFavoritesService.addFavorite(jobFavorites);
-        return ResponseEntity.ok(addedFavorite);
+    @DeleteMapping("/delete")
+    public ResponseEntity<?> deleteFavorite(@RequestParam String uuid, @RequestParam String jobPostingId) {
+        try {
+            jobFavoritesService.removeFavorite(uuid, jobPostingId);
+            return ResponseEntity.ok("즐겨찾기에서 삭제되었습니다.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("즐겨찾기 삭제 실패: " + e.getMessage());
+        }
     }
 
-    // 즐겨찾기 삭제
-    @DeleteMapping("/{jobFavoritesNo}")
-    public ResponseEntity<String> removeFavorite(@PathVariable String jobFavoritesNo) {
-        jobFavoritesService.removeFavorite(jobFavoritesNo);
-        return ResponseEntity.ok("삭제 완료");
-    }
-
-    // 즐겨찾기 조회
-    @GetMapping("/{uuid}")
-    public ResponseEntity<List<JobFavorites>> listFavorites(@PathVariable String uuid) {
-        List<JobFavorites> favorites = jobFavoritesService.listFavorites(uuid);
-        return ResponseEntity.ok(favorites);
+    @GetMapping("/search")
+    public ResponseEntity<List<JobFavorites>> getFavorites(@RequestParam String uuid) {
+        try {
+            return ResponseEntity.ok(jobFavoritesService.getFavorites(uuid));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
     }
 }
