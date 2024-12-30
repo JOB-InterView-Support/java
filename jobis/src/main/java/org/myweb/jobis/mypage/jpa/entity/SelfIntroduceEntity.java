@@ -52,6 +52,10 @@ public class SelfIntroduceEntity {
     @Column(name = "INTRO_DELETED_DATE")
     private LocalDateTime introDeletedDate; // 자기소개서 삭제 일자
 
+    @Builder.Default
+    @Column(name = "INTRO_IS_EDITED", length = 1, nullable = false)
+    private String introIsEdited = "N";
+
 
     @PrePersist
     private void generateIntroNo() {
@@ -75,6 +79,7 @@ public class SelfIntroduceEntity {
                 .certificate(this.certificate)
                 .introIsDeleted(this.introIsDeleted)
                 .introDeletedDate(this.introDeletedDate)
+                .introIsEdited(this.introIsEdited)
                 .build();
     }
 }
