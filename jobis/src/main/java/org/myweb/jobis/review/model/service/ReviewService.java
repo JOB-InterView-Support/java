@@ -63,4 +63,23 @@ public class ReviewService {
         return reviewEntity.toDto();
     }
 
+    public int deleteReview(String rno) {
+        try {
+            reviewRepository.deleteById(rno);
+            return 1;
+        } catch (Exception e) {
+            log.info(e.getMessage());
+            return 0;
+        }
+    }
+
+    public int updateReview(Review review) {
+        try {
+            reviewRepository.save(review.toEntity());
+            return 1;
+        } catch(Exception e) {
+            log.info(e.getMessage());
+            return 0;
+        }
+    }
 }

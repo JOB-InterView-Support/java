@@ -62,8 +62,8 @@ public class QnaService {
     }
 
 
-
-
+//    public QnaEntity findQnaEntityByQno(String qno) {
+//    }
 }
 
 
