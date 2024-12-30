@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -96,7 +97,7 @@ public class QnaController {
 
             // 파일 처리
             if (file != null && !file.isEmpty()) {
-                attachmentTitle = "Q_" + file.getOriginalFilename(); // 파일 이름 저장
+                attachmentTitle = "Q_I_" + file.getOriginalFilename(); // 파일 이름 저장
                 Path uploadPath = Paths.get("C:/upload_files"); // 파일 저장 경로 (디렉터리)
 
                 // 디렉터리 존재 여부 확인 및 생성
@@ -123,6 +124,7 @@ public class QnaController {
                     .qWDate(new Timestamp(System.currentTimeMillis())) // 작성 시간
                     .qAttachmentTitle(attachmentTitle) // 첨부 파일 제목
                     .qAttachmentYN(file != null ? "Y" : "N") // 첨부 여부
+                    .qADate(file != null ? new Timestamp(System.currentTimeMillis()) : null) // 첨부 파일 저장 날짜
                     .qIsSecret(qIsSecret) // 비밀 여부
                     .qIsDeleted("N") // 기본값
                     .uuid(uuid) // UUID 추가
@@ -173,40 +175,120 @@ public class QnaController {
     public ResponseEntity<Resource> getFile(@PathVariable String filename) {
         try {
             Path filePath = Paths.get("C:/upload_files").resolve(filename).normalize();
-            Resource resource = new UrlResource(filePath.toUri());
+            log.info("요청된 파일 경로: {}", filePath);
 
-            if (resource.exists()) {
+            Resource resource = new UrlResource(filePath.toUri());
+            if (resource.exists() && resource.isReadable()) {
+                log.info("파일이 존재하며 읽을 수 있습니다: {}", filePath);
+
+                // 파일 MIME 타입 확인
+                String contentType = Files.probeContentType(filePath);
+                if (contentType == null) {
+                    contentType = "application/octet-stream";
+                }
+
                 return ResponseEntity.ok()
-                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                        .contentType(MediaType.parseMediaType(contentType))
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
                         .body(resource);
             } else {
-                return ResponseEntity.notFound().build();
+                log.warn("파일이 존재하지 않거나 읽을 수 없습니다: {}", filePath);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
             }
         } catch (Exception e) {
-            log.error("File not found: {}", filename, e);
-            return ResponseEntity.internalServerError().build();
+            log.error("파일 제공 중 오류 발생: {}", filename, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
+
+
 
     @PutMapping("/{qno}/delete")
     public ResponseEntity<?> markQnaAsDeleted(@PathVariable String qno) {
         try {
             log.info("삭제 요청 받은 QnA 번호: {}", qno);
 
-            Optional<QnaEntity> qnaEntityOptional = qnaRepository.findById((qno));
+            // 데이터베이스에서 해당 QnA 번호(qno)로 QnA 엔티티 조회
+            Optional<QnaEntity> qnaEntityOptional = qnaRepository.findById(qno);
+
+            // QnA 엔티티가 존재하지 않는 경우, 404 Not Found 응답 반환
             if (qnaEntityOptional.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("QnA not found");
             }
 
             QnaEntity qnaEntity = qnaEntityOptional.get();
-            qnaEntity.setQIsDeleted("Y"); // qIsDeleted 필드를 "Y"로 변경
+
+            // qIsDeleted 필드를 "Y"로 설정하여 삭제 상태로 변경
+            qnaEntity.setQIsDeleted("Y");
+
+            // Q_D_DATE 필드에 현재 시간 설정
+            qnaEntity.setQDDate(new Timestamp(System.currentTimeMillis()));
+
+            // 변경된 엔티티를 데이터베이스에 저장
             qnaRepository.save(qnaEntity);
 
-            log.info("QnA가 삭제 처리됨 (qIsDeleted = 'Y'): {}", qno);
+            log.info("QnA가 삭제 처리됨 (qIsDeleted = 'Y', qDDate = {}): {}", qnaEntity.getQDDate(), qno);
+
+            // HTTP 상태 200과 성공 메시지 반환
             return ResponseEntity.ok("QnA marked as deleted");
         } catch (Exception e) {
+            // 예외 발생 시 로그를 출력하고 HTTP 500 응답 반환
             log.error("QnA 삭제 처리 중 에러 발생:", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error marking QnA as deleted");
+        }
+    }
+
+
+    @PutMapping("/update/{qno}")
+    public ResponseEntity<?> updateQna(
+            @PathVariable String qno,
+            @RequestParam("qTitle") String qTitle,
+            @RequestParam("qContent") String qContent,
+            @RequestParam("qIsSecret") String qIsSecret,
+            @RequestParam(value = "file", required = false) MultipartFile file) {
+
+        try {
+            log.info("수정 요청 QnA 번호: {}", qno);
+
+            Optional<QnaEntity> qnaEntityOptional = qnaRepository.findById(qno);
+            if (qnaEntityOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("QnA not found");
+            }
+
+            QnaEntity qnaEntity = qnaEntityOptional.get();
+
+            // 수정 데이터 반영
+            qnaEntity.setQTitle(qTitle);
+            qnaEntity.setQContent(qContent);
+            qnaEntity.setQIsSecret(qIsSecret);
+
+            // 파일 수정 처리
+            if (file != null && !file.isEmpty()) {
+                String attachmentTitle = "Q_U_" + file.getOriginalFilename();
+                Path uploadPath = Paths.get("C:/upload_files");
+                Files.copy(file.getInputStream(), uploadPath.resolve(attachmentTitle), StandardCopyOption.REPLACE_EXISTING);
+
+                qnaEntity.setQAttachmentTitle(attachmentTitle);
+                qnaEntity.setQAttachmentYN("Y");
+                qnaEntity.setQADate(new Timestamp(System.currentTimeMillis())); // 현재 시간 저장
+            } else {
+                qnaEntity.setQAttachmentTitle(null); // 첨부 파일 제목 제거
+                qnaEntity.setQAttachmentYN("N"); // 첨부 파일 여부 N
+                qnaEntity.setQADate(null); // 첨부 파일 날짜를 null로 설정
+            }
+
+            // 글 수정 여부와 수정 날짜 설정
+            qnaEntity.setQUpdateYN("Y"); // 수정 여부를 'Y'로 설정
+            qnaEntity.setQUpdateDate(new Timestamp(System.currentTimeMillis())); // 현재 시간 저장
+
+            // 데이터베이스 업데이트
+            qnaRepository.save(qnaEntity);
+            log.info("QnA가 성공적으로 수정됨: {}", qno);
+
+            return ResponseEntity.ok("QnA updated successfully");
+        } catch (Exception e) {
+            log.error("QnA 수정 중 에러 발생:", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error updating QnA");
         }
     }
 
@@ -214,7 +296,19 @@ public class QnaController {
 
 
 
+
+
+
 }
+
+
+
+
+
+
+
+
+
 
 
 

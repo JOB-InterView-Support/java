@@ -22,24 +22,24 @@ public class Qna {
     private String qContent;
     private String qWriter;
 
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Timestamp qWDate;
     private String qAttachmentTitle;
 
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Timestamp qADate;
 
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Timestamp qUpdateDate;
 
-    private String qIsDeleted; // 변경: char → String
+    private String qIsDeleted;
 
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Timestamp qDDate;
     private String uuid;
-    private String qAttachmentYN; // 변경: char → String
-    private String qIsSecret; // 변경: char → String
-    private String qUpdateYN; // 변경: char → String
+    private String qAttachmentYN;
+    private String qIsSecret;
+    private String qUpdateYN;
 
     // Entity 변환 메서드
     public QnaEntity toEntity() {
@@ -61,3 +61,5 @@ public class Qna {
                 .build();
     }
 }
+
+

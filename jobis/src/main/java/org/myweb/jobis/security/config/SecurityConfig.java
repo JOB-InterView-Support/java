@@ -93,7 +93,7 @@ public class SecurityConfig implements WebMvcConfigurer {
                         .requestMatchers("/**/{spring:[a-zA-Z0-9-_]+}").permitAll()
 
                         // 첨부파일 경로 인증 제외
-                        .requestMatchers("/attachments/**").permitAll()
+                        .requestMatchers("/qna/attachments/**").permitAll()
 
                         // 정적 리소스 및 인증 제외 경로
                         .requestMatchers("/", "/**", "/favicon.ico", "/manifest.json", "/public/**", "/auth/**", "/css/**", "/js/**").permitAll()

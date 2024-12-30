@@ -40,11 +40,11 @@ public class QnaEntity {
     @Column(name = "Q_A_DATE")
     private Timestamp qADate;
 
-    @Column(name = "Q_UPDATE_DATE")
+    @Column(name = "Q_UPDATE_DATE") // 글 수정 날짜
     private Timestamp qUpdateDate;
 
     @Column(name = "Q_IS_DELETED", length = 1, nullable = false)
-    private String qIsDeleted; // 변경: char → String
+    private String qIsDeleted;
 
     @Column(name = "Q_D_DATE")
     private Timestamp qDDate;
@@ -53,13 +53,13 @@ public class QnaEntity {
     private String uuid;
 
     @Column(name = "Q_ATTACHMENT_YN", length = 1)
-    private String qAttachmentYN; // 변경: char → String
+    private String qAttachmentYN;
 
     @Column(name = "Q_IS_SECRET", length = 1)
-    private String qIsSecret; // 변경: char → String
+    private String qIsSecret;
 
-    @Column(name = "Q_UPDATE_YN", length = 1)
-    private String qUpdateYN; // 변경: char → String
+    @Column(name = "Q_UPDATE_YN", length = 1) // 글 수정 여부
+    private String qUpdateYN;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "UUID", referencedColumnName = "UUID", insertable = false, updatable = false)
@@ -75,13 +75,13 @@ public class QnaEntity {
                 .qWDate(qWDate)
                 .qAttachmentTitle(qAttachmentTitle)
                 .qADate(qADate)
-                .qUpdateDate(qUpdateDate)
+                .qUpdateDate(qUpdateDate) // 수정 날짜 반영
                 .qIsDeleted(qIsDeleted)
                 .qDDate(qDDate)
                 .uuid(uuid)
                 .qAttachmentYN(qAttachmentYN)
                 .qIsSecret(qIsSecret)
-                .qUpdateYN(qUpdateYN)
+                .qUpdateYN(qUpdateYN) // 수정 여부 반영
                 .build();
     }
 
@@ -95,13 +95,13 @@ public class QnaEntity {
                 .qWDate(qna.getQWDate())
                 .qAttachmentTitle(qna.getQAttachmentTitle())
                 .qADate(qna.getQADate())
-                .qUpdateDate(qna.getQUpdateDate())
+                .qUpdateDate(qna.getQUpdateDate()) // 수정 날짜 반영
                 .qIsDeleted(qna.getQIsDeleted())
                 .qDDate(qna.getQDDate())
                 .uuid(qna.getUuid())
                 .qAttachmentYN(qna.getQAttachmentYN())
                 .qIsSecret(qna.getQIsSecret())
-                .qUpdateYN(qna.getQUpdateYN())
+                .qUpdateYN(qna.getQUpdateYN()) // 수정 여부 반영
                 .build();
     }
 }
