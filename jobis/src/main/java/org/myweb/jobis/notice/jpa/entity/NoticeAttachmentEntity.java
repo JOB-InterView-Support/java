@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.myweb.jobis.notice.model.dto.NoticeAttachment;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -15,8 +18,8 @@ public class NoticeAttachmentEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "NOTICE_ANO", nullable = false)
-    private Long noticeANo; // 첨부파일번호
+    @Column(name = "NOTICE_ANO", length = 50, nullable = false)
+    private String noticeANo; // 첨부파일번호
 
     @Column(name = "NOTICE_ANAME", length = 200, nullable = false)
     private String noticeAName; // 첨부파일명
@@ -28,7 +31,7 @@ public class NoticeAttachmentEntity {
     // Entity -> DTO 변환 메서드
     public NoticeAttachment toDto() {
         return NoticeAttachment.builder()
-                .noticeANo(String.valueOf(noticeANo))
+                .noticeANo(noticeANo)
                 .noticeAName(noticeAName)
                 .build();
     }
@@ -36,7 +39,7 @@ public class NoticeAttachmentEntity {
     // DTO -> Entity 변환 메서드
     public static NoticeAttachmentEntity fromDto(NoticeAttachment noticeattachment, NoticeEntity notice) {
         return NoticeAttachmentEntity.builder()
-                .noticeANo(Long.valueOf(noticeattachment.getNoticeANo()))
+                .noticeANo(noticeattachment.getNoticeANo())
                 .noticeAName(noticeattachment.getNoticeAName())
                 .notice(notice)
                 .build();

@@ -1,5 +1,6 @@
 package org.myweb.jobis.notice.jpa.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.myweb.jobis.notice.model.dto.Notice;
@@ -49,6 +50,7 @@ public class NoticeEntity {
     private String noticePath; // 첨부파일경로
 
     @OneToMany(mappedBy = "notice", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<NoticeAttachmentEntity> noticeAttachments = new ArrayList<>();
 
     // 작성 날짜 초기화

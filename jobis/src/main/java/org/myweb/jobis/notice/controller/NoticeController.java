@@ -24,10 +24,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j    //log 객체 선언임, 별도의 로그객체 선언 필요없음, 제공되는 레퍼런스는 log 임
@@ -43,49 +43,110 @@ public class NoticeController {
     @Value("${file.upload-dir}")
     private String uploadDir;
 
+//    @GetMapping
+//    public ResponseEntity<Map<String, Object>> getNoticeList(
+//            @RequestParam(value = "page", defaultValue = "1") int page,
+//            @RequestParam(value = "size", defaultValue = "10") int size) {
+//        log.info("getNoticeList 시작");
+//
+//        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "noticeWDate"));
+//
+//        // 서비스 호출
+//        Page<NoticeEntity> noticePage = noticeRepository.findByNoticeIsDeleted("N", pageable);
+//
+//        log.info("QCurrent Page: {}", noticePage.getNumber() + 1);
+//        log.info("QTotal Pages: {}", noticePage.getTotalPages());
+//        log.info("QTotal Items: {}", noticePage.getTotalElements());
+//        log.info("QContent: {}", noticePage.getContent());
+//
+//        Map<String, Object> response = new HashMap<>();
+//        response.put("list", noticePage.getContent());
+//        response.put("paging", Map.of(
+//                "currentPage", noticePage.getNumber() + 1,
+//                "maxPage", noticePage.getTotalPages(),
+//                "totalItems", noticePage.getTotalElements(),
+//                "startPage", Math.max(1, noticePage.getNumber() + 1 - 2),
+//                "endPage", Math.min(noticePage.getTotalPages(), noticePage.getNumber() + 1 + 3)
+//        ));
+//
+//        log.info("Response: {}", response);
+//        return ResponseEntity.ok(response);
+//    }
+
+//    @GetMapping
+//    public ResponseEntity<Map<String, Object>> getNoticeList(
+//            @RequestParam(value = "page", defaultValue = "1") int page,
+//            @RequestParam(value = "size", defaultValue = "10") int size) {
+//        log.info("getNoticeList 시작");
+//
+//        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "noticeWDate"));
+//
+//        // isDeleted = "N" 조건 추가하여 데이터 필터링
+//        Page<NoticeEntity> noticePage = noticeRepository.findByNoticeIsDeleted("N", pageable);
+//
+//        Map<String, Object> response = new HashMap<>();
+//        response.put("list", noticePage.getContent()); // 필터링된 공지 데이터
+//        response.put("paging", Map.of(
+//                "currentPage", noticePage.getNumber() + 1,
+//                "maxPage", noticePage.getTotalPages(),
+//                "totalItems", noticePage.getTotalElements(),
+//                "startPage", Math.max(1, noticePage.getNumber() + 1 - 2),
+//                "endPage", Math.min(noticePage.getTotalPages(), noticePage.getNumber() + 1 + 3)
+//        ));
+//
+//        return ResponseEntity.ok(response);
+//    }
+
     @GetMapping
     public ResponseEntity<Map<String, Object>> getNoticeList(
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "size", defaultValue = "10") int size) {
         log.info("getNoticeList 시작");
+
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "noticeWDate"));
-        Page<Notice> noticePage = noticeService.getPageNotices(pageable);
+        Page<NoticeEntity> noticePage = noticeRepository.findByNoticeIsDeleted("N", pageable);
 
-        log.info("QCurrent Page: {}", noticePage.getNumber() + 1);
-        log.info("QTotal Pages: {}", noticePage.getTotalPages());
-        log.info("QTotal Items: {}", noticePage.getTotalElements());
-        log.info("QContent: {}", noticePage.getContent());
-
+        log.info("Content: {}", noticePage.getContent());
         Map<String, Object> response = new HashMap<>();
-        response.put("list", noticePage.getContent());
+        response.put("list", noticePage.getContent()); // 여기서 isDeleted = N 데이터만
         response.put("paging", Map.of(
                 "currentPage", noticePage.getNumber() + 1,
-                "maxPage", noticePage.getTotalPages(),
-                "totalItems", noticePage.getTotalElements(),
-                "startPage", Math.max(1, noticePage.getNumber() + 1 - 2),
-                "endPage", Math.min(noticePage.getTotalPages(), noticePage.getNumber() + 1 + 3)
+                "totalPages", noticePage.getTotalPages(),
+                "totalItems", noticePage.getTotalElements()
         ));
 
-        log.info("Response: {}", response);
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/detail/{noticeNo}")
-    public Notice getNoticeDetail(@PathVariable String noticeNo) {
-        log.info("getNoticeDetail 시작");
-        try {
-            Notice notice = noticeRepository.findById(noticeNo).get().toDto();
-            notice.setNoticeVCount(notice.getNoticeVCount() + 1);
-            noticeRepository.save(notice.toEntity());
-            return notice;
-        } catch (Exception e){
-            e.printStackTrace();
-            return null;
-        }
+//    @GetMapping("/detail/{noticeNo}")
+//    public Notice getNoticeDetail(@PathVariable String noticeNo) {
+//        log.info("getNoticeDetail 시작");
+//        try {
+//            Notice notice = noticeRepository.findById(noticeNo).get().toDto();
+//            notice.setNoticeVCount(notice.getNoticeVCount() + 1);
+//            noticeRepository.save(notice.toEntity());
+//            return notice;
+//        } catch (Exception e){
+//            e.printStackTrace();
+//            return null;
+//        }
+//    }
+@GetMapping("/detail/{noticeNo}")
+public Notice getNoticeDetail(@PathVariable String noticeNo) {
+    log.info("getNoticeDetail 시작");
+    try {
+        Notice notice = noticeRepository.findById(noticeNo).get().toDto();
+        notice.setNoticeVCount(notice.getNoticeVCount() + 1);
+        noticeRepository.save(notice.toEntity());
+        return notice;
+    } catch (Exception e) {
+        e.printStackTrace();
+        return null;
     }
+}
 
     //SDA
-
+//
     @PostMapping("/insert")
     public ResponseEntity<?> insertNotice(
             @RequestParam(value = "uuid", required = false) String uuid,
@@ -140,58 +201,8 @@ public class NoticeController {
             log.error("공지 등록 중 에러 발생", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal server error"); // 실패 응답
         }
+
     }
-//@PostMapping("/insert")
-//public ResponseEntity<?> insertNotice(
-//        @RequestParam("uuid") String uuid,
-//        @RequestParam("noticeTitle") String noticeTitle,
-//        @RequestParam("noticeContent") String noticeContent,
-//        @RequestParam(value = "file", required = false) MultipartFile file) {
-//
-//    log.info("공지 등록 시작");
-//    log.info("UUID: {}", uuid);
-//    log.info("공지 제목: {}", noticeTitle);
-//    log.info("공지 내용: {}", noticeContent);
-//    log.info("첨부 파일: {}", file != null ? file.getOriginalFilename() : "첨부 파일 없음");
-//
-//    try {
-//        // 파일 처리
-//        String noticeAttachments = null;
-//        if (file != null && !file.isEmpty()) {
-//            noticeAttachments = "N_" + file.getOriginalFilename();
-//            Path uploadPath = Paths.get("C:/upload_files");
-//
-//            // 디렉토리 생성
-//            if (!Files.exists(uploadPath)) {
-//                Files.createDirectories(uploadPath);
-//                log.info("업로드 디렉터리 생성: {}", uploadPath.toString());
-//            }
-//
-//            // 파일 저장
-//            Files.copy(file.getInputStream(), uploadPath.resolve(noticeAttachments), StandardCopyOption.REPLACE_EXISTING);
-//            log.info("파일 저장 성공: {}", noticeAttachments);
-//        }
-//
-//        // Notice DTO 생성
-//        Notice notice = Notice.builder()
-//                .uuid(uuid)
-//                .noticeTitle(noticeTitle)
-//                .noticeContent(noticeContent)
-//                .noticePath(noticeAttachments)
-//                .noticeWDate(new Timestamp(System.currentTimeMillis()))
-//                .noticeVCount(0)
-//                .build();
-//
-//        // 서비스 호출
-//        noticeService.insertNotice(notice);
-//
-//        return ResponseEntity.status(HttpStatus.CREATED).body("공지 등록 성공");
-//    } catch (Exception e) {
-//        log.error("공지 등록 중 에러 발생", e);
-//        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("공지 등록 실패");
-//    }
-////}
-//
 //    @PostMapping("/insert")
 //    public ResponseEntity<?> insertNotice(
 //            @RequestParam("uuid") String uuid,
@@ -206,67 +217,7 @@ public class NoticeController {
 //        log.info("첨부 파일: {}", file != null ? file.getOriginalFilename() : "첨부 파일 없음");
 //
 //        try {
-//            // NoticeEntity 생성
-//            NoticeEntity noticeEntity = NoticeEntity.builder()
-//                    .noticeNo("NOTICE_" + System.currentTimeMillis())
-//                    .uuid(uuid)
-//                    .noticeTitle(noticeTitle)
-//                    .noticeContent(noticeContent)
-//                    .noticeWDate(new Timestamp(System.currentTimeMillis()))
-//                    .noticeVCount(0)
-//                    .noticeIsDeleted("N")
-//                    .build();
-//
-//            // 첨부파일 처리 및 NoticeAttachmentEntity 생성
-//            if (file != null && !file.isEmpty()) {
-//                String noticeAttachments = "N_" + file.getOriginalFilename();
-//                Path uploadPath = Paths.get("C:/upload_files");
-//
-//                // 디렉토리 생성
-//                if (!Files.exists(uploadPath)) {
-//                    Files.createDirectories(uploadPath);
-//                    log.info("업로드 디렉터리 생성: {}", uploadPath.toString());
-//                }
-//
-//                // 파일 저장
-//                Files.copy(file.getInputStream(), uploadPath.resolve(noticeAttachments), StandardCopyOption.REPLACE_EXISTING);
-//                log.info("파일 저장 성공: {}", noticeAttachments);
-//
-//                // NoticeAttachmentEntity 생성 및 NoticeEntity에 추가
-//                NoticeAttachmentEntity attachmentEntity = NoticeAttachmentEntity.builder()
-//                        .notice(noticeEntity) // NoticeEntity와 매핑
-//                        .noticeAName(noticeAttachments) // 파일 이름
-//                        .build();
-//
-//                // NoticeEntity의 첨부파일 리스트에 추가
-//                noticeEntity.getNoticeAttachments().add(attachmentEntity);
-//            }
-//
-//            // NoticeEntity 저장 (Notice와 Attachments 모두 저장)
-//            noticeService.saveNotice(noticeEntity);
-//
-//            return ResponseEntity.status(HttpStatus.CREATED).body("공지 등록 성공");
-//        } catch (Exception e) {
-//            log.error("공지 등록 중 에러 발생", e);
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("공지 등록 실패");
-//        }
-//    }
-//
-//    @PostMapping("/insert")
-//    public ResponseEntity<?> insertNotice(
-//            @RequestParam("uuid") String uuid,
-//            @RequestParam("noticeTitle") String noticeTitle,
-//            @RequestParam("noticeContent") String noticeContent,
-//            @RequestParam(value = "file", required = false) MultipartFile file) {
-//
-//        log.info("공지 등록 시작");
-//        log.info("UUID: {}", uuid);
-//        log.info("공지 제목: {}", noticeTitle);
-//        log.info("공지 내용: {}", noticeContent);
-//        log.info("첨부 파일: {}", file != null ? file.getOriginalFilename() : "첨부 파일 없음");
-//
-//        try {
-//            // DTO 생성
+//            // Notice DTO 생성
 //            Notice notice = Notice.builder()
 //                    .uuid(uuid)
 //                    .noticeTitle(noticeTitle)
@@ -283,8 +234,6 @@ public class NoticeController {
 //        }
 //    }
 
-
-
 //    @GetMapping("/update/{noticeNo}")
 //    public ResponseEntity<Notice> getNoticeForUpdate(@PathVariable String noticeNo) {
 //        try {
@@ -299,6 +248,38 @@ public class NoticeController {
 //            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
 //        }
 //    }
+//
+//    @PostMapping("/insert")
+//    public ResponseEntity<?> insertNotice(
+//            @RequestParam("uuid") String uuid,
+//            @RequestParam("noticeTitle") String noticeTitle,
+//            @RequestParam("noticeContent") String noticeContent,
+//            @RequestParam(value = "file", required = false) MultipartFile file) {
+//
+//        log.info("공지 등록 시작");
+//        log.info("UUID: {}", uuid);
+//        log.info("공지 제목: {}", noticeTitle);
+//        log.info("공지 내용: {}", noticeContent);
+//        log.info("첨부 파일: {}", file != null ? file.getOriginalFilename() : "첨부 파일 없음");
+//
+//        try {
+//            // Notice DTO 생성
+//            Notice notice = Notice.builder()
+//                    .uuid(uuid)
+//                    .noticeTitle(noticeTitle)
+//                    .noticeContent(noticeContent)
+//                    .build();
+//
+//            // 서비스 호출
+//            noticeService.insertNotice(notice, file);
+//
+//            return ResponseEntity.status(HttpStatus.CREATED).body("공지 등록 성공");
+//        } catch (Exception e) {
+//            log.error("공지 등록 중 에러 발생", e);
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("공지 등록 실패");
+//        }
+//    }
+//
 
     @GetMapping("/update/{noticeNo}")
     public ResponseEntity<Notice> getNoticeForUpdate(@PathVariable String noticeNo) {
@@ -445,14 +426,55 @@ public ResponseEntity<?> updateNotice(
 }
 
 
-    @DeleteMapping("/delete/{noticeNo}")
-    public void getNoticeDelete(@PathVariable String noticeNo) {
-        log.info("getNoticeDelete 시작");
-        try {
-            noticeRepository.deleteById(noticeNo);
-        } catch (Exception e){
-            e.printStackTrace();
-        }
+//    @PutMapping("/detail/{noticeNo}")
+//    public ResponseEntity<String> getNoticeDelete(@PathVariable String noticeNo) {
+//        log.info("getNoticeDelete 시작");
+//        try {
+//            log.info("삭제 요청 받은 notice 번호: {}", noticeNo);
+//
+//            Optional<NoticeEntity> notcieEntityOptional = noticeRepository.findById((noticeNo));
+//            if (notcieEntityOptional.isEmpty()) {
+//                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("notice not found");
+//            }
+//
+//            NoticeEntity noticeEntity = notcieEntityOptional.get();
+//            noticeEntity.setNoticeIsDeleted("Y"); // qIsDeleted 필드를 "Y"로 변경
+//            noticeRepository.save(noticeEntity);
+//
+//            log.info("notice 삭제 처리됨 (qIsDeleted = 'Y'): {}", noticeNo);
+//            return ResponseEntity.ok("notice marked as deleted");
+//        } catch (Exception e) {
+//            log.error("notice 삭제 처리 중 에러 발생:", e);
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error marking notice as deleted");
+//        }
+//}
 
+
+    @PutMapping("/detail/{noticeNo}")
+    public ResponseEntity<String> toggleNoticeDelete(@PathVariable String noticeNo) {
+        log.info("toggleNoticeDelete 시작");
+        try {
+            log.info("삭제 요청 받은 notice 번호: {}", noticeNo);
+
+            Optional<NoticeEntity> noticeEntityOptional = noticeRepository.findById(noticeNo);
+            if (noticeEntityOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Notice not found");
+            }
+
+            NoticeEntity noticeEntity = noticeEntityOptional.get();
+
+            // 기존 값에 따라 상태 변경 (Y ↔ N)
+            String newStatus = "N".equals(noticeEntity.getNoticeIsDeleted()) ? "Y" : "N";
+            noticeEntity.setNoticeIsDeleted(newStatus);
+
+            noticeRepository.save(noticeEntity);
+
+            log.info("Notice 상태 변경 완료: {} -> {}", noticeNo, newStatus);
+            return ResponseEntity.ok("Notice 상태가 '" + newStatus + "'로 변경되었습니다.");
+        } catch (Exception e) {
+            log.error("Notice 상태 변경 중 오류 발생:", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error toggling notice status");
+        }
     }
+
 }

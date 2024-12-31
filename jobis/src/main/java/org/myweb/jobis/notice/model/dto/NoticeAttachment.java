@@ -25,7 +25,7 @@ public class NoticeAttachment {
     // Entity 변환 메서드
     public NoticeAttachmentEntity toEntity() {
         return NoticeAttachmentEntity.builder()
-                .noticeANo(Long.valueOf(noticeANo))
+                .noticeANo(noticeANo)
                 .noticeAName(noticeAName)
                 .build();
     }
@@ -33,7 +33,7 @@ public class NoticeAttachment {
     // Entity -> DTO 변환 메서드
     public static NoticeAttachment fromEntity(NoticeAttachmentEntity noticeattachmententity) {
         return NoticeAttachment.builder()
-                .noticeANo(String.valueOf(noticeattachmententity.getNoticeANo()))
+                .noticeANo(noticeattachmententity.getNoticeANo())
                 .noticeAName(noticeattachmententity.getNoticeAName())
                 .noticeNo(noticeattachmententity.getNotice() != null ? noticeattachmententity.getNotice().getNoticeNo() : null)
                 .build();
