@@ -71,7 +71,7 @@ public class ReviewController {
                 "currentPage", reviewPage.getNumber() + 1,
                 "maxPage", reviewPage.getTotalPages(),
                 "startPage", Math.max(1, reviewPage.getNumber() + 1 - 2),
-                "endPage", Math.min(reviewPage.getTotalPages(), reviewPage.getNumber() +1+ 3),
+                "endPage", Math.min(reviewPage.getTotalPages(), reviewPage.getNumber() + 1 + 3),
                 "totalItems", reviewPage.getTotalElements()
         ));
 
@@ -85,6 +85,7 @@ public class ReviewController {
             @RequestParam("rContent") String rContent,
             @RequestParam("rWriter") String rWriter,
             @RequestParam("uuid") String uuid,
+            @RequestParam(value = "rCount", defaultValue = "0") int rCount,
             @RequestParam(value = "file", required = false) MultipartFile file) {
 
         log.info("리뷰 등록 메서드 시작: {}", rTitle);
@@ -93,6 +94,7 @@ public class ReviewController {
             log.info("Received rTitle: {}", rTitle);
             log.info("Received rContent: {}", rContent);
             log.info("Received rWriter: {}", rWriter);
+            log.info("rCount: {}", rCount);
             log.info("Received file: {}", file != null ? file.getOriginalFilename() : "No file");
 
             String attachmentTitle = null;
@@ -110,8 +112,18 @@ public class ReviewController {
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("업로드 디렉터리 생성 실패");
                     }
                 }
-                    Files.copy(file.getInputStream(), uploadPath.resolve(attachmentTitle), StandardCopyOption.REPLACE_EXISTING);
+                Files.copy(file.getInputStream(), uploadPath.resolve(attachmentTitle), StandardCopyOption.REPLACE_EXISTING);
             }
+
+            Review review = Review.builder()
+                    .rNo(null)
+                    .rTitle(rTitle)
+                    .rContent(rContent)
+                    .uuid(uuid)
+                    .rWDate(new Timestamp(System.currentTimeMillis()))
+                    .rCount(rCount)
+                    .build();
+
             // Review 객체 생성 (리뷰 등록 데이터)
             Review reviewDTO = Review.builder()
                     .rNo(null) // `System.currentTimeMillis()`가 중복되지 않는지 확인
@@ -122,6 +134,7 @@ public class ReviewController {
 
                     .rAttachmentTitle(attachmentTitle)
                     .uuid(uuid)
+
                     .rIsDeleted("N")
                     .rCount(0)
                     .build();
@@ -153,16 +166,17 @@ public class ReviewController {
         try {
             // 예: 서비스에서 리뷰 상세 데이터 가져오기
             Review review = reviewService.getReviewDetail(rno);
+            review.setRCount(review.getRCount() + 1);
+            reviewRepository.save(review.toEntity());
             return ResponseEntity.ok(review);
+
+
         } catch (Exception e) {
             logger.error("Error fetching review detail for rno: {}", rno, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Failed to fetch review detail.");
         }
     }
-
-
-
 
 
     @GetMapping("/attachments/{filename}")
@@ -206,5 +220,51 @@ public class ReviewController {
         }
     }
 
+    @PutMapping("/update/{rno}")
+    public ResponseEntity<?> updateReview(
+            @PathVariable String rno,
+            @RequestParam("rTitle") String rTitle,
+            @RequestParam("rContent") String rContent,
+            @RequestParam(value = "file", required = false) MultipartFile file) {
+
+        try {
+            log.info("Received rno: {}", rno);
+
+            Optional<ReviewEntity> reviewEntityOptional = reviewRepository.findById(rno);
+            if (reviewEntityOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Review not found");
+            }
+
+            ReviewEntity reviewEntity = reviewEntityOptional.get();
+            reviewEntity.setRTitle(rTitle);
+            reviewEntity.setRContent(rContent);
+
+            if (file != null && !file.isEmpty()) {
+                String attachmentTitle = "R_" + file.getOriginalFilename();
+                Path uploadPath = Paths.get("C:/upload_files");
+                Files.copy(file.getInputStream(), uploadPath.resolve(attachmentTitle), StandardCopyOption.REPLACE_EXISTING);
+
+                reviewEntity.setRAttachmentTitle(attachmentTitle);
+                reviewEntity.setRADate(new Timestamp(System.currentTimeMillis()));
+            } else {
+                reviewEntity.setRAttachmentTitle(null);
+                reviewEntity.setRADate(null);
+            }
+
+
+
+            reviewEntity.setRUpdateDate(new Timestamp(System.currentTimeMillis()));
+
+            reviewRepository.save(reviewEntity);
+
+            log.info("Review updated successfully: {}", rno);
+            return ResponseEntity.ok("Review updated successfully");
+        } catch (Exception e) {
+            log.error("Error updating review", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error updating review");
+        }
+    }
+
 
 }
+

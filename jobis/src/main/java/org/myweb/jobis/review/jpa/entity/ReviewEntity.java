@@ -56,8 +56,8 @@ public class ReviewEntity {
     private UserEntity user;
 
     @Builder.Default
-    @Column(name = "R_COUNT", nullable = false, columnDefinition = "NUMBER DEFAULT 1")
-    private int rCount = 1;
+    @Column(name = "R_COUNT", nullable = false)
+    private Integer rCount = 0;
 
     public Review toDto() {
         return Review.builder()

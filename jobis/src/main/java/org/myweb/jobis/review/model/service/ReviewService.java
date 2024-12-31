@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -34,7 +35,7 @@ public class ReviewService {
 
                 .rDDate(reviewDTO.getRDDate())
                 .uuid(reviewDTO.getUuid())
-                .rCount(reviewDTO.getRCount() != 0 ? reviewDTO.getRCount() : 0)
+                .rCount(Optional.ofNullable(reviewDTO.getRCount()).orElse(0))
                 .build();
 
         reviewRepository.save(reviewEntity);
