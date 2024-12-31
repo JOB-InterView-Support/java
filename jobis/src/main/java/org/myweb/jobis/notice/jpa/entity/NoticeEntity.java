@@ -79,7 +79,7 @@ public class NoticeEntity {
                 .noticeDDate(noticeDDate)
                 .noticeIsDeleted(noticeIsDeleted)
                 .noticeVCount(noticeVCount)
-                .noticePath(noticePath)
+                .noticePath(noticePath) // 파일 이름만 반환
                 .build();
     }
 
