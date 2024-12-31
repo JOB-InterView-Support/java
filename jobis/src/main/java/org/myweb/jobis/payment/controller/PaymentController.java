@@ -1,10 +1,18 @@
 package org.myweb.jobis.payment.controller;
 
+
 import lombok.extern.slf4j.Slf4j;
+import org.myweb.jobis.payment.model.dto.Payment;
 import org.myweb.jobis.payment.model.service.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -15,15 +23,26 @@ public class PaymentController {
     private PaymentService paymentService;
 
     @PostMapping("/confirm")
-    public ResponseEntity<String> confirmPayment(
-            @RequestBody String orderId,
-            @RequestBody int amount,
-            @RequestBody String paymentKey
-    ) {
-        log.info("전달온 orderId : {}", orderId);
-        ResponseEntity<String> response = paymentService.confirmPayment(orderId, amount, paymentKey);
-        log.info("response : " + response);
-        return response;
-    }
+    public ResponseEntity<?> confirmPayment(@RequestBody Map<String, Object> requestData) {
+        try {
+            String paymentKey = (String) requestData.get("paymentKey");
+            int amount = (int) requestData.get("amount");
+            String orderId = (String) requestData.get("orderId");
 
+            Map<String, Object> response = paymentService.confirmPayment(paymentKey, amount, orderId);
+            return ResponseEntity.ok(response);
+        } catch (IOException e) {
+            log.error("IOException occurred: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    "code", "IO_ERROR",
+                    "message", e.getMessage()
+            ));
+        } catch (Exception e) {
+            log.error("Unexpected error occurred: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    "code", "UNKNOWN_ERROR",
+                    "message", "An unexpected error occurred"
+            ));
+        }
+    }
 }
