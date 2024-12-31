@@ -6,6 +6,7 @@ import org.myweb.jobis.faceid.model.service.FaceIdService;
 import org.myweb.jobis.mypage.jpa.entity.SelfIntroduceEntity;
 import org.myweb.jobis.mypage.model.dto.SelfIntroduce;
 import org.myweb.jobis.mypage.model.service.MypageService;
+import org.myweb.jobis.ticket.jpa.entity.TicketEntity;
 import org.myweb.jobis.user.jpa.entity.UserEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.method.P;
@@ -197,6 +198,20 @@ public class MypageController {
         faceIdService.deleteImageAndDataByUuid(uuid);
 
         return ResponseEntity.ok("USER_FACEID_STATUS has been reset to 'N' and image file deleted.");
+    }
+
+    @GetMapping("/ticket/{uuid}")
+    public ResponseEntity<List<TicketEntity>> getTicketList(@PathVariable String uuid) {
+        try {
+            List<TicketEntity> sortedTickets = mypageService.getTicketsByUuidSortedByPurchaseDate(uuid);
+            if (sortedTickets.isEmpty()) {
+                log.info("티켓 데이터가 없습니다. UUID: {}", uuid);
+            }
+            return ResponseEntity.ok(sortedTickets); // 빈 리스트도 200 OK로 반환
+        } catch (Exception e) {
+            log.error("티켓 리스트 가져오기 중 오류 발생: {}", e.getMessage());
+            return ResponseEntity.status(500).body(null); // 실제 오류 발생 시 500 상태 반환
+        }
     }
 
 }

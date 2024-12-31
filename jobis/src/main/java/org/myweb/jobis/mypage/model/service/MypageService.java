@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.myweb.jobis.mypage.jpa.entity.SelfIntroduceEntity;
 import org.myweb.jobis.mypage.jpa.repository.SelfIntroduceRepository;
 import org.myweb.jobis.mypage.model.dto.SelfIntroduce;
+import org.myweb.jobis.ticket.jpa.entity.TicketEntity;
+import org.myweb.jobis.ticket.jpa.repository.TicketRepository;
 import org.myweb.jobis.user.jpa.entity.UserEntity;
 import org.myweb.jobis.user.jpa.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,7 @@ import java.util.List;
 public class MypageService {
     private final UserRepository userRepository;
     private final SelfIntroduceRepository selfIntroduceRepository;
+    private final TicketRepository ticketRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -197,5 +200,14 @@ public class MypageService {
         }
 
         user.setUserFaceIdStatus("N");
+    }
+
+    public List<TicketEntity> getTicketsByUuidSortedByPurchaseDate(String uuid) {
+        List<TicketEntity> tickets = ticketRepository.findAllByUuidOrderByTicketStartDateDesc(uuid);
+        if (tickets == null || tickets.isEmpty()) {
+            log.info("티켓 데이터가 없습니다. UUID: {}", uuid);
+            return List.of(); // 빈 리스트 반환
+        }
+        return tickets;
     }
 }
