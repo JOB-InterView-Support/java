@@ -59,9 +59,9 @@ public class JWTFilter extends OncePerRequestFilter {
                 requestURI.equals("/review") || // 추가
                 requestURI.equals("/notice")||
 
-                requestURI.equals("payments/success")||// 12.27 추가 건열
-                requestURI.equals("payments/fail")|| // 12.27 추가 건열
-                requestURI.equals("payments/confirm")|| // 12.30 추가 건열
+                requestURI.equals("/payments/success")||// 12.27 추가 건열
+                requestURI.equals("/payments/fail")|| // 12.27 추가 건열
+                requestURI.equals("/payments/confirm")|| // 12.30 추가 건열
                 requestURI.equals("/paymentSuccess")|| // 12.30 추가 건열
 
 

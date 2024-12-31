@@ -1,12 +1,17 @@
 package org.myweb.jobis.notice.jpa.repository;
 
 import org.myweb.jobis.notice.jpa.entity.NoticeEntity;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Optional;
 
 public interface NoticeRepositoryCustom {
+    //
+    Optional<NoticeEntity> findByNotice(String noticeNo);
+    Page<NoticeEntity> findByNoticeIsDeleted(String noticeIsDeleted, Pageable pageable);
     String findLastNoticeNo();
     List<NoticeEntity> findSearchTitle(String keyword, Pageable pageable);
     String countSearchTitle(String keyword);

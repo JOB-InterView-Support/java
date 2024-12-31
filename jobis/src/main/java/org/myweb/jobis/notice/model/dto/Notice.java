@@ -50,7 +50,7 @@ public class Notice {
                         .noticeUDate(noticeUDate)
                         .noticeIsDeleted(noticeIsDeleted)
                         .noticeDDate(noticeDDate)
-                        .noticePath(noticePath == null ? "" : noticePath)
+                        .noticePath(noticePath)
                         .build();
         }
 
