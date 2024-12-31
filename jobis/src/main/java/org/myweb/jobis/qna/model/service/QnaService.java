@@ -21,14 +21,24 @@ public class QnaService {
     private final QnaRepository qnaRepository; // final 필드로 선언하여 @RequiredArgsConstructor가 생성자 생성
 
     public void insertQna(Qna qnaDTO) {
+
+        // 9시간을 밀리초로 변환
+        long nineHoursInMillis = 9 * 60 * 60 * 1000;
+
         QnaEntity qnaEntity = QnaEntity.builder()
                 .qNo(qnaDTO.getQNo() != null ? qnaDTO.getQNo() : "QNA_" + System.currentTimeMillis())
                 .qTitle(qnaDTO.getQTitle())
                 .qContent(qnaDTO.getQContent())
                 .qWriter(qnaDTO.getQWriter())
-                .qWDate(qnaDTO.getQWDate() != null ? qnaDTO.getQWDate() : new Timestamp(System.currentTimeMillis()))
+                .qWDate(qnaDTO.getQWDate() != null
+                        ? qnaDTO.getQWDate()
+                        : new Timestamp(System.currentTimeMillis() + nineHoursInMillis)) // 작성 시간 + 9시간
                 .qAttachmentTitle(qnaDTO.getQAttachmentTitle())
-                .qADate(qnaDTO.getQADate() != null ? qnaDTO.getQADate() : (qnaDTO.getQAttachmentTitle() != null ? new Timestamp(System.currentTimeMillis()) : null))
+                .qADate(qnaDTO.getQADate() != null
+                        ? qnaDTO.getQADate()
+                        : (qnaDTO.getQAttachmentTitle() != null
+                        ? new Timestamp(System.currentTimeMillis() + nineHoursInMillis) // 첨부 시간 + 9시간
+                        : null))
                 .qUpdateDate(qnaDTO.getQUpdateDate())
                 .qIsDeleted(qnaDTO.getQIsDeleted() != null ? qnaDTO.getQIsDeleted() : "N")
                 .qDDate(qnaDTO.getQDDate())

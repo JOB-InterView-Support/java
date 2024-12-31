@@ -281,6 +281,8 @@ public class QnaController {
 
             // 글 수정 여부와 수정 날짜 설정
             qnaEntity.setQUpdateYN("Y"); // 수정 여부를 'Y'로 설정
+
+
             qnaEntity.setQUpdateDate(new Timestamp(System.currentTimeMillis())); // 현재 시간 저장
 
             // 데이터베이스 업데이트
