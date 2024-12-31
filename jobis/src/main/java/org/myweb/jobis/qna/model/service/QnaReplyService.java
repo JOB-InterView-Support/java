@@ -51,4 +51,24 @@ public class QnaReplyService {
 //                .orElseThrow(() -> new NoSuchElementException("게시글을 찾을 수 없습니다."));
 //    }
 
+
+    // 댓글 추가 메서드
+    public QnaReply addReply(QnaReply replyDto, QnaEntity qnaEntity) {
+        // 현재 시간과 qno를 사용하여 repno 생성
+        String repno = qnaEntity.getQNo() + "_" + System.currentTimeMillis();
+
+        QnaReplyEntity replyEntity = QnaReplyEntity.builder()
+                .repno(repno) // 생성된 repno 설정
+                .repwriter(replyDto.getRepwriter())
+                .repdate(new Timestamp(System.currentTimeMillis()))
+                .repisdeleted('N')
+                .repcontent(replyDto.getRepcontent())
+                .uuid(replyDto.getUuid())
+                .qna(qnaEntity)
+                .build();
+
+        QnaReplyEntity savedEntity = qnaReplyRepository.save(replyEntity);
+        return savedEntity.toDto();
+    }
+
 }

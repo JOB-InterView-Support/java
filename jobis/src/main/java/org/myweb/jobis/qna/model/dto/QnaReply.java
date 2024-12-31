@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.myweb.jobis.qna.jpa.entity.QnaEntity;
 import org.myweb.jobis.qna.jpa.entity.QnaReplyEntity;
 
 import java.sql.Timestamp;
@@ -29,7 +30,7 @@ public class QnaReply {
     private String qno;             // 질문 번호 (외래 키)
 
     // Entity 변환 메서드
-    public QnaReplyEntity toEntity() {
+    public QnaReplyEntity toEntity(QnaEntity qna) {
         return QnaReplyEntity.builder()
                 .repno(repno)
                 .repwriter(repwriter)
@@ -39,8 +40,10 @@ public class QnaReply {
                 .repdeletedate(repdeletedate)
                 .repcontent(repcontent)
                 .uuid(uuid)
+                .qna(qna)
                 .build();
     }
+
 
     // Entity -> DTO 변환 메서드
     public static QnaReply fromEntity(QnaReplyEntity entity) {

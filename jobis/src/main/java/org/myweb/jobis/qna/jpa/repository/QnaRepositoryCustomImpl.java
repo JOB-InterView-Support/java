@@ -87,15 +87,6 @@ public class QnaRepositoryCustomImpl implements QnaRepositoryCustom {
 
 
 
-    // 날짜로 검색하는 부분 검색 수정중
-//    @Override
-//    public long countSearchDate(Date begin, Date end) {
-//        return queryFactory
-//                .selectFrom(qna)
-//               .where(qna.qWDate.between(begin.toLocalDate().atStartOfDay(), end.toLocalDate().atStartOfDay()))
-//                .fetchCount();
-//    }
-
     @Override
     public List<QnaEntity> findSearchTitle(String keyword, Pageable pageable) {
         return queryFactory

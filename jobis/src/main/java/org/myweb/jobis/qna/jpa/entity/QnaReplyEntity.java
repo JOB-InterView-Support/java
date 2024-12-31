@@ -19,36 +19,36 @@ import java.sql.Timestamp;
 public class QnaReplyEntity {
 
     @Id
-    @Column(name = "REP_NO", length = 50, nullable = false)
+    @Column(name = "REP_NO", length = 50, nullable = false) // 대문자 컬럼명
     private String repno;
 
-    @Column(name = "REP_WRITER", length = 50, nullable = false)
+    @Column(name = "REP_WRITER", length = 50, nullable = false) // 대문자 컬럼명
     private String repwriter;
 
-    @Column(name = "REP_DATE", nullable = false)
+    @Column(name = "REP_DATE", nullable = false) // 대문자 컬럼명
     private Timestamp repdate;
 
-    @Column(name = "REP_IS_DELETED", length = 1, nullable = false)
+    @Column(name = "REP_IS_DELETED", length = 1, nullable = false, columnDefinition = "CHAR(1) DEFAULT 'N'") // 대문자 컬럼명
     private char repisdeleted;
 
-    @Column(name = "REP_UPDATE_DATE")
+    @Column(name = "REP_UPDATE_DATE") // 대문자 컬럼명
     private Timestamp repupdatedate;
 
-    @Column(name = "REP_DELETE_DATE")
+    @Column(name = "REP_DELETE_DATE") // 대문자 컬럼명
     private Timestamp repdeletedate;
 
-    @Column(name = "REP_CONTENT", length = 100, nullable = false)
+    @Column(name = "REP_CONTENT", length = 100, nullable = false) // 대문자 컬럼명
     private String repcontent;
 
-    @Column(name = "UUID", length = 50, nullable = false)
+    @Column(name = "UUID", length = 50, nullable = false) // 대문자 컬럼명
     private String uuid;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "UUID", referencedColumnName = "UUID", insertable = false, updatable = false)
+    @JoinColumn(name = "UUID", referencedColumnName = "UUID", insertable = false, updatable = false) // 대문자 컬럼명
     private UserEntity user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "Q_NO", referencedColumnName = "Q_NO", insertable = false, updatable = false)
+    @JoinColumn(name = "Q_NO", referencedColumnName = "Q_NO", insertable = false, updatable = false) // 대문자 컬럼명
     private QnaEntity qna;
 
     // Entity -> DTO 변환 메서드

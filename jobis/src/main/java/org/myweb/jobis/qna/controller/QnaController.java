@@ -3,10 +3,8 @@ package org.myweb.jobis.qna.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.myweb.jobis.qna.jpa.entity.QnaEntity;
-import org.myweb.jobis.qna.jpa.entity.QnaReplyEntity;
 import org.myweb.jobis.qna.jpa.repository.QnaRepository;
 import org.myweb.jobis.qna.model.dto.Qna;
-import org.myweb.jobis.qna.model.dto.QnaReply;
 import org.myweb.jobis.qna.model.service.QnaReplyService;
 import org.myweb.jobis.qna.model.service.QnaService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,10 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.*;
 import java.sql.Timestamp;
 import java.util.*;
 
@@ -39,11 +34,9 @@ import java.util.*;
 public class QnaController {
 
     private final QnaService qnaService;
-    private final QnaReplyService qnaReplyService;
 
     @Autowired
     private QnaRepository qnaRepository;
-
 
 
     @Value("${file.upload-dir}")
@@ -176,32 +169,48 @@ public class QnaController {
     @GetMapping("/attachments/{filename}")
     public ResponseEntity<Resource> getFile(@PathVariable String filename) {
         try {
+            // 파일 경로 생성
             Path filePath = Paths.get("C:/upload_files").resolve(filename).normalize();
-            log.info("요청된 파일 경로: {}", filePath);
+            log.info("Resolved file path: {}", filePath.toAbsolutePath());
 
+            // 리소스 생성
             Resource resource = new UrlResource(filePath.toUri());
             if (resource.exists() && resource.isReadable()) {
-                log.info("파일이 존재하며 읽을 수 있습니다: {}", filePath);
+                log.info("File exists and is readable: {}", filePath);
 
-                // 파일 MIME 타입 확인
+                // MIME 타입 확인 및 기본값 설정
                 String contentType = Files.probeContentType(filePath);
                 if (contentType == null) {
-                    contentType = "application/octet-stream";
+                    if (filename.endsWith(".png")) {
+                        contentType = "image/png";
+                    } else if (filename.endsWith(".jpg") || filename.endsWith(".jpeg")) {
+                        contentType = "image/jpeg";
+                    } else if (filename.endsWith(".gif")) {
+                        contentType = "image/gif";
+                    } else {
+                        contentType = "application/octet-stream";
+                    }
                 }
 
                 return ResponseEntity.ok()
                         .contentType(MediaType.parseMediaType(contentType))
                         .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
+                        .header(HttpHeaders.CACHE_CONTROL, "max-age=3600")
                         .body(resource);
             } else {
-                log.warn("파일이 존재하지 않거나 읽을 수 없습니다: {}", filePath);
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+                log.warn("File does not exist or is not readable: {}", filePath);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 빈 ResponseEntity 반환
             }
+        } catch (NoSuchFileException e) {
+            log.error("File not found: {}", filename, e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 파일이 없는 경우
         } catch (Exception e) {
-            log.error("파일 제공 중 오류 발생: {}", filename, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+            log.error("Unexpected error while providing file: {}", filename, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 기타 예외 발생 시
         }
     }
+
+
 
 
 
@@ -296,86 +305,15 @@ public class QnaController {
         }
     }
 
-//    /**
-//     * 댓글 등록
-//     */
-//    @PostMapping("/{qno}")
-//    public ResponseEntity<?> createReply(
-//            @PathVariable String qno,
-//            @RequestBody QnaReply reply) {
-//        try {
-//            QnaEntity qnaEntity = qnaService.findQnaEntityByQno(qno); // QnA 게시글 존재 확인
-//            QnaReplyEntity replyEntity = QnaReplyEntity.fromDto(reply, qnaEntity);
-//
-//            replyEntity.setRepdate(new Timestamp(System.currentTimeMillis())); // 등록 시간 설정
-//            replyEntity.setRepisdeleted('N'); // 삭제 여부 기본값 설정
-//
-//            qnaReplyService.saveReply(replyEntity);
-//
-//            return ResponseEntity.status(HttpStatus.CREATED).body("댓글이 등록되었습니다.");
-//        } catch (NoSuchElementException e) {
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("해당 게시글을 찾을 수 없습니다.");
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("댓글 등록 중 오류가 발생했습니다.");
-//        }
-//    }
-//
-//    /**
-//     * 댓글 조회
-//     */
-//    @GetMapping("/{qno}")
-//    public ResponseEntity<List<QnaReply>> getReplies(@PathVariable String qno) {
-//        try {
-//            List<QnaReply> replies = qnaReplyService.findRepliesByQno(qno);
-//            return ResponseEntity.ok(replies);
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.emptyList());
-//        }
-//    }
-//
-//    /**
-//     * 댓글 수정
-//     */
-//    @PutMapping("/{repno}")
-//    public ResponseEntity<?> updateReply(
-//            @PathVariable String repno,
-//            @RequestBody QnaReply updatedReply) {
-//        try {
-//            QnaReplyEntity replyEntity = qnaReplyService.findReplyByRepno(repno);
-//
-//            replyEntity.setRepcontent(updatedReply.getRepcontent()); // 내용 수정
-//            replyEntity.setRepupdatedate(new Timestamp(System.currentTimeMillis())); // 수정 시간 설정
-//
-//            qnaReplyService.saveReply(replyEntity);
-//
-//            return ResponseEntity.ok("댓글이 수정되었습니다.");
-//        } catch (NoSuchElementException e) {
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("해당 댓글을 찾을 수 없습니다.");
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("댓글 수정 중 오류가 발생했습니다.");
-//        }
-//    }
-//
-//    /**
-//     * 댓글 삭제
-//     */
-//    @DeleteMapping("/{repno}")
-//    public ResponseEntity<?> deleteReply(@PathVariable String repno) {
-//        try {
-//            QnaReplyEntity replyEntity = qnaReplyService.findReplyByRepno(repno);
-//
-//            replyEntity.setRepisdeleted('Y'); // 삭제 여부 변경
-//            replyEntity.setRepdeletedate(new Timestamp(System.currentTimeMillis())); // 삭제 시간 설정
-//
-//            qnaReplyService.saveReply(replyEntity);
-//
-//            return ResponseEntity.ok("댓글이 삭제되었습니다.");
-//        } catch (NoSuchElementException e) {
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("해당 댓글을 찾을 수 없습니다.");
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("댓글 삭제 중 오류가 발생했습니다.");
-//        }
-    }
+
+
+
+}
+
+
+
+
+
 
 
 

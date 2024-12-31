@@ -93,7 +93,7 @@ public class SecurityConfig implements WebMvcConfigurer {
                         .requestMatchers("/**/{spring:[a-zA-Z0-9-_]+}").permitAll()
 
                         // 첨부파일 경로 인증 제외
-                        .requestMatchers("/qna/attachments/**").permitAll()
+                        .requestMatchers("/attachments/**").permitAll()
 
                         // 정적 리소스 및 인증 제외 경로
                         .requestMatchers("/", "/**", "/favicon.ico", "/manifest.json", "/public/**", "/auth/**", "/css/**", "/js/**").permitAll()
@@ -126,6 +126,13 @@ public class SecurityConfig implements WebMvcConfigurer {
                         .requestMatchers(HttpMethod.POST, "/qna/**").hasAnyRole("USER", "ADMIN") // 등록은 USER와 ADMIN 허용
                         .requestMatchers(HttpMethod.PUT, "/qna/{no}").hasAnyRole("USER", "ADMIN")// 수정은 USER와 ADMIN 허용
                         .requestMatchers(HttpMethod.DELETE, "/qna/{no}").hasAnyRole("USER", "ADMIN") // 삭제는 USER와 ADMIN 허용
+
+                        //QnA 댓글 경로 설정
+                        .requestMatchers(HttpMethod.GET, "/reply/**").hasAnyRole("USER", "ADMIN") // 댓글 조회 허용
+                        .requestMatchers(HttpMethod.POST, "/reply/**").hasAnyRole( "ADMIN") // 댓글 등록 허용
+                        .requestMatchers(HttpMethod.PUT, "/qna/{no}").hasAnyRole( "ADMIN")// 수정은 ADMIN 허용
+                        .requestMatchers(HttpMethod.DELETE, "/reply/**").hasAnyRole( "ADMIN") // 댓글 삭제 허용
+
 
                         // notice
                         .requestMatchers(HttpMethod.GET, "/notice", "/notice/detail/{no}").hasAnyRole("USER", "ADMIN")
