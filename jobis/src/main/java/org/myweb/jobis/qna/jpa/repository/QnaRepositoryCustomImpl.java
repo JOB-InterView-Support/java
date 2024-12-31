@@ -59,55 +59,55 @@ public class QnaRepositoryCustomImpl implements QnaRepositoryCustom {
 
 
 
-    @Override
-    public String findLastQnaNo() {
-        QnaEntity qnaEntity = queryFactory
-                .selectFrom(qna)
-                .from(qna)
-                .orderBy(qna.qNo.desc())
-                .fetchFirst(); // 가장 마지막 등록 글 1개 조회
-        return qnaEntity.getQNo();
-    }
+//    @Override
+//    public String findLastQnaNo() {
+//        QnaEntity qnaEntity = queryFactory
+//                .selectFrom(qna)
+//                .from(qna)
+//                .orderBy(qna.qNo.desc())
+//                .fetchFirst(); // 가장 마지막 등록 글 1개 조회
+//        return qnaEntity.getQNo();
+//    }
 
-    @Override
-    public long countSearchTitle(String keyword) {
-        return queryFactory
-                .selectFrom(qna)
-                .where(qna.qTitle.containsIgnoreCase(keyword))
-                .fetchCount();
-    }
+//    @Override
+//    public long countSearchTitle(String keyword) {
+//        return queryFactory
+//                .selectFrom(qna)
+//                .where(qna.qTitle.containsIgnoreCase(keyword))
+//                .fetchCount();
+//    }
+//
+//    @Override
+//    public long countSearchWriter(String keyword) {
+//        return queryFactory
+//                .selectFrom(qna)
+//                .where(qna.qWriter.containsIgnoreCase(keyword))
+//                .fetchCount();
+//    }
 
-    @Override
-    public long countSearchWriter(String keyword) {
-        return queryFactory
-                .selectFrom(qna)
-                .where(qna.qWriter.containsIgnoreCase(keyword))
-                .fetchCount();
-    }
 
 
-
-    @Override
-    public List<QnaEntity> findSearchTitle(String keyword, Pageable pageable) {
-        return queryFactory
-                .selectFrom(qna)
-                .where(qna.qTitle.containsIgnoreCase(keyword))
-                .orderBy(qna.qNo.desc())
-                .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
-                .fetch();
-    }
-
-    @Override
-    public List<QnaEntity> findSearchWriter(String keyword, Pageable pageable) {
-        return queryFactory
-                .selectFrom(qna)
-                .where(qna.qWriter.containsIgnoreCase(keyword))
-                .orderBy(qna.qNo.desc())
-                .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
-                .fetch();
-    }
+//    @Override
+//    public List<QnaEntity> findSearchTitle(String keyword, Pageable pageable) {
+//        return queryFactory
+//                .selectFrom(qna)
+//                .where(qna.qTitle.containsIgnoreCase(keyword))
+//                .orderBy(qna.qNo.desc())
+//                .offset(pageable.getOffset())
+//                .limit(pageable.getPageSize())
+//                .fetch();
+//    }
+//
+//    @Override
+//    public List<QnaEntity> findSearchWriter(String keyword, Pageable pageable) {
+//        return queryFactory
+//                .selectFrom(qna)
+//                .where(qna.qWriter.containsIgnoreCase(keyword))
+//                .orderBy(qna.qNo.desc())
+//                .offset(pageable.getOffset())
+//                .limit(pageable.getPageSize())
+//                .fetch();
+//    }
 
     @Override
     public Optional<QnaEntity> findByQno(String qno) {

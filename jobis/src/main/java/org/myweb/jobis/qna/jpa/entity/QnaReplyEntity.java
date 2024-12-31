@@ -6,7 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.myweb.jobis.qna.model.dto.QnaReply;
-import org.myweb.jobis.user.jpa.entity.UserEntity;
 
 import java.sql.Timestamp;
 
@@ -44,12 +43,9 @@ public class QnaReplyEntity {
     private String uuid;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "UUID", referencedColumnName = "UUID", insertable = false, updatable = false) // 대문자 컬럼명
-    private UserEntity user;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "Q_NO", referencedColumnName = "Q_NO", insertable = false, updatable = false) // 대문자 컬럼명
+    @JoinColumn(name = "Q_NO", referencedColumnName = "Q_NO") // 외래 키 설정
     private QnaEntity qna;
+
 
     // Entity -> DTO 변환 메서드
     public QnaReply toDto() {
@@ -66,18 +62,18 @@ public class QnaReplyEntity {
                 .build();
     }
 
-    // DTO -> Entity 변환 메서드
-    public static QnaReplyEntity fromDto(QnaReply reply, QnaEntity qna) {
-        return QnaReplyEntity.builder()
-                .repno(reply.getRepno())
-                .repwriter(reply.getRepwriter())
-                .repdate(reply.getRepdate())
-                .repisdeleted(reply.getRepisdeleted())
-                .repupdatedate(reply.getRepupdatedate())
-                .repdeletedate(reply.getRepdeletedate())
-                .repcontent(reply.getRepcontent())
-                .uuid(reply.getUuid())
-                .qna(qna)
-                .build();
-    }
+//    // DTO -> Entity 변환 메서드
+//    public static QnaReplyEntity fromDto(QnaReply reply, QnaEntity qna) {
+//        return QnaReplyEntity.builder()
+//                .repno(reply.getRepno())
+//                .repwriter(reply.getRepwriter())
+//                .repdate(reply.getRepdate())
+//                .repisdeleted(reply.getRepisdeleted())
+//                .repupdatedate(reply.getRepupdatedate())
+//                .repdeletedate(reply.getRepdeletedate())
+//                .repcontent(reply.getRepcontent())
+//                .uuid(reply.getUuid())
+//                .qna(qna)
+//                .build();
+//    }
 }

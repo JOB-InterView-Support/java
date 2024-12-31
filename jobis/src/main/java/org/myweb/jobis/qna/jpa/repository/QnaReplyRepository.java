@@ -13,4 +13,7 @@ import java.util.List;
 @Repository
 public interface QnaReplyRepository extends JpaRepository<QnaReplyEntity, String> {
     List<QnaReplyEntity> findByQna(QnaEntity qna);
+
+    @Query("SELECT r FROM QnaReplyEntity r WHERE r.qna.qNo = :qno AND r.repisdeleted = 'N'")
+    List<QnaReplyEntity> findByQnaQno(@Param("qno") String qno);
 }

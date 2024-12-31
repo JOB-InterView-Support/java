@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.myweb.jobis.qna.jpa.entity.QnaEntity;
 import org.myweb.jobis.qna.jpa.repository.QnaRepository;
 import org.myweb.jobis.qna.model.dto.Qna;
+import org.myweb.jobis.qna.model.dto.QnaReply;
 import org.myweb.jobis.qna.model.service.QnaReplyService;
 import org.myweb.jobis.qna.model.service.QnaService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,7 @@ import java.util.*;
 public class QnaController {
 
     private final QnaService qnaService;
+    private final QnaReplyService qnaReplyService;
 
     @Autowired
     private QnaRepository qnaRepository;
@@ -147,11 +149,18 @@ public class QnaController {
         try {
             log.info("상세페이지 qno: {}", qno);
 
+            // QnA 데이터 조회
             Qna qna = qnaService.selectQna(qno);
             log.info("조회된 Qna DTO: {}", qna);
 
+            // 댓글 데이터 조회
+            List<QnaReply> replies = qnaReplyService.findRepliesByQno(qno);
+            log.info("조회된 댓글 목록: {}", replies);
+
+            // 응답 데이터 구성
             Map<String, Object> response = new HashMap<>();
             response.put("qna", qna);
+            response.put("replies", replies); // 댓글 포함
 
             return ResponseEntity.ok(response);
         } catch (NoSuchElementException e) {
@@ -164,6 +173,8 @@ public class QnaController {
                     .body(Map.of("error", "Internal server error"));
         }
     }
+
+
 
 
     @GetMapping("/attachments/{filename}")

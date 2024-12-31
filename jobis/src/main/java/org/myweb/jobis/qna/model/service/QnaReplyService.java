@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -53,22 +55,66 @@ public class QnaReplyService {
 
 
     // 댓글 추가 메서드
-    public QnaReply addReply(QnaReply replyDto, QnaEntity qnaEntity) {
-        // 현재 시간과 qno를 사용하여 repno 생성
-        String repno = qnaEntity.getQNo() + "_" + System.currentTimeMillis();
+    // 댓글 추가 메서드
+    @Transactional
+    public void addReply(QnaReply replyDto) {
+        // QnaEntity를 조회하여 연결
+        QnaEntity qna = qnaRepository.findById(replyDto.getQno())
+                .orElseThrow(() -> new RuntimeException("QnA not found"));
 
+        log.info("QnaEntity 조회 성공: {}", qna);
+
+        // repno를 qno와 현재 시간(9시간 추가)으로 생성
+        LocalDateTime now = LocalDateTime.now().plusHours(9); // 9시간 추가
+        String generatedRepno = replyDto.getQno() + "-" + now.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+        log.info("생성된 댓글 번호: {}", generatedRepno);
+
+        // QnaReplyEntity로 변환하면서 QnaEntity를 매핑
         QnaReplyEntity replyEntity = QnaReplyEntity.builder()
-                .repno(repno) // 생성된 repno 설정
+                .repno(generatedRepno) // 동적으로 생성된 repno 설정
                 .repwriter(replyDto.getRepwriter())
-                .repdate(new Timestamp(System.currentTimeMillis()))
-                .repisdeleted('N')
+                .repdate(Timestamp.valueOf(now)) // 현재 시간으로 설정
+                .repisdeleted('N') // 기본값 설정
+                .repupdatedate(null)
+                .repdeletedate(null)
                 .repcontent(replyDto.getRepcontent())
                 .uuid(replyDto.getUuid())
-                .qna(qnaEntity)
+                .qna(qna) // QnaEntity 연결
                 .build();
 
-        QnaReplyEntity savedEntity = qnaReplyRepository.save(replyEntity);
-        return savedEntity.toDto();
+        log.info("QnaReplyEntity 생성 성공: {}", replyEntity);
+
+        // 데이터 저장
+        qnaReplyRepository.save(replyEntity);
+        log.info("댓글 저장 완료: {}", replyEntity);
     }
+
+    public void markReplyAsDeleted(String repno) {
+        // 댓글 엔티티 조회
+        QnaReplyEntity reply = qnaReplyRepository.findById(repno)
+                .orElseThrow(() -> new IllegalArgumentException("댓글을 찾을 수 없습니다. repno=" + repno));
+
+        // 삭제 상태 업데이트
+        reply.setRepisdeleted('Y'); // 삭제 여부 설정
+        reply.setRepdeletedate(Timestamp.valueOf(LocalDateTime.now()));
+
+        // 저장
+        qnaReplyRepository.save(reply);
+        log.info("댓글 삭제 처리 완료: {}", reply);
+    }
+
+
+    // 특정 QnA의 댓글 목록 조회
+    public List<QnaReply> findRepliesByQno(String qno) {
+        QnaEntity qnaEntity = qnaRepository.findById(qno)
+                .orElseThrow(() -> new NoSuchElementException("QnA not found with id: " + qno));
+
+        List<QnaReplyEntity> replyEntities = qnaReplyRepository.findByQna(qnaEntity);
+
+        return replyEntities.stream()
+                .map(QnaReplyEntity::toDto) // Entity -> DTO 변환
+                .collect(Collectors.toList());
+    }
+
 
 }
