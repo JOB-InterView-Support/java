@@ -53,4 +53,22 @@ public class Review {
                 .rCount(rCount)
                 .build();
     }
+
+    public static Review fromEntity(ReviewEntity entity) {
+        return Review.builder()
+                .rNo(entity.getRNo())
+                .uuid(entity.getUuid())
+                .rTitle(entity.getRTitle())
+                .rContent(entity.getRContent())
+                .rWriter(entity.getRWriter())
+                .rWDate(entity.getRWDate())
+                .rAttachmentTitle(entity.getRAttachmentTitle())
+                .rADate(entity.getRADate())
+                .rUpdateDate(entity.getRUpdateDate())
+                .rIsDeleted(entity.getRIsDeleted())
+                .rDDate(entity.getRDDate())
+                .rCount(entity.getRCount())
+
+                .build();
+    }
 }

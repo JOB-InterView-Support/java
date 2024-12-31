@@ -1,35 +1,28 @@
 package org.myweb.jobis.jobposting.model.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.myweb.jobis.jobposting.jpa.entity.JobFavoritesEntity;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
-@Data
-@AllArgsConstructor
 @NoArgsConstructor
-@Builder
+@AllArgsConstructor
+@Data
 public class JobFavorites {
-
-    private String jobFavoritesNo; // 즐겨찾기 ID
+    private String jobFavoritesNo; // 즐겨찾기 번호
     private String uuid; // 사용자 UUID
     private String jobPostingId; // 공고 ID
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    private String jobCreatedDate; // 즐겨찾기 추가 날짜
+    private LocalDateTime jobCreatedDate; // 즐겨찾기 생성 일자
 
-    // DTO -> Entity 변환 메서드
+    // toEntity 메서드 추가
     public JobFavoritesEntity toEntity() {
         return JobFavoritesEntity.builder()
-                .jobFavoritesNo(jobFavoritesNo)
-                .uuid(uuid)
-                .jobPostingId(jobPostingId)
-                .jobCreatedDate(jobCreatedDate != null
-                        ? Timestamp.valueOf(jobCreatedDate)
-                        : new Timestamp(System.currentTimeMillis()))
+                .jobFavoritesNo(this.jobFavoritesNo)
+                .uuid(this.uuid)
+                .jobPostingId(this.jobPostingId)
+                .jobCreatedDate(this.jobCreatedDate)
                 .build();
     }
 }
