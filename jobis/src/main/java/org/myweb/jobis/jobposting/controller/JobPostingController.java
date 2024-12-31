@@ -28,7 +28,7 @@ public class JobPostingController {
             @RequestParam(defaultValue = "pd") String sort)  // 정렬 기준
     {
 
-        Object result = jobPostingService.searchJobPostings(indCd, locCd, eduLv, jobCd, count, start, sort);
+        Object result = jobPostingService.searchJobPostings(indCd, locCd, eduLv, jobCd, count, start, sort, page, size);
         return ResponseEntity.ok(result);
     }
 

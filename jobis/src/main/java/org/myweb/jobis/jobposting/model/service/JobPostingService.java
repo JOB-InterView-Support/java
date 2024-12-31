@@ -1,7 +1,5 @@
 package org.myweb.jobis.jobposting.model.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.myweb.jobis.jobposting.model.dto.JobPosting;
@@ -27,7 +25,7 @@ public class JobPostingService {
     private final RestTemplate restTemplate = new RestTemplate();
 
     public Object searchJobPostings(String indCd, String locCd, String eduLv, String jobCd,
-                                    int count, int start, String sort) {
+                                    int count, int start, String sort, int page, int size) {
 
         String fullUri = UriComponentsBuilder.fromHttpUrl(apiUrl)
                 .queryParam("access-key", apiKey)
@@ -38,6 +36,8 @@ public class JobPostingService {
                 .queryParam("count", count)
                 .queryParam("start", start)
                 .queryParam("sort", sort)
+                .queryParam("page", page)
+                .queryParam("size", size)
                 .toUriString();
 
         try {
@@ -52,15 +52,15 @@ public class JobPostingService {
         // 사람인 API 요청 URL 생성
         String url = UriComponentsBuilder.fromHttpUrl("https://oapi.saramin.co.kr/job-search")
                 .queryParam("access-key", apiKey)
-                .queryParam("page", page)
-                .queryParam("size", size)
+                .queryParam("page", page)  // 페이지 번호
+                .queryParam("size", size)  // 한 페이지 당 항목 수
                 .toUriString();
 
         // 외부 API 호출
         JobPostingResponse response = restTemplate.getForObject(url, JobPostingResponse.class);
-        // response가 null이 아닐 경우
-        if (response != null) {
-            // 페이지 정보와 함께 반환
+
+        // 응답 처리
+        if (response != null && response.getJobs() != null) {
             return new JobPostingResponse(
                     response.getJobs(),
                     response.getTotalPages(),
@@ -69,7 +69,9 @@ public class JobPostingService {
                     response.getSize()
             );
         }
-        return new JobPostingResponse(List.of(), 0, 0, page, size);  // 빈 리스트와 0 값으로 반환
+
+        // 응답이 null이거나 jobs가 null일 경우 빈 리스트와 0 값 반환
+        return new JobPostingResponse(List.of(), 0, 0, page, size);
     }
 
     // 채용공고 상세보기
