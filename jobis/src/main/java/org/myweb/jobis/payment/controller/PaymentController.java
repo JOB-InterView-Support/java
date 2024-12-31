@@ -16,11 +16,12 @@ public class PaymentController {
 
     @PostMapping("/confirm")
     public ResponseEntity<String> confirmPayment(
-            @RequestParam String paymentKey,
-            @RequestParam int amount,
-            @RequestParam String orderId
+            @RequestBody String orderId,
+            @RequestBody int amount,
+            @RequestBody String paymentKey
     ) {
-        ResponseEntity<String> response = paymentService.confirmPayment(paymentKey, amount, orderId);
+        log.info("전달온 orderId : {}", orderId);
+        ResponseEntity<String> response = paymentService.confirmPayment(orderId, amount, paymentKey);
         log.info("response : " + response);
         return response;
     }

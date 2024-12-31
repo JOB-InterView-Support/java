@@ -28,6 +28,8 @@ public class PaymentService {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("Authorization", "Basic " + encodedCredentials);
+        log.info(encodedCredentials);
+
 
         // 2. 요청 바디 생성
         Map<String, Object> body = new HashMap<>();
