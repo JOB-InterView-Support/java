@@ -147,7 +147,7 @@ public class SecurityConfig implements WebMvcConfigurer {
                         .requestMatchers(HttpMethod.DELETE, "/review/{no}").hasAnyRole("USER", "ADMIN") // 삭제는 USER와 ADMIN 허용
 
                         // 채용공고
-                        .requestMatchers(HttpMethod.GET,"/jobPostings/**").hasAnyRole("USER", "ADMIN") // 조회는 USER와 ADMIN 허용
+                        .requestMatchers(HttpMethod.GET,"/jobPosting/**").hasAnyRole("USER", "ADMIN") // 조회는 USER와 ADMIN 허용
                         .requestMatchers(HttpMethod.GET,"/favorites/**").hasAnyRole("USER", "ADMIN") // 조회는 USER와 ADMIN 허용
                         .requestMatchers(HttpMethod.POST,"/favorites/**").hasAnyRole("USER", "ADMIN") // 조회는 USER와 ADMIN 허용
                         .requestMatchers(HttpMethod.PUT,"/favorites/**").hasAnyRole("USER", "ADMIN") // 조회는 USER와 ADMIN 허용
