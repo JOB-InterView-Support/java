@@ -24,75 +24,64 @@ public class JobPostingService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    // 채용공고 목록 검색
-    public JobPostingResponse searchJobPostings(String jobType, String locMcd, String eduLv, String jobCd,
-                                                int count, int start, String sort, int page, int size) {
-        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(apiUrl)
-                .queryParam("access-key", apiKey);
+    public Object searchJobPostings(String jobType, String locMcd, String eduLv, String jobCd,
+                                    int count, int start, String sort, int page, int size) {
 
-        // Optional 파라미터 추가
-        if (jobType != null) uriBuilder.queryParam("job_type", jobType);
-        if (locMcd != null) uriBuilder.queryParam("loc_mcd", locMcd);
-        if (eduLv != null) uriBuilder.queryParam("edu_lv", eduLv);
-        if (jobCd != null) uriBuilder.queryParam("job_cd", jobCd);
-        if (count > 0) uriBuilder.queryParam("count", count);
-        if (start > 0) uriBuilder.queryParam("start", start);
-        if (sort != null) uriBuilder.queryParam("sort", sort);
-        if (page > 0) uriBuilder.queryParam("page", page);
-        if (size > 0) uriBuilder.queryParam("size", size);
-
-        String fullUri = uriBuilder.toUriString();
+        String fullUri = UriComponentsBuilder.fromHttpUrl(apiUrl)
+                .queryParam("access-key", apiKey)
+                .queryParam("job_type", jobType)
+                .queryParam("loc_mcd", locMcd)
+                .queryParam("edu_lv", eduLv)
+                .queryParam("job_cd", jobCd)
+                .queryParam("count", count)
+                .queryParam("start", start)
+                .queryParam("sort", sort)
+                .queryParam("page", page)
+                .queryParam("size", size)
+                .toUriString();
 
         try {
-            // API 호출 후, JobPostingResponse로 응답 받기
-            JobPostingResponse response = restTemplate.getForObject(fullUri, JobPostingResponse.class);
-
-            // 응답이 없으면 빈 리스트 반환
-            if (response == null || response.getJobs() == null) {
-                return new JobPostingResponse(List.of(), 0, 0, page, size);
-            }
-
-            return response;
+            return restTemplate.getForObject(fullUri, Object.class);
         } catch (Exception e) {
-            log.error("API 호출 실패: " + e.getMessage());
             throw new RuntimeException("API 호출 실패: " + e.getMessage(), e);
         }
     }
 
     // 채용공고 목록 가져오기
     public JobPostingResponse getJobPostings(int page, int size) {
+        int start = (page - 1) * size;
         String url = UriComponentsBuilder.fromHttpUrl("https://oapi.saramin.co.kr/job-search")
                 .queryParam("access-key", apiKey)
-                .queryParam("page", page)
-                .queryParam("size", size)
+                .queryParam("page", page)  // 페이지 번호
+                .queryParam("size", size)  // 한 페이지 당 항목 수
                 .toUriString();
 
-        try {
-            // 외부 API 호출
-            JobPostingResponse response = restTemplate.getForObject(url, JobPostingResponse.class);
+        // 외부 API 호출
+        JobPostingResponse response = restTemplate.getForObject(url, JobPostingResponse.class);
 
-            if (response != null && response.getJobs() != null) {
-                // 필요한 메타 데이터 계산 후 반환
-                int totalCount = response.getJobs().size(); // 예시로 totalCount를 계산
-                int totalPages = (int) Math.ceil((double) totalCount / size); // 페이지 수 계산
+        // 응답 처리
+        if (response != null && response.getJobs() != null) {
+            int totalItems = response.getTotalCount(); // 총 채용공고 수
+            int totalPages = (int) Math.ceil((double) totalItems / size); // 전체 페이지 수 계산
 
-                response.setTotalCount(totalCount);
-                response.setTotalPages(totalPages);
-                response.setCurrentPage(page);
-                response.setPageSize(size);
-
-                return response;
-            }
-        } catch (Exception e) {
-            log.error("API 호출 실패: " + e.getMessage());
+            return new JobPostingResponse(
+                    response.getJobs(),
+                    totalItems,  // 전체 항목 수
+                    totalPages,  // 전체 페이지 수
+                    page,        // 현재 페이지
+                    size         // 페이지 크기
+            );
         }
 
-        // 응답이 없으면 빈 리스트와 0 값을 반환
+        // API 응답이 없거나 비정상일 경우
         return new JobPostingResponse(List.of(), 0, 0, page, size);
     }
 
     // 채용공고 상세보기
     public JobPosting getJobPostingById(Long id) {
+        // 사람인 API에서 상세정보를 가져올 수 있도록 수정 필요
+        // 사람인 API에서는 특정 채용공고 ID로 상세 조회를 지원하지 않으므로
+        // 목록에서 해당 ID에 맞는 채용공고를 반환하는 방식으로 처리
         int page = 1; // 페이지 번호 (여기서는 1부터 시작)
 
         while (true) {

@@ -3,6 +3,7 @@ package org.myweb.jobis.jobposting.jpa.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.myweb.jobis.jobposting.model.dto.JobFavorites;
+import org.myweb.jobis.jobposting.model.dto.JobPosting;
 import org.myweb.jobis.user.jpa.entity.UserEntity;
 
 import java.time.LocalDateTime;

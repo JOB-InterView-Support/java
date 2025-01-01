@@ -1,74 +1,61 @@
 package org.myweb.jobis.jobposting.model.service;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.myweb.jobis.jobposting.jpa.entity.JobFavoritesEntity;
 import org.myweb.jobis.jobposting.jpa.repository.JobFavoritesRepository;
 import org.myweb.jobis.jobposting.model.dto.JobFavorites;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
-@Slf4j
 @Service
-@Transactional
 @RequiredArgsConstructor
 public class JobFavoritesService {
+
     private final JobFavoritesRepository jobFavoritesRepository;
 
     // 즐겨찾기 추가
-    public JobFavorites addFavorite(JobFavorites favorites) {
+    @Transactional
+    public JobFavorites addFavorite(JobFavorites jobFavorites) {
+        // Check if the favorite already exists
+        Optional<JobFavoritesEntity> existingFavorite = jobFavoritesRepository.findByUuidAndJobPostingId(jobFavorites.getUuid(), jobFavorites.getJobPostingId());
 
-        // UUID 생성
-        favorites.setJobFavoritesNo(UUID.randomUUID().toString());
-
-        // 중복 체크
-        Optional<JobFavoritesEntity> existing = jobFavoritesRepository
-                .findByUuidAndJobPostingId(favorites.getUuid(), favorites.getJobPostingId());
-        if (existing.isPresent()) {
-            throw new RuntimeException("이미 즐겨찾기에 추가된 채용공고입니다.");
+        if (existingFavorite.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This job posting is already in the favorites list.");
         }
 
-        // 데이터 저장
-        JobFavoritesEntity savedEntity = jobFavoritesRepository.save(favorites.toEntity());
+        JobFavoritesEntity jobFavoritesEntity = jobFavorites.toEntity();
+        jobFavoritesRepository.save(jobFavoritesEntity);
 
-        return savedEntity.toDto();
+        return jobFavoritesEntity.toDto();  // 변환 후 반환
     }
 
-    // 즐겨찾기 목록 조회
+    // 특정 사용자(UUID)의 즐겨찾기 목록 조회
     public List<JobFavorites> getFavorites(String uuid) {
+        List<JobFavoritesEntity> favorites = jobFavoritesRepository.findByUuid(uuid);
 
-        // 데이터 조회
-        List<JobFavoritesEntity> entities = jobFavoritesRepository.searchFavorites(uuid);
-
-        // DTO 변환 후 반환
-        return entities.stream()
-                .map(JobFavoritesEntity::toDto)
-                .collect(Collectors.toList());
+        return favorites.stream()
+                .map(JobFavoritesEntity::toDto)  // Convert entities to DTOs
+                .toList();
     }
 
     // 즐겨찾기 삭제
+    @Transactional
     public void removeFavorite(String uuid, String jobPostingId) {
-        // 즐겨찾기 삭제 처리
-        Optional<JobFavoritesEntity> existing = jobFavoritesRepository
-                .findByUuidAndJobPostingId(uuid, jobPostingId);
+        // Find the favorite record
+        JobFavoritesEntity favoriteEntity = jobFavoritesRepository.findByUuidAndJobPostingId(uuid, jobPostingId)
+                .orElseThrow(() -> new RuntimeException("Favorite not found for the given job posting."));
 
-        if (existing.isPresent()) {
-            jobFavoritesRepository.delete(existing.get());
-        } else {
-            throw new RuntimeException("삭제할 즐겨찾기 공고가 존재하지 않습니다.");
-        }
+        // Delete the favorite record
+        jobFavoritesRepository.delete(favoriteEntity);
     }
 
     // 즐겨찾기 여부 확인
     public boolean isFavorite(String uuid, String jobPostingId) {
-
-        boolean exists = jobFavoritesRepository.findByUuidAndJobPostingId(uuid, jobPostingId).isPresent();
-
-        return exists;
+        return jobFavoritesRepository.existsByUuidAndJobPostingId(uuid, jobPostingId);
     }
 }

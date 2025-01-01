@@ -18,4 +18,5 @@ public class JobPostingResponse {
         private int currentPage;        // 현재 페이지
         private int pageSize;           // 페이지 당 항목 수
 
+
 }

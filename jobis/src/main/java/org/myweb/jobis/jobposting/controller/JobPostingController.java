@@ -3,7 +3,6 @@ package org.myweb.jobis.jobposting.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.myweb.jobis.jobposting.model.dto.JobPosting;
-import org.myweb.jobis.jobposting.model.dto.JobPostingResponse;
 import org.myweb.jobis.jobposting.model.service.JobPostingService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,32 +15,32 @@ public class JobPostingController {
 
     private final JobPostingService jobPostingService;
 
-    // 채용공고 목록 검색 API
     @GetMapping("/search")
-    public JobPostingResponse searchJobPostings(
-            @RequestParam(required = false) String jobType,
-            @RequestParam(required = false) String locMcd,
-            @RequestParam(required = false) String eduLv,
-            @RequestParam(required = false) String jobCd,
-            @RequestParam(defaultValue = "10") int count,
-            @RequestParam(defaultValue = "1") int start,
-            @RequestParam(defaultValue = "desc") String sort,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size
+    public ResponseEntity<Object> searchJobPostings(
+            @RequestParam(required = false) String jobType, // 근무형태
+            @RequestParam(required = false) String locMcd, // 지역 코드
+            @RequestParam(required = false) String eduLv, // 학력 조건
+            @RequestParam(required = false) String jobCd, // 직무 코드
+            @RequestParam(defaultValue = "110") int count, // 검색 횟수
+            @RequestParam(defaultValue = "0") int start, // 시작 페이지
+            @RequestParam(defaultValue = "1") int page, // 페이지 수
+            @RequestParam(defaultValue = "10") int size, // 페이지 크기
+            @RequestParam(defaultValue = "pd") String sort // 정렬 기준
     ) {
-        return jobPostingService.searchJobPostings(jobType, locMcd, eduLv, jobCd, count, start, sort, page, size);
+        // 서비스 호출
+        Object result = jobPostingService.searchJobPostings(jobType, locMcd, eduLv, jobCd, count, start, sort, page, size);
+
+        // 서비스 결과 로그로 출력
+
+        return ResponseEntity.ok(result);
     }
 
-    // 채용공고 목록 가져오기 (기본)
-    @GetMapping
-    public JobPostingResponse getJobPostings(@RequestParam(defaultValue = "1") int page,
-                                             @RequestParam(defaultValue = "10") int size) {
-        return jobPostingService.getJobPostings(page, size);
-    }
-
-    // 채용공고 상세보기
+    // 채용공고 상세 조회
     @GetMapping("/{id}")
-    public JobPosting getJobPostingById(@PathVariable Long id) {
-        return jobPostingService.getJobPostingById(id);
+    public JobPosting getJobPosting(@PathVariable Long id) {
+
+        JobPosting jobPosting = jobPostingService.getJobPostingById(id);
+
+        return jobPosting;
     }
 }

@@ -19,10 +19,10 @@ public class JobFavoritesController {
 
     // 즐겨찾기 추가
     @PostMapping
-    public ResponseEntity<JobFavorites> addFavorite(@RequestBody JobFavorites favoriteDto) {
+    public ResponseEntity<JobFavorites> addFavorite(@RequestBody JobFavorites jobFavorites) {
         try {
-            log.info("즐겨찾기 추가 요청: {}", favoriteDto); // 즐겨찾기 추가 요청 시 로그
-            JobFavorites addedFavorite = jobFavoritesService.addFavorite(favoriteDto);
+            log.info("즐겨찾기 추가 요청: {}", jobFavorites); // 즐겨찾기 추가 요청 시 로그
+            JobFavorites addedFavorite = jobFavoritesService.addFavorite(jobFavorites);
             log.info("즐겨찾기 추가 성공: {}", addedFavorite); // 성공적으로 추가된 즐겨찾기 로그
             return ResponseEntity.ok(addedFavorite);
         } catch (RuntimeException e) {
