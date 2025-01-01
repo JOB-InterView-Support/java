@@ -12,6 +12,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -69,7 +70,6 @@ public class JWTFilter extends OncePerRequestFilter {
                  requestURI.startsWith("/qna/attachments/"); // 첨부 파일 경로 추가
 
     }
-
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)

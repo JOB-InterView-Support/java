@@ -126,6 +126,56 @@ public class NoticeController {
 //        }
 //    }
 
+//    @GetMapping("/detail/{noticeNo}")
+//    public Notice getNoticeDetail(@PathVariable String noticeNo) {
+//        log.info("getNoticeDetail 시작");
+//        try {
+//            Notice notice = noticeRepository.findById(noticeNo).orElseThrow(() ->
+//                    new IllegalArgumentException("공지사항을 찾을 수 없습니다.")).toDto();
+//
+//            // noticePath 중복 방지
+//            String baseUrl = "http://localhost:8080/notice/attachments/";
+//            if (notice.getNoticePath() != null && !notice.getNoticePath().startsWith(baseUrl)) {
+//                notice.setNoticePath(baseUrl + notice.getNoticePath());
+//            }
+//
+//            // 조회수 증가 처리
+//            notice.setNoticeVCount(notice.getNoticeVCount() + 1);
+//            noticeRepository.save(notice.toEntity());
+//
+//            log.info("Processed Notice Path: {}", notice.getNoticePath());
+//            return notice;
+//        } catch (Exception e) {
+//            log.error("공지사항 상세 조회 중 오류 발생", e);
+//            return null;
+//        }
+//    }
+
+//    @GetMapping("/detail/{noticeNo}")
+//    public Notice getNoticeDetail(@PathVariable String noticeNo) {
+//        log.info("getNoticeDetail 시작");
+//        try {
+//            Notice notice = noticeRepository.findById(noticeNo).orElseThrow(() ->
+//                    new IllegalArgumentException("공지사항을 찾을 수 없습니다.")).toDto();
+//
+//            String baseUrl = "http://localhost:8080/notice/attachments/";
+//            // 경로가 이미 절대 경로인지 확인 후 추가
+//            if (notice.getNoticePath() != null && !notice.getNoticePath().startsWith(baseUrl)) {
+//                notice.setNoticePath(baseUrl + notice.getNoticePath());
+//            }
+//
+//            // 조회수 증가 처리
+//            notice.setNoticeVCount(notice.getNoticeVCount() + 1);
+//            noticeRepository.save(notice.toEntity());
+//
+//            log.info("Processed Notice Path: {}", notice.getNoticePath());
+//            return notice;
+//        } catch (Exception e) {
+//            log.error("공지사항 상세 조회 중 오류 발생", e);
+//            return null;
+//        }
+//    }
+
     @GetMapping("/detail/{noticeNo}")
     public Notice getNoticeDetail(@PathVariable String noticeNo) {
         log.info("getNoticeDetail 시작");
@@ -237,49 +287,75 @@ public class NoticeController {
 //        }
 //    }
 
+//    @GetMapping("/attachments/{filename}")
+//    @CrossOrigin(origins = "http://localhost:3000")
+//    public ResponseEntity<Resource> getFile(@PathVariable String filename) {
+//        try {
+//            // 파일 경로 생성
+//            Path filePath = Paths.get("C:/upload_files").resolve(filename).normalize();
+//            log.info("Resolved file path: {}", filePath.toAbsolutePath());
+//
+//            // 리소스 생성
+//            Resource resource = new UrlResource(filePath.toUri());
+//            if (resource.exists() && resource.isReadable()) {
+//                log.info("File exists and is readable: {}", filePath);
+//
+//                // MIME 타입 확인 및 기본값 설정
+//                String contentType = Files.probeContentType(filePath);
+//                if (contentType == null) {
+//                    if (filename.endsWith(".png")) {
+//                        contentType = "image/png";
+//                    } else if (filename.endsWith(".jpg") || filename.endsWith(".jpeg")) {
+//                        contentType = "image/jpeg";
+//                    } else if (filename.endsWith(".gif")) {
+//                        contentType = "image/gif";
+//                    } else {
+//                        contentType = "application/octet-stream";
+//                    }
+//                }
+//
+//                return ResponseEntity.ok()
+//                        .contentType(MediaType.parseMediaType(contentType))
+//                        .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
+//                        .header(HttpHeaders.CACHE_CONTROL, "max-age=3600")
+//                        .body(resource);
+//            } else {
+//                log.warn("File does not exist or is not readable: {}", filePath);
+//                return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 빈 ResponseEntity 반환
+//            }
+//        } catch (NoSuchFileException e) {
+//            log.error("File not found: {}", filename, e);
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 파일이 없는 경우
+//        } catch (Exception e) {
+//            log.error("Unexpected error while providing file: {}", filename, e);
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 기타 예외 발생 시
+//        }
+//    }
+
     @GetMapping("/attachments/{filename}")
     public ResponseEntity<Resource> getFile(@PathVariable String filename) {
         try {
-            // 파일 경로 생성
             Path filePath = Paths.get("C:/upload_files").resolve(filename).normalize();
-            log.info("Resolved file path: {}", filePath.toAbsolutePath());
-
-            // 리소스 생성
             Resource resource = new UrlResource(filePath.toUri());
-            if (resource.exists() && resource.isReadable()) {
-                log.info("File exists and is readable: {}", filePath);
 
-                // MIME 타입 확인 및 기본값 설정
-                String contentType = Files.probeContentType(filePath);
-                if (contentType == null) {
-                    if (filename.endsWith(".png")) {
-                        contentType = "image/png";
-                    } else if (filename.endsWith(".jpg") || filename.endsWith(".jpeg")) {
-                        contentType = "image/jpeg";
-                    } else if (filename.endsWith(".gif")) {
-                        contentType = "image/gif";
-                    } else {
-                        contentType = "application/octet-stream";
-                    }
-                }
-
-                return ResponseEntity.ok()
-                        .contentType(MediaType.parseMediaType(contentType))
-                        .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
-                        .header(HttpHeaders.CACHE_CONTROL, "max-age=3600")
-                        .body(resource);
-            } else {
-                log.warn("File does not exist or is not readable: {}", filePath);
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 빈 ResponseEntity 반환
+            if (!resource.exists() || !resource.isReadable()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
             }
-        } catch (NoSuchFileException e) {
-            log.error("File not found: {}", filename, e);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 파일이 없는 경우
+
+            // MIME 타입 자동 감지
+            String contentType = Files.probeContentType(filePath);
+            if (contentType == null) {
+                contentType = "application/octet-stream"; // 기본 MIME 타입 설정
+            }
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .body(resource);
         } catch (Exception e) {
-            log.error("Unexpected error while providing file: {}", filename, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 기타 예외 발생 시
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
+
 
 
 //    @PostMapping("/insert")
