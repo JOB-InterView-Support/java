@@ -12,13 +12,10 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class JobPostingResponse {
-    private List<JobPosting> jobs; // 빈 리스트로 초기화
-    private int totalPages;
-    private int totalElements;
-    private int currentPage;
-    private int size;
-
-
-
+        private List<JobPosting> jobs;
+        private int totalCount;         // 총 채용공고 수
+        private int totalPages;         // 전체 페이지 수
+        private int currentPage;        // 현재 페이지
+        private int pageSize;           // 페이지 당 항목 수
 
 }
