@@ -64,18 +64,18 @@ public class PaymentEntity {
     // Entity에서 DTO로 변환
     public Payment toDto() {
         return Payment.builder()
-                .payPaymentKey(paymentKey)
+                .paymentKey(paymentKey)
                 .prodNumber(prodNumber)
                 .uuid(uuid)
-                .payOrderId(orderId)
-                .payOrderName(orderName)
-                .payMid(mid)
-                .payCurrenoy(currenoy)
-                .payTotalAmount(totalAmount)
-                .payStatus(status)
-                .payRequestAt(requestAt)
-                .payApprovedAt(approvedAt)
-                .payCancelYN(cancelYN)
+                .orderId(orderId)
+                .orderName(orderName)
+                .mid(mid)
+                .currenoy(currenoy)
+                .totalAmount(totalAmount)
+                .status(status)
+                .requestAt(requestAt)
+                .approvedAt(approvedAt)
+                .cancelYN(cancelYN)
                 .build();
     }
 
