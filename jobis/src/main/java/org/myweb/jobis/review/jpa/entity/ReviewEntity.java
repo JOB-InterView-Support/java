@@ -59,6 +59,9 @@ public class ReviewEntity {
     @Column(name = "R_COUNT", nullable = false)
     private Integer rCount = 0;
 
+    @Column(name = "REVIEW_PATH", length = 250, nullable = false)
+    private String reviewPath;
+
     public Review toDto() {
         return Review.builder()
                 .rNo(rNo)
@@ -73,6 +76,7 @@ public class ReviewEntity {
                 .rDDate(rDDate)
                 .uuid(uuid)
                 .rCount(rCount)
+                .reviewPath(reviewPath)
                 .build();
     }
 
@@ -91,6 +95,7 @@ public class ReviewEntity {
                 .rDDate(review.getRDDate())
                 .uuid(review.getUuid())
                 .rCount(review.getRCount())
+                .reviewPath(review.getReviewPath())
                 .build();
     }
 }

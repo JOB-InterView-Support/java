@@ -93,7 +93,7 @@ public class NoticeController {
 //
 //            // 조회수 증가 처리
 //            notice.setNoticeVCount(notice.getNoticeVCount() + 1);
-//            noticeRepository.save(notice.toEntity());
+//            noticeRepository.save(notice.toEntity());ㅔ
 //
 //            log.info("Processed Notice Path: {}", notice.getNoticePath());
 //            return notice;

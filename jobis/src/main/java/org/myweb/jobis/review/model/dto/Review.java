@@ -1,6 +1,7 @@
 package org.myweb.jobis.review.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,6 +10,7 @@ import org.myweb.jobis.review.jpa.entity.ReviewEntity;
 
 import java.sql.Timestamp;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -19,6 +21,7 @@ public class Review {
     private String rTitle;
     private String rContent;
     private String rWriter;
+    private String reviewPath;
 
     @JsonFormat(pattern = "yyyy-MM-dd")
     private Timestamp rWDate;
@@ -51,6 +54,7 @@ public class Review {
                 .rDDate(rDDate)
                 .uuid(uuid)
                 .rCount(rCount)
+                .reviewPath(reviewPath)
                 .build();
     }
 
@@ -68,7 +72,7 @@ public class Review {
                 .rIsDeleted(entity.getRIsDeleted())
                 .rDDate(entity.getRDDate())
                 .rCount(entity.getRCount())
-
+                .reviewPath(entity.getReviewPath())
                 .build();
     }
 }
