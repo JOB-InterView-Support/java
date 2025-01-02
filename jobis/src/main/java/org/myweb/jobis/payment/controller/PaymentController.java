@@ -24,6 +24,8 @@ public class PaymentController {
 
     @PostMapping("/confirm")
     public ResponseEntity<?> confirmPayment(@RequestBody Map<String, Object> requestData) {
+        log.info("Confirm Payment API called with data: {}", requestData);
+        // 기존 코드 유지
         try {
             String paymentKey = (String) requestData.get("paymentKey");
             int amount = (int) requestData.get("amount");

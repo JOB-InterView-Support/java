@@ -5,13 +5,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 import com.fasterxml.jackson.databind.introspect.TypeResolutionContext;
+import jakarta.annotation.PostConstruct;
+import jakarta.persistence.Basic;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import javax.sql.DataSource;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -24,15 +29,18 @@ import java.util.Map;
 @Slf4j
 @Service
 public class PaymentService {
-
     private static final String TOSS_PAYMENTS_URL = "https://api.tosspayments.com/v1/payments/confirm";
-    public static void main(String[] args) {
-        String secretKey = "test_sk_zXLkKEypNArWmo50nX3lmeaxYG5R"; // 원래 시크릿 키
-        String encodedKey = Base64.getEncoder().encodeToString(secretKey.getBytes());
-        System.out.println("Encoded Key: " + encodedKey);
-    }
+
     @Value("${tossSecretKey}")
     private String tossSecretKey;
+
+    String secretKey = tossSecretKey; // 원래 시크릿 키
+    private String encodedKey;
+
+    @PostConstruct
+    private void init() {
+        encodedKey = Base64.getEncoder().encodeToString(tossSecretKey.getBytes());
+    }
 
 
     public Map<String, Object> confirmPayment(String paymentKey, int amount, String orderId) throws IOException {
@@ -42,12 +50,15 @@ public class PaymentService {
                 "orderId", orderId
         );
         log.info("Service requenstBody : " + requestBody);
+
+        String authorizationHeader = "Basic " + encodedKey;
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(TOSS_PAYMENTS_URL))
-                .header("Authorization", tossSecretKey)
+                .header("Authorization", authorizationHeader)
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(new ObjectMapper().writeValueAsString(requestBody)))
                 .build();
+        log.info("encodeKey : " + encodedKey);
         log.info("Service request : " + request);
 
         try {
