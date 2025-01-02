@@ -145,7 +145,6 @@ public class QnaController {
 
     @GetMapping("/detail/{qno}")
     public ResponseEntity<Map<String, Object>> qnaDetailMethod(@PathVariable String qno) {
-
         try {
             log.info("상세페이지 qno: {}", qno);
 
@@ -161,6 +160,7 @@ public class QnaController {
             Map<String, Object> response = new HashMap<>();
             response.put("qna", qna);
             response.put("replies", replies); // 댓글 포함
+            response.put("hasAttachment", qna.getQAttachmentTitle() != null); // 첨부파일 여부 추가
 
             return ResponseEntity.ok(response);
         } catch (NoSuchElementException e) {
@@ -173,6 +173,7 @@ public class QnaController {
                     .body(Map.of("error", "Internal server error"));
         }
     }
+
 
 
 
@@ -320,39 +321,3 @@ public class QnaController {
 
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
