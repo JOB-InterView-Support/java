@@ -66,18 +66,27 @@ public class PaymentService {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             log.info("client " + client);
             log.info("Service response : " + response);
+
+
             if (response.statusCode() == 200) {
                 // JSON 응답을 Map으로 변환
                 log.info("response code : " + response.statusCode());
                 log.info("response  : " + response);
                 return new ObjectMapper().readValue(response.body(), new TypeReference<Map<String, Object>>() {
                 });
+            } else if (response.statusCode() == 400 && response.body().contains("PROVIDER_ERROR")) {
+                // 재시도 로직 추가
+                log.warn("PROVIDER_ERROR, retrying...");
+                Thread.sleep(1000); // 1초 대기 후 재시도
+                return confirmPayment(paymentKey, amount, orderId); // 재시도 호출
             } else {
                 throw new IOException("Toss API returned an error: " + response.body());
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt(); // Interrupt 상태 복구
             throw new IOException("Request interrupted", e);
+        } finally{
+            log.info("Service End ");
         }
     }
 }

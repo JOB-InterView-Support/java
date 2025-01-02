@@ -17,8 +17,8 @@ import java.sql.Timestamp;
 @Table(name="Payment")
 public class PaymentEntity {
     @Id
-    @Column(name = "PAY_PAYMENT_KEY", length = 400, nullable = false )
-    private String payPaymentKey;
+    @Column(name = "PAYMENT_KEY", length = 400, nullable = false )
+    private String paymentKey;
 
     @Column(name = "PROD_NUMBER", length = 50, nullable = false )
     private int prodNumber;
@@ -26,56 +26,56 @@ public class PaymentEntity {
     @Column(name = "UUID", length = 50, nullable = false )
     private String uuid;
 
-    @Column(name = "PAY_ORDER_ID", length = 100, nullable = false )
-    private String payOrderId;
+    @Column(name = "ORDER_ID", length = 100, nullable = false )
+    private String orderId;
 
-    @Column(name = "PAY_ORDER_NAME", length = 50, nullable = false )
-    private String payOrderName;
+    @Column(name = "ORDER_NAME", length = 50, nullable = false )
+    private String orderName;
 
-    @Column(name = "PAY_MID", length = 40, nullable = false )
-    private String payMid;
+    @Column(name = "MID", length = 40, nullable = false )
+    private String mid;
 
-    @Column(name = "PAY_CURRENOY", length = 50, nullable = false )
-    private String payCurrenoy;
+    @Column(name = "CURRENOY", length = 50, nullable = false )
+    private String currenoy;
 
-    @Column(name = "PAY_TOTAL_AMOUNT", length = 50, nullable = false )
-    private int payTotalAmount;
+    @Column(name = "TOTAL_AMOUNT", length = 50, nullable = false )
+    private int totalAmount;
 
-    @Column(name = "PAY_STATUS", length = 20, nullable = false )
-    private String payStatus;
+    @Column(name = "STATUS", length = 20, nullable = false )
+    private String status;
 
-    @Column(name = "PAY_REQUEST_AT", nullable = false )
-    private Timestamp payRequestAt;
+    @Column(name = "REQUEST_AT", nullable = false )
+    private Timestamp requestAt;
 
-    @Column(name = "PAY_APPROVED_AT", nullable = false )
-    private Timestamp payApprovedAt;
+    @Column(name = "APPROVED_AT", nullable = false )
+    private Timestamp approvedAt;
 
-    @Column(name = "PAY_CANCELYN", length = 2)
-    private String payCancelYN;
+    @Column(name = "CANCELYN", length = 2)
+    private String cancelYN;
 
 
     @PrePersist
     public void onPrePersist() {
-        if (payRequestAt == null) {
-            this.payRequestAt = new Timestamp(System.currentTimeMillis());  // Set current date + time
+        if (requestAt == null) {
+            this.requestAt = new Timestamp(System.currentTimeMillis());  // Set current date + time
         }
     }
 
     // Entity에서 DTO로 변환
     public Payment toDto() {
         return Payment.builder()
-                .payPaymentKey(payPaymentKey)
+                .payPaymentKey(paymentKey)
                 .prodNumber(prodNumber)
                 .uuid(uuid)
-                .payOrderId(payOrderId)
-                .payOrderName(payOrderName)
-                .payMid(payMid)
-                .payCurrenoy(payCurrenoy)
-                .payTotalAmount(payTotalAmount)
-                .payStatus(payStatus)
-                .payRequestAt(payRequestAt)
-                .payApprovedAt(payApprovedAt)
-                .payCancelYN(payCancelYN)
+                .payOrderId(orderId)
+                .payOrderName(orderName)
+                .payMid(mid)
+                .payCurrenoy(currenoy)
+                .payTotalAmount(totalAmount)
+                .payStatus(status)
+                .payRequestAt(requestAt)
+                .payApprovedAt(approvedAt)
+                .payCancelYN(cancelYN)
                 .build();
     }
 
