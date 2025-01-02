@@ -1,92 +1,78 @@
 package org.myweb.jobis.payment.model.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-
-import com.fasterxml.jackson.databind.introspect.TypeResolutionContext;
-import jakarta.annotation.PostConstruct;
-import jakarta.persistence.Basic;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.myweb.jobis.payment.model.dto.Payment;
+import org.myweb.jobis.payment.model.dto.PaymentRequest;
+import org.myweb.jobis.payment.jpa.repository.PaymentRepository;
+import org.myweb.jobis.payment.jpa.entity.PaymentEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.PropertySource;
-import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.http.*;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
-
-import javax.sql.DataSource;
-import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.util.Base64;
+import java.sql.Timestamp;
+import java.util.HashMap;
 import java.util.Map;
 
-
 @Slf4j
+@RequiredArgsConstructor
+@Transactional
 @Service
 public class PaymentService {
-    private static final String TOSS_PAYMENTS_URL = "https://api.tosspayments.com/v1/payments/confirm";
 
-    @Value("${tossSecretKey}")
-    private String tossSecretKey;
+    @Autowired
+    private PaymentRepository paymentRepository;
 
-    String secretKey = tossSecretKey; // 원래 시크릿 키
-    private String encodedKey;
+    @Value("${tossClientKey}")
+    private String tossClientKey;
 
-    @PostConstruct
-    private void init() {
-        encodedKey = Base64.getEncoder().encodeToString(tossSecretKey.getBytes());
-    }
-
-
-    public Map<String, Object> confirmPayment(String paymentKey, int amount, String orderId) throws IOException {
-        Map<String, Object> requestBody = Map.of(
-                "paymentKey", paymentKey,
-                "amount", amount,
-                "orderId", orderId
-        );
-        log.info("Service requenstBody : " + requestBody);
-
-        String authorizationHeader = "Basic " + encodedKey;
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(TOSS_PAYMENTS_URL))
-                .header("Authorization", authorizationHeader)
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(new ObjectMapper().writeValueAsString(requestBody)))
-                .build();
-        log.info("encodeKey : " + encodedKey);
-        log.info("Service request : " + request);
-
+    // 결제 승인 처리
+    public ResponseEntity<?> confirmPayment(PaymentRequest paymentRequest) {
         try {
-            HttpClient client = HttpClient.newHttpClient();
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            log.info("client " + client);
-            log.info("Service response : " + response);
+            // Toss Payments API 호출
+            String apiUrl = "https://api.tosspayments.com/v1/payments/confirm";
+            String clientKey = tossClientKey;
+            String authorizationHeader = "Basic " + java.util.Base64.getEncoder().encodeToString(clientKey.getBytes());
 
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", authorizationHeader);
+            headers.set("Content-Type", "application/json");
 
-            if (response.statusCode() == 200) {
-                // JSON 응답을 Map으로 변환
-                log.info("response code : " + response.statusCode());
-                log.info("response  : " + response);
-                return new ObjectMapper().readValue(response.body(), new TypeReference<Map<String, Object>>() {
-                });
-            } else if (response.statusCode() == 400 && response.body().contains("PROVIDER_ERROR")) {
-                // 재시도 로직 추가
-                log.warn("PROVIDER_ERROR, retrying...");
-                Thread.sleep(1000); // 1초 대기 후 재시도
-                return confirmPayment(paymentKey, amount, orderId); // 재시도 호출
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("paymentKey", paymentRequest.getPaymentKey());
+            requestBody.put("orderId", paymentRequest.getOrderId());
+            requestBody.put("amount", paymentRequest.getAmount());
+
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+
+            log.info("Toss API 호출 요청 데이터: {}", requestBody);
+            RestTemplate restTemplate = new RestTemplate();
+            ResponseEntity<String> response = restTemplate.exchange(apiUrl, HttpMethod.POST, entity, String.class);
+
+            log.info("Toss API 응답: {}", response.getBody());
+            if (response.getStatusCode() == HttpStatus.OK) {
+                // Payment 객체 인스턴스화 후 값 설정
+                Payment payment = new Payment();  // 인스턴스화
+                payment.setPaymentKey(paymentRequest.getPaymentKey());  // 인스턴스에서 호출
+                payment.setOrderId(paymentRequest.getOrderId());
+                payment.setOrderName("Test Order");  // 예시 값
+                payment.setStatus("APPROVED");  // 결제 상태
+                payment.setTotalAmount(paymentRequest.getAmount());
+                payment.setApprovedAt(new Timestamp(System.currentTimeMillis()));
+
+                // Payment 객체를 Entity로 변환 후 DB에 저장
+                PaymentEntity paymentEntity = payment.toEntity();
+                paymentRepository.save(paymentEntity);
+
+                return ResponseEntity.ok("결제 승인 및 저장 완료: " + response.getBody());
             } else {
-                throw new IOException("Toss API returned an error: " + response.body());
+                log.error("Toss Payments API 응답 오류: {}", response.getBody());
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("결제 승인 실패");
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt(); // Interrupt 상태 복구
-            throw new IOException("Request interrupted", e);
-        } finally{
-            log.info("Service End ");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("결제 승인 중 오류 발생: " + e.getMessage());
         }
     }
 }

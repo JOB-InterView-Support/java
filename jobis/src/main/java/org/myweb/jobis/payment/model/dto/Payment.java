@@ -48,4 +48,6 @@ public class Payment {
                 .cancelYN(cancelYN)
                 .build();
     }
+
+
 }
