@@ -94,10 +94,13 @@ public class QnaController {
 
             // 파일 처리
             if (file != null && !file.isEmpty()) {
-                attachmentTitle = "Q_I_" + file.getOriginalFilename(); // 파일 이름 저장
-                Path uploadPath = Paths.get("C:/upload_files"); // 파일 저장 경로 (디렉터리)
+                // 파일 이름 정리
+                String sanitizedFileName = file.getOriginalFilename().replaceAll("[\\\\/:*?\"<>|]", "_");
+                String timestamp = String.valueOf(System.currentTimeMillis()); // 안전한 타임스탬프 생성
+                attachmentTitle = "Q_I_" + timestamp +  "_" + sanitizedFileName ; // 최종 파일 이름
+                Path uploadPath = Paths.get("C:/upload_files");
 
-                // 디렉터리 존재 여부 확인 및 생성
+                // 디렉터리 생성 및 파일 저장
                 if (!Files.exists(uploadPath)) {
                     try {
                         Files.createDirectories(uploadPath);
@@ -110,7 +113,9 @@ public class QnaController {
 
                 // 파일 저장
                 Files.copy(file.getInputStream(), uploadPath.resolve(attachmentTitle), StandardCopyOption.REPLACE_EXISTING);
+                log.info("파일 저장 완료: {}", attachmentTitle);
             }
+
 
             // Qna DTO 생성
             Qna qnaDTO = Qna.builder()
