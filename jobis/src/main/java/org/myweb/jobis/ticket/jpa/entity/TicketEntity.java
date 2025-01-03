@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import org.myweb.jobis.ticket.model.dto.Ticket;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
@@ -23,7 +24,7 @@ public class TicketEntity {
     @Column(name = "UUID", length = 50, nullable = false )
     private String uuid;
 
-    @Column(name = "PAY_PAYMENT_KEY", length = 400, nullable = false )
+    @Column(name = "PAYMENT_KEY", length = 400, nullable = false )
     private String paymentKey;
 
     @Column(name = "PROD_NUMBER", length = 50, nullable = false )
@@ -36,17 +37,19 @@ public class TicketEntity {
     private int ticketAmount;
 
     @Column(name = "TICKET_PERIOD", length = 50, nullable = false )
-    private Timestamp ticketPeriod;
+    private String ticketPeriod;
 
     @Column(name = "TICKET_COUNT", length = 50, nullable = false )
     private int ticketCount;
 
     @Column(name = "TICKET_START_DATE", length = 50, nullable = false )
-    private Timestamp ticketStartDate;
+    private LocalDateTime ticketStartDate;
 
     @Column(name = "TICKET_END_DATE", length = 50, nullable = false )
-    private Timestamp ticketEndDate;
+    private LocalDateTime ticketEndDate;
 
+    @Column(name = "PROD_NUMBEROFTIME", nullable = false)
+    private Integer prodNumberOfTime;
 
     // Entity에서 DTO로 변환
     public Ticket toDto() {
@@ -61,6 +64,7 @@ public class TicketEntity {
                 .ticketCount(ticketCount)
                 .ticketStartDate(ticketStartDate)
                 .ticketEndDate(ticketEndDate)
+                .prodNumberOfTime(prodNumberOfTime)
                 .build();
     }
 

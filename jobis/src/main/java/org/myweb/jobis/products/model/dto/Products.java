@@ -20,6 +20,7 @@ public class Products {
     private String prodPeriod;
     private String prodSellable;
     private String prodName;
+    private int prodNumberOfTime;
 
     // Entity 객체로 변환하는 메서드
     public ProductsEntity toEntity() {
@@ -30,6 +31,7 @@ public class Products {
                 .prodPeriod(prodPeriod)
                 .prodSellable(prodSellable)
                 .prodName(prodName)
+                .prodNumberOfTime(prodNumberOfTime)
                 .build();
     }
 }

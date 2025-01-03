@@ -5,12 +5,22 @@ import lombok.extern.slf4j.Slf4j;
 import org.myweb.jobis.review.jpa.entity.ReviewEntity;
 import org.myweb.jobis.review.jpa.repository.ReviewRepository;
 import org.myweb.jobis.review.model.dto.Review;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.sql.Timestamp;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @Slf4j
 @Service
@@ -32,6 +42,8 @@ public class ReviewService {
                 .rADate(reviewDTO.getRADate())
                 .rUpdateDate(reviewDTO.getRUpdateDate())
                 .rIsDeleted(reviewDTO.getRIsDeleted() != null ? reviewDTO.getRIsDeleted() : "N")
+                
+                .reviewPath(reviewDTO.getReviewPath() != null ? reviewDTO.getReviewPath() : "")
 
                 .rDDate(reviewDTO.getRDDate())
                 .uuid(reviewDTO.getUuid())
@@ -53,7 +65,7 @@ public class ReviewService {
             throw e;
         }
     }
-
+    
 
     public Review getReviewDetail(String rno) {
         // 리뷰 엔티티 조회
@@ -82,5 +94,26 @@ public class ReviewService {
             log.info(e.getMessage());
             return 0;
         }
+    }
+
+    private String saveFile(MultipartFile file) throws IOException {
+        String uploadDir = "C:/upload_files";
+        Path uploadPath = Paths.get(uploadDir);
+
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+            log.info("업로드 디렉터리 생성: {}", uploadPath);
+        }
+
+        String filePath = uploadDir + "/" + file.getOriginalFilename();
+        Files.copy(file.getInputStream(), Paths.get(filePath), StandardCopyOption.REPLACE_EXISTING);
+        log.info("파일 저장 완료: {}", filePath);
+        return filePath;
+    }
+
+    private String generaterno(String rno, int attachmentIndex) {
+        String reviewAno = "R_" + rno + "_" + String.format("%02d", attachmentIndex);
+        log.info("생성된 review_rno: {}", reviewAno);
+        return rno;
     }
 }

@@ -32,6 +32,8 @@ public class QReviewEntity extends EntityPathBase<ReviewEntity> {
 
     public final DateTimePath<java.sql.Timestamp> rDDate = createDateTime("rDDate", java.sql.Timestamp.class);
 
+    public final StringPath reviewPath = createString("reviewPath");
+
     public final StringPath rIsDeleted = createString("rIsDeleted");
 
     public final StringPath rNo = createString("rNo");
