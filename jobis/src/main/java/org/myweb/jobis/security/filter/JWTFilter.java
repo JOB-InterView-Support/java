@@ -52,6 +52,7 @@ public class JWTFilter extends OncePerRequestFilter {
                 requestURI.equals("/googleLogin") ||
                 requestURI.equals("/googleLink") ||
                 requestURI.equals("/faceRegistration") ||
+                requestURI.equals("/face/receiveUuid") ||
                 requestURI.equals("/mypage/faceId/**") ||
                 requestURI.equals("/updateUser") ||
 

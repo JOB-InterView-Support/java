@@ -109,6 +109,8 @@ public class SecurityConfig implements WebMvcConfigurer {
                         .requestMatchers("/google/**").permitAll()
                         // naver
                         .requestMatchers("/naver/**").permitAll()
+                        // faceLogin
+                        .requestMatchers("/face/receiveUuid").permitAll()
                         // /mypage/** 경로는 인증만 필요
                         .requestMatchers("/mypage/**").authenticated()
                         .requestMatchers("/updateUser").authenticated()

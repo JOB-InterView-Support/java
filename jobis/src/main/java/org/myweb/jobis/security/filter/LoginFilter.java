@@ -38,23 +38,24 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         String userId = null;
         String userPw = null;
 
-        // 소셜 로그인 요청인지 확인
+        // UUID 기반 요청인지 확인
         if (request.getAttribute("userId") != null && request.getAttribute("userPw") != null) {
             userId = (String) request.getAttribute("userId");
             userPw = (String) request.getAttribute("userPw");
-            log.info("Social Login Request Detected: ID={}, PW={}", userId, userPw);
-            // 소셜 로그인 시 비밀번호 검증을 스킵
-            return new UsernamePasswordAuthenticationToken(userId, null);
-        } else {
-            // 일반 로그인 처리
-            try {
-                ObjectMapper objectMapper = new ObjectMapper();
-                Map<String, String> requestBody = objectMapper.readValue(request.getInputStream(), Map.class);
-                userId = requestBody.get("userId");
-                userPw = requestBody.get("userPw");
-            } catch (IOException e) {
-                throw new RuntimeException("요청 데이터를 읽을 수 없습니다.", e);
-            }
+            log.info("UUID-based Login Request Detected: ID={}, PW={}", userId, userPw);
+
+            // UUID 기반 로그인의 경우 비밀번호 검증 스킵
+            return new UsernamePasswordAuthenticationToken(userId, userPw);
+        }
+
+        // 일반 로그인 처리
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            Map<String, String> requestBody = objectMapper.readValue(request.getInputStream(), Map.class);
+            userId = requestBody.get("userId");
+            userPw = requestBody.get("userPw");
+        } catch (IOException e) {
+            throw new RuntimeException("요청 데이터를 읽을 수 없습니다.", e);
         }
 
         if (userId == null || userPw == null) {
@@ -66,6 +67,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
                 new UsernamePasswordAuthenticationToken(userId, userPw);
         return this.getAuthenticationManager().authenticate(authenticationToken);
     }
+
 
 
 
