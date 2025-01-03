@@ -35,6 +35,8 @@ public class ProductsEntity {
     @Column(name = "PROD_NAME", length = 20, nullable = true )
     private String prodName;
 
+    @Column(name = "PROD_NUMBEROFTIME", nullable = false)
+    private Integer prodNumberOfTime;
     // Entity에서 DTO로 변환
     public Products toDto() {
         return Products.builder()
@@ -44,6 +46,7 @@ public class ProductsEntity {
                 .prodPeriod(prodPeriod)
                 .prodSellable(prodSellable)
                 .prodName(prodName)
+                .prodNumberOfTime(prodNumberOfTime)
                 .build();
     }
 

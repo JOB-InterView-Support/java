@@ -8,44 +8,44 @@ import org.myweb.jobis.payment.jpa.entity.PaymentEntity;
 
 import java.sql.Timestamp;
 
-@Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@Data
 public class Payment {
-    private String payPaymentKey;
+    private String paymentKey;
     private int prodNumber;
     private String uuid;
-    private String payOrderId;
-    private String payOrderName;
-    private String payMid;
-    private String payCurrenoy;
-    private int payTotalAmount;
-    private String payStatus;
+    private String orderId;
+    private String orderName;
+    private String mid;
+    private String currenoy;
+    private int totalAmount;
+    private String status;
 
     @JsonFormat(pattern = "yyyy-MM-dd")
-    private Timestamp payRequestAt;
+    private Timestamp requestAt;
 
     @JsonFormat(pattern = "yyyy-MM-dd")
-    private Timestamp payApprovedAt;
+    private Timestamp approvedAt;
 
-    private String payCancelYN;
+    private String cancelYN;
 
     // Entity 객체로 변환하는 메서드
     public PaymentEntity toEntity() {
         return PaymentEntity.builder()
-                .payPaymentKey(payPaymentKey)
+                .paymentKey(paymentKey)
                 .prodNumber(prodNumber)
                 .uuid(uuid)
-                .payOrderId(payOrderId)
-                .payOrderName(payOrderName)
-                .payMid(payMid)
-                .payCurrenoy(payCurrenoy)
-                .payTotalAmount(payTotalAmount)
-                .payStatus(payStatus)
-                .payRequestAt(payRequestAt)
-                .payApprovedAt(payApprovedAt)
-                .payCancelYN(payCancelYN)
+                .orderId(orderId)
+                .orderName(orderName)
+                .mid(mid)
+                .currenoy(currenoy)
+                .totalAmount(totalAmount)
+                .status(status)
+                .requestAt(requestAt)
+                .approvedAt(approvedAt)
+                .cancelYN(cancelYN)
                 .build();
     }
 }

@@ -192,4 +192,15 @@ public class UserService {
     private String generateUuid() {
         return java.util.UUID.randomUUID().toString();
     }
+
+    // faceLogin
+    public User getUserByUuid(String uuid) {
+        // UUID로 UserEntity 조회
+        UserEntity userEntity = userRepository.findByUuid(uuid);
+        if (userEntity != null) {
+            // Entity를 DTO로 변환
+            return userEntity.toDto();
+        }
+        return null;
+    }
 }

@@ -39,6 +39,7 @@ public class JobFavoritesController {
             List<JobFavorites> favorites = jobFavoritesService.getFavorites(uuid);
             log.info("사용자 UUID {}의 즐겨찾기 목록 조회 성공: {}개", uuid, favorites.size()); // 즐겨찾기 목록 조회 성공 로그
             return ResponseEntity.ok(favorites);
+
         } catch (Exception e) {
             log.error("사용자 UUID {}의 즐겨찾기 목록 조회 실패: {}", uuid, e.getMessage(), e); // 예외 발생 시 로그
             return ResponseEntity.status(500).body(null); // 예외 처리

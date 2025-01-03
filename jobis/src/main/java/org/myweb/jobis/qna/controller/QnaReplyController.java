@@ -25,16 +25,19 @@ public class QnaReplyController {
             @PathVariable String qno,
             @RequestBody Map<String, String> replyData) {
 
-        log.info("댓글 등록 요청 수신: qno={}, replyContent={}, uuid={}, replyWriter={}",
-                qno, replyData.get("replyContent"), replyData.get("uuid"), replyData.get("replyWriter"));
+        log.info("댓글 등록 요청 데이터: {}", replyData);
+
+        if (replyData == null || replyData.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("요청 본문이 누락되었습니다.");
+        }
 
         try {
             // 유효성 검증
             if (!replyData.containsKey("replyContent") || !replyData.containsKey("uuid") || !replyData.containsKey("replyWriter")) {
+                log.error("요청 데이터 누락: {}", replyData);
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("필수 데이터가 누락되었습니다.");
             }
 
-            // 비즈니스 로직 수행
             QnaReply reply = QnaReply.builder()
                     .qno(qno)
                     .repcontent(replyData.get("replyContent"))
@@ -50,6 +53,8 @@ public class QnaReplyController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("댓글 등록 실패");
         }
     }
+
+
 
     @PutMapping("/{repno}/delete")
     public ResponseEntity<?> markReplyAsDeleted(@PathVariable String repno) {

@@ -30,7 +30,7 @@ public class ReviewAttachmentEntity {
     @Column(name = "R_EXTENSION", length = 50, nullable = false)
     private String rExtension;
 
-    // 질문 번호 (외래 키)
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "R_NO", referencedColumnName = "R_NO", insertable = false, updatable = false)
     private ReviewEntity review;

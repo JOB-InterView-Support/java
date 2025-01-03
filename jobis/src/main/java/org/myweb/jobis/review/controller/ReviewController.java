@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.myweb.jobis.review.jpa.entity.ReviewEntity;
 import org.myweb.jobis.review.jpa.repository.ReviewRepository;
 import org.myweb.jobis.review.model.dto.Review;
+import org.myweb.jobis.review.model.dto.ReviewAttachment;
 import org.myweb.jobis.review.model.service.ReviewService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +22,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -88,59 +90,40 @@ public class ReviewController {
             @RequestParam(value = "rCount", defaultValue = "0") int rCount,
             @RequestParam(value = "file", required = false) MultipartFile file) {
 
-        log.info("리뷰 등록 메서드 시작: {}", rTitle);
-
         try {
-            log.info("Received rTitle: {}", rTitle);
-            log.info("Received rContent: {}", rContent);
-            log.info("Received rWriter: {}", rWriter);
-            log.info("rCount: {}", rCount);
-            log.info("Received file: {}", file != null ? file.getOriginalFilename() : "No file");
-
             String attachmentTitle = null;
-            // 첨부파일 처리
+            String fileUrl = null;
+
             if (file != null && !file.isEmpty()) {
                 attachmentTitle = "R_" + file.getOriginalFilename();
-                Path uploadPath = Paths.get("C:/upload_files");
+                Path uploadPath = Paths.get(uploadDir).resolve(attachmentTitle);
 
-                if (!Files.exists(uploadPath)) {
-                    try {
-                        Files.createDirectories(uploadPath);
-                        log.info("업로드 디렉터리 생성: {}", uploadPath);
-                    } catch (Exception e) {
-                        log.error("업로드 디렉터리 생성 실패", e);
-                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("업로드 디렉터리 생성 실패");
-                    }
+                // 디렉토리 생성 확인
+                if (!Files.exists(uploadPath.getParent())) {
+                    Files.createDirectories(uploadPath.getParent());
                 }
-                Files.copy(file.getInputStream(), uploadPath.resolve(attachmentTitle), StandardCopyOption.REPLACE_EXISTING);
+
+                // 파일 저장
+                Files.copy(file.getInputStream(), uploadPath, StandardCopyOption.REPLACE_EXISTING);
+
+                // URL 생성
+                fileUrl = "http://localhost:8080/review/attachments/" + attachmentTitle;
             }
 
-            Review review = Review.builder()
-                    .rNo(null)
-                    .rTitle(rTitle)
-                    .rContent(rContent)
-                    .uuid(uuid)
-                    .rWDate(new Timestamp(System.currentTimeMillis()))
-                    .rCount(rCount)
-                    .build();
-
-            // Review 객체 생성 (리뷰 등록 데이터)
+            // DTO 생성 및 서비스 호출
             Review reviewDTO = Review.builder()
-                    .rNo(null) // `System.currentTimeMillis()`가 중복되지 않는지 확인
                     .rTitle(rTitle)
                     .rContent(rContent)
                     .rWriter(rWriter)
-                    .rWDate(new Timestamp(System.currentTimeMillis()))
-
-                    .rAttachmentTitle(attachmentTitle)
                     .uuid(uuid)
-
+                    .rAttachmentTitle(attachmentTitle)
+                    .reviewPath(fileUrl) // URL 저장
+                    .rCount(rCount)
+                    .rWDate(new Timestamp(System.currentTimeMillis()))
                     .rIsDeleted("N")
-                    .rCount(0)
                     .build();
 
-            log.info("생성된 리뷰 데이터: {}", reviewDTO); // 디버깅 로그 추가
-
+            log.info("생성된 리뷰 데이터: {}", reviewDTO);
 
             if (uuid == null || uuid.isEmpty()) {
                 log.error("UUID가 없습니다. 확인 바랍니다.");
@@ -158,43 +141,81 @@ public class ReviewController {
 
     @GetMapping("/detail/{rno}")
     public ResponseEntity<?> getReviewDetail(@PathVariable("rno") String rno) {
-        // rno 값 로그 출력
-        System.out.println("Received rno: " + rno);
-        Logger logger = LoggerFactory.getLogger(ReviewController.class);
-        logger.info("Received rno: {}", rno);
-
         try {
-            // 예: 서비스에서 리뷰 상세 데이터 가져오기
             Review review = reviewService.getReviewDetail(rno);
+
+            // 리뷰 조회수 증가
             review.setRCount(review.getRCount() + 1);
             reviewRepository.save(review.toEntity());
+
+            // URL이 포함된 파일 경로 확인
+            String baseUrl = "http://localhost:8080/review/attachments/";
+            if (review.getReviewPath() != null && !review.getReviewPath().startsWith(baseUrl)) {
+                review.setReviewPath(baseUrl + review.getReviewPath());
+            }
+
             return ResponseEntity.ok(review);
-
-
         } catch (Exception e) {
-            logger.error("Error fetching review detail for rno: {}", rno, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to fetch review detail.");
+            log.error("리뷰 상세 조회 중 오류 발생", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("리뷰 조회 실패");
         }
     }
+
+
+
+//    @GetMapping("/detail/{rno}")
+//    public Review getReviewDetail(@PathVariable("rno") String rno) {
+//            //public ResponseEntity<?> getReviewDetail(@PathVariable("rno") String rno) {
+//        // rno 값 로그 출력
+//        System.out.println("Received rno: " + rno);
+//        Logger logger = LoggerFactory.getLogger(ReviewController.class);
+//        logger.info("Received rno: {}", rno);
+//
+//        try {
+//            // 예: 서비스에서 리뷰 상세 데이터 가져오기
+//            Review review = reviewService.getReviewDetail(rno);
+//            review.setRCount(review.getRCount() + 1);
+//            reviewRepository.save(review.toEntity());
+//            //return ResponseEntity.ok(review);
+//
+//            // reviewPath 중복 방지
+//            String baseUrl = "http://localhost:8080/review/attachments/";
+//            if (review.getReviewPath() != null && !review.getReviewPath().startsWith(baseUrl)) {
+//                review.setReviewPath(baseUrl + review.getReviewPath());
+//            }
+//            return review;
+//        } catch (Exception e) {
+//            log.error("공지사항 상세 조회 중 오류 발생", e);
+//            return null;
+////            logger.error("Error fetching review detail for rno: {}", rno, e);
+////            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+////                    .body("Failed to fetch review detail.");
+//        }
+//    }
 
 
     @GetMapping("/attachments/{filename}")
     public ResponseEntity<Resource> getFile(@PathVariable String filename) {
         try {
+            // 파일 경로 생성
             Path filePath = Paths.get("C:/upload_files").resolve(filename).normalize();
+            // 리소스 생성
             Resource resource = new UrlResource(filePath.toUri());
-
-            if (resource.exists()) {
-                return ResponseEntity.ok()
-                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
-                        .body(resource);
-            } else {
-                return ResponseEntity.notFound().build();
+            if (!resource.exists() && !resource.isReadable()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
             }
+
+            // MIME 타입 자동 감지
+            String contentType = Files.probeContentType(filePath);
+            if (contentType == null) {
+                contentType = "application/octet-stream"; // 기본 MIME 타입 설정
+            }
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .body(resource);
         } catch (Exception e) {
-            log.error("파일을 찾을 수 없습니다: {}", filename, e);
-            return ResponseEntity.internalServerError().build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
@@ -245,19 +266,22 @@ public class ReviewController {
                 Files.copy(file.getInputStream(), uploadPath.resolve(attachmentTitle), StandardCopyOption.REPLACE_EXISTING);
 
                 reviewEntity.setRAttachmentTitle(attachmentTitle);
+                reviewEntity.setReviewPath(attachmentTitle); // 경로 업데이트
+                log.info("Review Entity before save: {}", reviewEntity);
+
                 reviewEntity.setRADate(new Timestamp(System.currentTimeMillis()));
             } else {
                 reviewEntity.setRAttachmentTitle(null);
                 reviewEntity.setRADate(null);
+
+
             }
 
-
-
             reviewEntity.setRUpdateDate(new Timestamp(System.currentTimeMillis()));
-
+            // db 업데이트
             reviewRepository.save(reviewEntity);
-
             log.info("Review updated successfully: {}", rno);
+
             return ResponseEntity.ok("Review updated successfully");
         } catch (Exception e) {
             log.error("Error updating review", e);

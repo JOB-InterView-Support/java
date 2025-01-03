@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.myweb.jobis.mypage.jpa.entity.SelfIntroduceEntity;
 import org.myweb.jobis.mypage.jpa.repository.SelfIntroduceRepository;
 import org.myweb.jobis.mypage.model.dto.SelfIntroduce;
+import org.myweb.jobis.products.jpa.repository.ProductsRepository;
 import org.myweb.jobis.ticket.jpa.entity.TicketEntity;
 import org.myweb.jobis.ticket.jpa.repository.TicketRepository;
 import org.myweb.jobis.user.jpa.entity.UserEntity;
@@ -210,4 +211,6 @@ public class MypageService {
         }
         return tickets;
     }
+
+
 }

@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import org.myweb.jobis.ticket.jpa.entity.TicketEntity;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
@@ -20,15 +21,18 @@ public class Ticket {
     private String ticketName;
     private int ticketAmount;
 
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    private Timestamp ticketPeriod;
+
+    private String ticketPeriod;
 
     private int ticketCount;
 
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    private Timestamp ticketStartDate;
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    private Timestamp ticketEndDate;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime ticketStartDate;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime ticketEndDate;
+
+    private int prodNumberOfTime;
 
     // Entity 객체로 변환하는 메서드
     public TicketEntity toEntity() {
@@ -43,6 +47,7 @@ public class Ticket {
                 .ticketCount(ticketCount)
                 .ticketStartDate(ticketStartDate)
                 .ticketEndDate(ticketEndDate)
+                .prodNumberOfTime(prodNumberOfTime)
                 .build();
     }
 
