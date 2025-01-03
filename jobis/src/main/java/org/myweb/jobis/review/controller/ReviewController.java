@@ -90,19 +90,24 @@ public class ReviewController {
             @RequestParam(value = "rCount", defaultValue = "0") int rCount,
             @RequestParam(value = "file", required = false) MultipartFile file) {
 
-
         try {
             String attachmentTitle = null;
+            String fileUrl = null;
+
             if (file != null && !file.isEmpty()) {
                 attachmentTitle = "R_" + file.getOriginalFilename();
-                Path uploadPath = Paths.get("C:/upload_files").resolve(attachmentTitle);
+                Path uploadPath = Paths.get(uploadDir).resolve(attachmentTitle);
 
                 // 디렉토리 생성 확인
                 if (!Files.exists(uploadPath.getParent())) {
                     Files.createDirectories(uploadPath.getParent());
                 }
 
+                // 파일 저장
                 Files.copy(file.getInputStream(), uploadPath, StandardCopyOption.REPLACE_EXISTING);
+
+                // URL 생성
+                fileUrl = "http://localhost:8080/review/attachments/" + attachmentTitle;
             }
 
             // DTO 생성 및 서비스 호출
@@ -111,14 +116,14 @@ public class ReviewController {
                     .rContent(rContent)
                     .rWriter(rWriter)
                     .uuid(uuid)
-                    .reviewPath(attachmentTitle) // 파일 경로 저장
+                    .rAttachmentTitle(attachmentTitle)
+                    .reviewPath(fileUrl) // URL 저장
                     .rCount(rCount)
                     .rWDate(new Timestamp(System.currentTimeMillis()))
                     .rIsDeleted("N")
                     .build();
 
-            log.info("생성된 리뷰 데이터: {}", reviewDTO); // 디버깅 로그 추가
-
+            log.info("생성된 리뷰 데이터: {}", reviewDTO);
 
             if (uuid == null || uuid.isEmpty()) {
                 log.error("UUID가 없습니다. 확인 바랍니다.");
@@ -139,11 +144,15 @@ public class ReviewController {
         try {
             Review review = reviewService.getReviewDetail(rno);
 
-
-
-
+            // 리뷰 조회수 증가
             review.setRCount(review.getRCount() + 1);
             reviewRepository.save(review.toEntity());
+
+            // URL이 포함된 파일 경로 확인
+            String baseUrl = "http://localhost:8080/review/attachments/";
+            if (review.getReviewPath() != null && !review.getReviewPath().startsWith(baseUrl)) {
+                review.setReviewPath(baseUrl + review.getReviewPath());
+            }
 
             return ResponseEntity.ok(review);
         } catch (Exception e) {
@@ -151,6 +160,7 @@ public class ReviewController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("리뷰 조회 실패");
         }
     }
+
 
 
 //    @GetMapping("/detail/{rno}")
@@ -187,10 +197,11 @@ public class ReviewController {
     @GetMapping("/attachments/{filename}")
     public ResponseEntity<Resource> getFile(@PathVariable String filename) {
         try {
+            // 파일 경로 생성
             Path filePath = Paths.get("C:/upload_files").resolve(filename).normalize();
+            // 리소스 생성
             Resource resource = new UrlResource(filePath.toUri());
-
-            if (!resource.exists() || !resource.isReadable()) {
+            if (!resource.exists() && !resource.isReadable()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
             }
 
@@ -255,19 +266,22 @@ public class ReviewController {
                 Files.copy(file.getInputStream(), uploadPath.resolve(attachmentTitle), StandardCopyOption.REPLACE_EXISTING);
 
                 reviewEntity.setRAttachmentTitle(attachmentTitle);
+                reviewEntity.setReviewPath(attachmentTitle); // 경로 업데이트
+                log.info("Review Entity before save: {}", reviewEntity);
+
                 reviewEntity.setRADate(new Timestamp(System.currentTimeMillis()));
             } else {
                 reviewEntity.setRAttachmentTitle(null);
                 reviewEntity.setRADate(null);
+
+
             }
 
-
-
             reviewEntity.setRUpdateDate(new Timestamp(System.currentTimeMillis()));
-
+            // db 업데이트
             reviewRepository.save(reviewEntity);
-
             log.info("Review updated successfully: {}", rno);
+
             return ResponseEntity.ok("Review updated successfully");
         } catch (Exception e) {
             log.error("Error updating review", e);

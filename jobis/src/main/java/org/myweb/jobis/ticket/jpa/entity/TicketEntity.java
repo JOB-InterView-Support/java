@@ -24,7 +24,7 @@ public class TicketEntity {
     @Column(name = "UUID", length = 50, nullable = false )
     private String uuid;
 
-    @Column(name = "PAY_PAYMENT_KEY", length = 400, nullable = false )
+    @Column(name = "PAYMENT_KEY", length = 400, nullable = false )
     private String paymentKey;
 
     @Column(name = "PROD_NUMBER", length = 50, nullable = false )
