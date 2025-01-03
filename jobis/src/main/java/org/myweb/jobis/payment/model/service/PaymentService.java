@@ -65,6 +65,7 @@ public class PaymentService {
 
         // 결제 처리 성공 시 로깅 등 추가 작업
         log.info("Payment processed successfully for order: {}", paymentRequest.getOrderId());
+        log.info("PaymentRequest: {}", paymentRequest);
     }
 
 

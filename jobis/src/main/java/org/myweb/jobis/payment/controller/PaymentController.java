@@ -34,6 +34,7 @@ public class PaymentController {
         try {
             // PaymentService에서 결제 요청 처리
             paymentService.processPayment(paymentRequest);
+            log.info("paymentRequest" + paymentRequest);
             return ResponseEntity.ok().body("결제 요청 성공");
         } catch (Exception e) {
             // 예외 처리
@@ -53,8 +54,8 @@ public class PaymentController {
             String orderId = (String) requestData.get("orderId");
 
             boolean isAlreadyProcessed = paymentRepository.existsByOrderId(orderId);
-                if (isAlreadyProcessed) {
-                    throw new IllegalStateException("Duplicate request for orderId: " + orderId);
+            if (isAlreadyProcessed) {
+                throw new IllegalStateException("Duplicate request for orderId: " + orderId);
             }
             // 이미 처리된 요청 확인 로직
             if (isAlreadyProcessed(paymentKey, orderId)) {
