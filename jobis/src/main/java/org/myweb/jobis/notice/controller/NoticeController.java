@@ -332,6 +332,47 @@ public class NoticeController {
 //        }
 //    }
 
+//    @GetMapping("/attachments/{filename}")
+//    public ResponseEntity<Resource> getFile(@PathVariable String filename) {
+//        try {
+//            Path filePath = Paths.get("C:/upload_files").resolve(filename).normalize();
+//            Resource resource = new UrlResource(filePath.toUri());
+//
+//            if (!resource.exists() || !resource.isReadable()) {
+//                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+//            }
+//
+//            // MIME 타입 자동 감지
+//            String contentType = Files.probeContentType(filePath);
+//            if (contentType == null) {
+//                contentType = "application/octet-stream"; // 기본 MIME 타입 설정
+//            }
+//
+////            // Content-Disposition 헤더 설정
+////            boolean isImage = contentType.startsWith("image/");
+////            HttpHeaders headers = new HttpHeaders();
+////            if (isImage) {
+////                headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline"); // 브라우저에서 미리보기
+////            } else {
+////                headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\""); // 다운로드
+////            }
+//            String encodedFilename = UriUtils.encode(filename, StandardCharsets.UTF_8);
+//            boolean isImage = contentType.startsWith("image/");
+//            HttpHeaders headers = new HttpHeaders();
+//            if (isImage) {
+//                headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + encodedFilename + "\"");
+//            } else {
+//                headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + encodedFilename + "\"");
+//            }
+//
+//            return ResponseEntity.ok()
+//                    .contentType(MediaType.parseMediaType(contentType))
+//                    .body(resource);
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+//        }
+//    }
+
     @GetMapping("/attachments/{filename}")
     public ResponseEntity<Resource> getFile(@PathVariable String filename) {
         try {
@@ -339,22 +380,33 @@ public class NoticeController {
             Resource resource = new UrlResource(filePath.toUri());
 
             if (!resource.exists() || !resource.isReadable()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
             }
 
-            // MIME 타입 자동 감지
+            // MIME 타입 감지
             String contentType = Files.probeContentType(filePath);
             if (contentType == null) {
                 contentType = "application/octet-stream"; // 기본 MIME 타입 설정
             }
 
+            // Content-Disposition 설정
+            boolean isImage = contentType.startsWith("image/");
+            String contentDisposition = isImage
+                    ? "inline; filename=\"" + UriUtils.encode(filename, StandardCharsets.UTF_8) + "\""
+                    : "attachment; filename=\"" + UriUtils.encode(filename, StandardCharsets.UTF_8) + "\"";
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, contentDisposition);
+
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(contentType))
+                    .headers(headers)
                     .body(resource);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
 
 
 
@@ -453,130 +505,159 @@ public class NoticeController {
         }
     }
 
-
-//    @GetMapping("/update/{noticeNo}")
-//    public ResponseEntity<Notice> getNoticeForUpdate(@PathVariable String noticeNo) {
-//        try {
-//            NoticeEntity noticeEntity = noticeRepository.findById(noticeNo)
-//                    .orElseThrow(() -> new IllegalArgumentException("공지사항을 찾을 수 없습니다. (get)"));
-//            return ResponseEntity.ok(noticeEntity.toDto());
-//        } catch (IllegalArgumentException e) {
-//            log.error("공지사항 조회 실패 : {}", e.getMessage());
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-//        } catch (Exception e) {
-//            log.error("공지사항 조회 중 오류 발생 : ", e);
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-//        }
-//    }
-
-//
 //    @PutMapping("/update/{noticeNo}")
 //    public ResponseEntity<?> updateNotice(
 //            @PathVariable String noticeNo,
 //            @RequestParam("noticeTitle") String noticeTitle,
 //            @RequestParam("noticeContent") String noticeContent,
 //            @RequestParam(value = "file", required = false) MultipartFile file) {
-//        log.info("공지 수정 시작: {}", noticeNo);
+//        log.info("공지 수정 시작");
 //
 //        try {
-//            NoticeEntity noticeEntity = noticeRepository.findById(noticeNo)
-//                    .orElseThrow(() -> new IllegalArgumentException("공지사항을 찾을 수 없습니다. (put)"));
+//            NoticeEntity noticeEntity = noticeRepository.findById(noticeNo).orElseThrow(() ->
+//                    new IllegalArgumentException("공지사항을 찾을 수 없습니다."));
 //
-//            // 제목, 내용 업데이트
 //            noticeEntity.setNoticeTitle(noticeTitle);
 //            noticeEntity.setNoticeContent(noticeContent);
-//            noticeEntity.setNoticeUDate(new Timestamp(System.currentTimeMillis())); // 수정 시간 갱신
+//            noticeEntity.setNoticeUDate(new Timestamp(System.currentTimeMillis()));
+//
+//            if (file != null && !file.isEmpty()) {
+//                // 파일 저장 로직
+//                String uploadDir = "C:/upload_files"; // 파일 저장 경로
+//                Path uploadPath = Paths.get(uploadDir);
+//                if (!Files.exists(uploadPath)) {
+//                    Files.createDirectories(uploadPath); // 경로가 없으면 생성
+//                }
+//
+//                String fileName = "N_" + file.getOriginalFilename();
+//                Path filePath = uploadPath.resolve(fileName);
+//                Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+//
+//                noticeEntity.setNoticePath(fileName); // DB에 저장할 파일 경로 설정
+//            }
+//
+//            noticeRepository.save(noticeEntity);
+//            return ResponseEntity.ok("공지 수정 성공");
+//        } catch (Exception e) {
+//            log.error("공지 수정 중 오류 발생", e);
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("공지 수정 실패");
+//        }
+//    }
+
+//    @PutMapping("/update/{noticeNo}")
+//    public ResponseEntity<?> updateNotice(
+//            @PathVariable String noticeNo,
+//            @RequestParam(value = "noticeTitle", required = false) String noticeTitle,
+//            @RequestParam(value = "noticeContent", required = false) String noticeContent,
+//            @RequestParam(value = "file", required = false) MultipartFile file,
+//            @RequestParam(value = "deleteFile", required = false, defaultValue = "false") boolean deleteFile) {
+//        log.info("공지 수정 시작");
+//
+//        try {
+//            NoticeEntity noticeEntity = noticeRepository.findById(noticeNo).orElseThrow(() ->
+//                    new IllegalArgumentException("공지사항을 찾을 수 없습니다."));
+//
+//            // 첨부파일 삭제 처리
+//            if (deleteFile) {
+//                log.info("첨부파일 삭제 요청 처리 중");
+//                String existingFilePath = noticeEntity.getNoticePath();
+//                if (existingFilePath != null) {
+//                    Path filePath = Paths.get("C:/upload_files").resolve(existingFilePath);
+//                    if (Files.exists(filePath)) {
+//                        Files.delete(filePath); // 파일 삭제
+//                        log.info("첨부파일 삭제 완료: {}", existingFilePath);
+//                    }
+//                }
+//                noticeEntity.setNoticePath(null); // DB에서 경로 제거
+//            }
+//
+//            // 제목과 내용 업데이트 (선택적 처리)
+//            if (noticeTitle != null) {
+//                noticeEntity.setNoticeTitle(noticeTitle);
+//            }
+//            if (noticeContent != null) {
+//                noticeEntity.setNoticeContent(noticeContent);
+//            }
 //
 //            // 파일 업데이트
 //            if (file != null && !file.isEmpty()) {
-//                String noticeAttachments = "N_" + file.getOriginalFilename();
-//                Path uploadPath = Paths.get(uploadDir); // 업로드 경로 사용
-//                if (!Files.exists(uploadPath)) {
-//                    Files.createDirectories(uploadPath);
+//                String fileName = "N_" + file.getOriginalFilename();
+//                Path uploadPath = Paths.get("C:/upload_files").resolve(fileName);
+//                if (!Files.exists(uploadPath.getParent())) {
+//                    Files.createDirectories(uploadPath.getParent());
 //                }
-//                Files.copy(file.getInputStream(), uploadPath.resolve(noticeAttachments), StandardCopyOption.REPLACE_EXISTING);
-//                noticeEntity.setNoticePath(noticeAttachments); // 파일 경로 저장
+//                Files.copy(file.getInputStream(), uploadPath, StandardCopyOption.REPLACE_EXISTING);
+//                noticeEntity.setNoticePath(fileName); // DB에 경로 저장
 //            }
 //
-//            noticeRepository.save(noticeEntity); // 업데이트된 공지 저장
-//            log.info("공지사항 수정 완료: {}", noticeNo);
+//            noticeEntity.setNoticeUDate(new Timestamp(System.currentTimeMillis()));
+//            noticeRepository.save(noticeEntity);
 //            return ResponseEntity.ok("공지사항 수정 성공");
-//        } catch (IllegalArgumentException e) {
-//            log.error("공지사항 수정 실패: {}", e.getMessage());
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("공지사항을 찾을 수 없습니다.");
 //        } catch (Exception e) {
-//            log.error("공지사항 수정 중 오류 발생:", e);
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("공지사항 수정 중 오류가 발생했습니다.");
+//            log.error("공지 수정 중 오류 발생", e);
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("공지 수정 실패");
 //        }
 //    }
 
     @PutMapping("/update/{noticeNo}")
     public ResponseEntity<?> updateNotice(
             @PathVariable String noticeNo,
-            @RequestParam("noticeTitle") String noticeTitle,
-            @RequestParam("noticeContent") String noticeContent,
-            @RequestParam(value = "file", required = false) MultipartFile file) {
+            @RequestParam(value = "noticeTitle", required = false) String noticeTitle,
+            @RequestParam(value = "noticeContent", required = false) String noticeContent,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "deleteFile", required = false, defaultValue = "false") boolean deleteFile) {
         log.info("공지 수정 시작");
 
         try {
             NoticeEntity noticeEntity = noticeRepository.findById(noticeNo).orElseThrow(() ->
                     new IllegalArgumentException("공지사항을 찾을 수 없습니다."));
 
-            noticeEntity.setNoticeTitle(noticeTitle);
-            noticeEntity.setNoticeContent(noticeContent);
-            noticeEntity.setNoticeUDate(new Timestamp(System.currentTimeMillis()));
+            // 첨부파일 삭제 처리
+            if (deleteFile) {
+                log.info("첨부파일 삭제 요청 처리 중");
+                String existingFilePath = noticeEntity.getNoticePath();
+                if (existingFilePath != null) {
+                    // URL 경로를 로컬 파일 경로로 변환
+                    String fileName = existingFilePath.substring(existingFilePath.lastIndexOf('/') + 1);
+                    Path filePath = Paths.get("C:/upload_files").resolve(fileName);
 
-            if (file != null && !file.isEmpty()) {
-                String filePath = "C:/upload_files/N_" + file.getOriginalFilename();
-                Files.copy(file.getInputStream(), Paths.get(filePath), StandardCopyOption.REPLACE_EXISTING);
-                noticeEntity.setNoticePath(filePath);
+                    if (Files.exists(filePath)) {
+                        Files.delete(filePath); // 파일 삭제
+                        log.info("첨부파일 삭제 완료: {}", filePath);
+                    }
+                }
+                noticeEntity.setNoticePath(null); // DB에서 경로 제거
             }
 
+            // 제목과 내용 업데이트 (선택적 처리)
+            if (noticeTitle != null) {
+                noticeEntity.setNoticeTitle(noticeTitle);
+            }
+            if (noticeContent != null) {
+                noticeEntity.setNoticeContent(noticeContent);
+            }
+
+            // 파일 업데이트
+            if (file != null && !file.isEmpty()) {
+                String fileName = "N_" + file.getOriginalFilename();
+                Path uploadPath = Paths.get("C:/upload_files").resolve(fileName);
+                if (!Files.exists(uploadPath.getParent())) {
+                    Files.createDirectories(uploadPath.getParent());
+                }
+                Files.copy(file.getInputStream(), uploadPath, StandardCopyOption.REPLACE_EXISTING);
+                noticeEntity.setNoticePath(fileName); // DB에 경로 저장
+            }
+
+            noticeEntity.setNoticeUDate(new Timestamp(System.currentTimeMillis()));
             noticeRepository.save(noticeEntity);
-            return ResponseEntity.ok("공지 수정 성공");
+            return ResponseEntity.ok("공지사항 수정 성공");
         } catch (Exception e) {
             log.error("공지 수정 중 오류 발생", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("공지 수정 실패");
         }
     }
-//
-//@PutMapping("/update/{noticeNo}")
-//public ResponseEntity<?> updateNotice(
-//        @PathVariable String noticeNo,
-//        @RequestParam("noticeTitle") String noticeTitle,
-//        @RequestParam("noticeContent") String noticeContent,
-//        @RequestParam(value = "file", required = false) MultipartFile file) {
-//
-//    try {
-//        NoticeEntity noticeEntity = noticeRepository.findById(noticeNo)
-//                .orElseThrow(() -> new IllegalArgumentException("공지사항을 찾을 수 없습니다."));
-//
-//        // 제목, 내용 업데이트
-//        noticeEntity.setNoticeTitle(noticeTitle);
-//        noticeEntity.setNoticeContent(noticeContent);
-//        noticeEntity.setNoticeUDate(new Timestamp(System.currentTimeMillis()));
-//
-//        // 파일 업데이트
-//        if (file != null && !file.isEmpty()) {
-//            String filePath = "uploads/" + file.getOriginalFilename();
-//            Files.copy(file.getInputStream(), Paths.get(filePath), StandardCopyOption.REPLACE_EXISTING);
-//
-//            // 기존 첨부파일 삭제 및 새 첨부파일 저장
-//            noticeEntity.getNoticeAttachments().clear();
-//            NoticeAttachmentEntity newAttachment = NoticeAttachmentEntity.builder()
-//                    .notice(noticeEntity)
-//                    .noticeAName(file.getOriginalFilename())
-//                    .build();
-//            noticeEntity.getNoticeAttachments().add(newAttachment);
-//        }
-//
-//        noticeRepository.save(noticeEntity);
-//        return ResponseEntity.ok("공지사항 수정 성공");
-//    } catch (Exception e) {
-//        log.error("공지사항 수정 중 오류 발생: ", e);
-//        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("공지사항 수정 실패");
-//    }
-//}
+
+
 
     @PutMapping("/detail/{noticeNo}")
     public ResponseEntity<String> toggleNoticeDelete(@PathVariable String noticeNo) {
