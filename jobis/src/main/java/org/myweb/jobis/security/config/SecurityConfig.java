@@ -119,6 +119,11 @@ public class SecurityConfig implements WebMvcConfigurer {
                         .requestMatchers("/payments/**").hasAnyRole("USER", "ADMIN")
                         // 나머지 모든 요청은 인증 필요
 
+                        // payment 경로 설정
+                        .requestMatchers(HttpMethod.GET, "/api/payments/**", "/payments/confirm").hasAnyRole("USER", "ADMIN") // 조회는 USER와 ADMIN 허용
+                        .requestMatchers(HttpMethod.POST, "/api/payments/confirm, /api/payments/request").hasAnyRole("USER", "ADMIN") // 등록은 USER와 ADMIN 허용
+                        .requestMatchers(HttpMethod.PUT, "/api/payments").hasAnyRole("USER", "ADMIN")// 수정은 USER와 ADMIN 허용
+                        .requestMatchers(HttpMethod.DELETE, "/payments").hasAnyRole("USER", "ADMIN") // 삭제는 USER와 ADMIN 허용
 
 
                         // QnA 경로 설정

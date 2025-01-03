@@ -5,13 +5,15 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@Data
 public class PaymentRequest{
-    private String paymentKey;  // 결제 키
     private String orderId;     // 주문 ID
     private int amount;         // 결제 금액
-    private String orderName;   // 주문 이름
+    private String paymentKey;  // 결제 키
+    private String customerEmail;
+    private String customerName;
+    private String customerMobilePhone;
 }

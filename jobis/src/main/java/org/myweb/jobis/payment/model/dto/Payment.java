@@ -8,10 +8,10 @@ import org.myweb.jobis.payment.jpa.entity.PaymentEntity;
 
 import java.sql.Timestamp;
 
-@Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@Data
 public class Payment {
     private String paymentKey;
     private int prodNumber;
@@ -48,6 +48,4 @@ public class Payment {
                 .cancelYN(cancelYN)
                 .build();
     }
-
-
 }

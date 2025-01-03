@@ -8,5 +8,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PaymentRepository extends JpaRepository<PaymentEntity, Long> {
     boolean existsByPaymentKeyAndOrderId(String paymentKey, String orderId);
+
+    boolean existsByOrderId(String orderId);
     // 기본 JPA 메소드 사용 가능
 }
