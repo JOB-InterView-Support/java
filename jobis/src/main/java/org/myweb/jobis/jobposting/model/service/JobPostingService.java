@@ -25,7 +25,7 @@ public class JobPostingService {
     private final RestTemplate restTemplate = new RestTemplate();
 
     public Object searchJobPostings(String jobType, String locMcd, String eduLv, String jobCd,
-                                    int count, int start, String sort, int page, int size) {
+                                    int count, int start, int total, String sort) {
 
         String fullUri = UriComponentsBuilder.fromHttpUrl(apiUrl)
                 .queryParam("access-key", apiKey)
@@ -35,9 +35,8 @@ public class JobPostingService {
                 .queryParam("job_cd", jobCd)
                 .queryParam("count", count)
                 .queryParam("start", start)
+                .queryParam("total", total)
                 .queryParam("sort", sort)
-                .queryParam("page", page)
-                .queryParam("size", size)
                 .toUriString();
 
         try {
@@ -50,7 +49,7 @@ public class JobPostingService {
     // 채용공고 목록 가져오기
     public JobPostingResponse getJobPostings(int page, int size) {
         int start = (page - 1) * size;
-        String url = UriComponentsBuilder.fromHttpUrl("https://oapi.saramin.co.kr/job-search")
+        String url = UriComponentsBuilder.fromHttpUrl("apiUrl")
                 .queryParam("access-key", apiKey)
                 .queryParam("page", page)  // 페이지 번호
                 .queryParam("size", size)  // 한 페이지 당 항목 수

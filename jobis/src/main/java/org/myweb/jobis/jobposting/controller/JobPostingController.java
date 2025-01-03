@@ -21,14 +21,13 @@ public class JobPostingController {
             @RequestParam(required = false) String locMcd, // 지역 코드
             @RequestParam(required = false) String eduLv, // 학력 조건
             @RequestParam(required = false) String jobCd, // 직무 코드
-            @RequestParam(defaultValue = "110") int count, // 검색 횟수
-            @RequestParam(defaultValue = "0") int start, // 시작 페이지
-            @RequestParam(defaultValue = "1") int page, // 페이지 수
-            @RequestParam(defaultValue = "10") int size, // 페이지 크기
+            @RequestParam(defaultValue = "5") int count, // 검색 횟수
+            @RequestParam(defaultValue = "1") int start, // 시작 페이지
+            @RequestParam(defaultValue = "110") int total, // 총 횟수
             @RequestParam(defaultValue = "pd") String sort // 정렬 기준
     ) {
         // 서비스 호출
-        Object result = jobPostingService.searchJobPostings(jobType, locMcd, eduLv, jobCd, count, start, sort, page, size);
+        Object result = jobPostingService.searchJobPostings(jobType, locMcd, eduLv, jobCd, count, start, total, sort);
 
         // 서비스 결과 로그로 출력
 
@@ -40,7 +39,6 @@ public class JobPostingController {
     public JobPosting getJobPosting(@PathVariable Long id) {
 
         JobPosting jobPosting = jobPostingService.getJobPostingById(id);
-
         return jobPosting;
     }
 }
