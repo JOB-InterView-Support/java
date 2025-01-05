@@ -1,31 +1,109 @@
 package org.myweb.jobis.jobposting.model.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Data
 public class JobPosting {
-    private String id;  // 공고 번호
-    private String jobTitle;  // 공고 제목
-    private String companyName;  // 회사명
-    private String location;  // 근무지
-    private String jobType;  // 근무 형태
-    private String experienceLevel;  // 경력
-    private String requiredEducationLevel;  // 학력
-    private String postingDate;  // 게시일
-    private String expirationDate;  // 마감일
-    private String salary;  // 연봉
-    private String jobUrl;  // 공고 URL
-    private String title;       // 채용공고 제목
-    private String description; // 채용공고 설명
 
-    // 추가 필드 (예시로 사람인 API의 일부를 가정한 항목들)
-    private String companyUrl;  // 회사 URL
-    private String contactNumber;  // 연락처
-    private String workType;  // 근무 형태 (정규직, 계약직 등)
-    private String jobCategory;  // 직무 카테고리
-    private String employmentType;  // 고용 형태
+    private String id;
+    private String url;
+    private int active;
+    private Company company;
+    private Position position;
+    private String keyword;
+    private Salary salary;
+    private String postingTimestamp;
+    private String postingDate;
+    private String modificationTimestamp;
+    private String openingTimestamp;
+    private String expirationTimestamp;
+    private String expirationDate;
+    private CloseType closeType;
+    private int readCnt;
+    private int applyCnt;
+
+    @Data
+    public static class Company {
+        private Detail detail;
+
+        @Data
+        public static class Detail {
+            private String href;
+            private String name;
+        }
+    }
+
+    @Data
+    public static class Position {
+        private String title;
+        private Industry industry;
+        private Location location;
+        private JobType jobType;
+        private JobMidCode jobMidCode;
+        private JobCode jobCode;
+        private ExperienceLevel experienceLevel;
+        private RequiredEducationLevel requiredEducationLevel;
+
+        @Data
+        public static class Industry {
+            private String code;
+            private String name;
+        }
+
+        @Data
+        public static class Location {
+            private String code;
+            private String name;
+        }
+
+        @Data
+        public static class JobType {
+            private String code;
+            private String name;
+        }
+
+        @Data
+        public static class JobMidCode {
+            private String code;
+            private String name;
+        }
+
+        @Data
+        public static class JobCode {
+            private String code;
+            private String name;
+        }
+
+        @Data
+        public static class ExperienceLevel {
+            private int code;
+            private int min;
+            private int max;
+            private String name;
+        }
+
+        @Data
+        public static class RequiredEducationLevel {
+            private String code;
+            private String name;
+        }
+    }
+
+    @Data
+    public static class Salary {
+        private String code;
+        private String name;
+    }
+
+    @Data
+    public static class CloseType {
+        private String code;
+        private String name;
+    }
 }

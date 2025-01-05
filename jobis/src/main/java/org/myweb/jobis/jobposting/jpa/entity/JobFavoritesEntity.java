@@ -8,52 +8,39 @@ import org.myweb.jobis.user.jpa.entity.UserEntity;
 
 import java.time.LocalDateTime;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
 @Entity
 @Table(name = "JOB_FAVORITES")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class JobFavoritesEntity {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "job_favorites_no")
-    private String jobFavoritesNo;
+    private String jobFavoritesNo; // 즐겨찾기 번호
 
-    @Column(name = "UUID", length = 50, nullable = false)
-    private String uuid;
+    @Column(name = "uuid")
+    private String uuid; // 사용자 UUID
 
-    @Column(name = "job_posting_id", nullable = false)
-    private String jobPostingId;
+    @Column(name = "job_posting_id")
+    private String jobPostingId; // 사람인 API의 공고 ID와 일치
 
-    @Column(name = "job_created_date", nullable = false)
-    private LocalDateTime jobCreatedDate;
+    @Column(name = "job_created_date")
+    private LocalDateTime jobCreatedDate; // 즐겨찾기 생성 일자
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "UUID", referencedColumnName = "UUID", insertable = false, updatable = false)
-    private UserEntity user;
+    @ManyToOne
+    @JoinColumn(name = "uuid", referencedColumnName = "uuid", insertable = false, updatable = false)
+    private UserEntity userEntity; // 사용자 엔티티 (외래 키 관계)
 
-    @PrePersist
-    protected void onCreate() {
-        jobCreatedDate = LocalDateTime.now();
-    }
-
-    // toDto 메서드 추가
-    public JobFavorites toDto() {
-        return new JobFavorites(
-                this.jobFavoritesNo,
-                this.uuid,
-                this.jobPostingId,
-                this.jobCreatedDate
+    // DTO -> Entity 변환
+    public static JobFavoritesEntity fromDto(JobFavorites jobFavorites) {
+        return new JobFavoritesEntity(
+                jobFavorites.getJobFavoritesNo(),
+                jobFavorites.getUuid(),
+                jobFavorites.getJobPostingId(), // 사람인 API의 공고 ID 사용
+                jobFavorites.getJobCreatedDate(),
+                null // UserEntity는 외부에서 설정해야 할 수 있음
         );
     }
-
-    // toEntity 메서드 추가
-    public static JobFavoritesEntity toEntity(JobFavorites dto) {
-        return JobFavoritesEntity.builder()
-                .jobFavoritesNo(dto.getJobFavoritesNo())
-                .uuid(dto.getUuid())
-                .jobPostingId(dto.getJobPostingId())
-                .jobCreatedDate(dto.getJobCreatedDate())
-                .build();
-    }
 }
+
