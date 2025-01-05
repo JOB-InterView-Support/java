@@ -7,8 +7,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.introspect.TypeResolutionContext;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.Basic;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.myweb.jobis.payment.jpa.entity.PaymentEntity;
+import org.myweb.jobis.payment.jpa.repository.PaymentRepository;
 import org.myweb.jobis.payment.model.dto.PaymentRequest;
+import org.myweb.jobis.payment.model.dto.PaymentResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -23,6 +27,9 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.Map;
 import java.util.Set;
@@ -33,6 +40,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class PaymentService {
     private static final String TOSS_PAYMENTS_URL = "https://api.tosspayments.com/v1/payments/confirm";
+    private final PaymentRepository paymentRepository;
+    private final HttpServletRequest httpServletRequest;
 
     @Value("${tossSecretKey}")
     private String tossSecretKey;
@@ -103,7 +112,8 @@ public class PaymentService {
                 // JSON 응답을 Map으로 변환
                 log.info("response code : " + response.statusCode());
                 log.info("response body : " + response.body());
-                return new ObjectMapper().readValue(response.body(), new TypeReference<Map<String, Object>>() {});
+                return new ObjectMapper().readValue(response.body(), new TypeReference<Map<String, Object>>() {
+                });
             } else {
                 throw new IOException("Toss API returned an error: " + response.body());
             }
@@ -116,4 +126,49 @@ public class PaymentService {
             log.info("Service End");
         }
     }
+
+
+    @Autowired
+    public PaymentService(PaymentRepository paymentRepository, HttpServletRequest httpServletRequest) {
+        this.paymentRepository = paymentRepository;
+        this.httpServletRequest = httpServletRequest;
+    }
+
+    private void logRequestHeaders(HttpServletRequest request) {
+        log.info("Request Headers:");
+        request.getHeaderNames().asIterator()
+                .forEachRemaining(headerName ->
+                        log.info("{}: {}", headerName, request.getHeader(headerName))
+                );
+    }
+
+    public void savePaymentData(PaymentResponse response) {
+        try {
+            // 요청 헤더 로깅
+            logRequestHeaders(httpServletRequest);
+
+            // DateTimeFormatter를 사용하여 String을 LocalDateTime으로 변환
+            DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
+            LocalDateTime approvedAtLocalDateTime = LocalDateTime.parse(response.getApprovedAt(), formatter);
+
+            // LocalDateTime을 Timestamp로 변환
+            Timestamp approvedAtTimestamp = Timestamp.valueOf(approvedAtLocalDateTime);
+
+            // 엔티티 빌더를 사용하여 데이터 저장
+            PaymentEntity paymentEntity = PaymentEntity.builder()
+                    .paymentKey(response.getPaymentKey())
+                    .orderId(response.getOrderId())
+                    .totalAmount(response.getAmount()) // 엔티티의 totalAmount와 매핑
+                    .status(response.getStatus())
+                    .approvedAt(approvedAtTimestamp) // 변환된 Timestamp 설정
+                    .build();
+
+            paymentRepository.save(paymentEntity);
+            log.info("Payment data saved: {}", paymentEntity);
+        } catch (Exception e) {
+            log.error("Error saving payment data: {}", e.getMessage());
+            throw new RuntimeException("Failed to save payment data", e);
+        }
+    }
+
 }
