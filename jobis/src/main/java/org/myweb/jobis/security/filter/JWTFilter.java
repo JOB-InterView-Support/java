@@ -55,6 +55,7 @@ public class JWTFilter extends OncePerRequestFilter {
                 requestURI.equals("/face/receiveUuid") ||
                 requestURI.equals("/mypage/faceId/**") ||
                 requestURI.equals("/updateUser") ||
+                requestURI.equals("/interview/**") ||
 
                 requestURI.equals("/favorites") || // 추가
                 requestURI.equals("/jobPosting") || // 추가
