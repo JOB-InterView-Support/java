@@ -1,17 +1,21 @@
 package org.myweb.jobis.jobposting.model.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.myweb.jobis.jobposting.jpa.entity.JobFavoritesEntity;
 import org.myweb.jobis.jobposting.jpa.repository.JobFavoritesRepository;
 import org.myweb.jobis.jobposting.model.dto.JobFavorites;
 import org.myweb.jobis.jobposting.model.dto.JobPostingResponse;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class JobFavoritesService {
@@ -22,66 +26,46 @@ public class JobFavoritesService {
     @Value("${saramins.api.url}")
     private String apiUrl;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final JobFavoritesRepository jobFavoritesRepository;
+    private final JobPostingService jobPostingService;
 
-    // 즐겨찾기 추가
+    @Transactional
     public JobFavorites addFavorite(JobFavorites jobFavorites) {
-        // 즐겨찾기 추가 로직 구현 (예: DB에 저장)
-        return jobFavorites;
+        jobFavorites.setJobFavoritesNo(UUID.randomUUID().toString());
+        jobFavorites.setJobCreatedDate(LocalDateTime.now());
+
+        JobFavoritesEntity entity = JobFavorites.toEntity(jobFavorites);
+        JobFavoritesEntity savedEntity = jobFavoritesRepository.save(entity);
+
+        return JobFavorites.toDto(savedEntity, null);
     }
 
-    // 특정 사용자(UUID)의 즐겨찾기 목록 조회
+    @Transactional
+    public void deleteFavorite(String uuid, String jobFavoritesNo) {
+        jobFavoritesRepository.deleteByUuidAndJobFavoritesNo(uuid, jobFavoritesNo);
+    }
+
+    @Transactional(readOnly = true)
     public List<JobFavorites> getFavorites(String uuid) {
-        // 즐겨찾기 목록 조회 로직 구현 (예: DB에서 조회)
-        return List.of(); // 예시: 빈 목록 반환
-    }
+        // UUID로 즐겨찾기 목록을 찾는다.
+        List<JobFavoritesEntity> entities = jobFavoritesRepository.findByUuid(uuid);
 
-    // 즐겨찾기 삭제
-    public void removeFavorite(String uuid, String jobPostingId) {
-        // 즐겨찾기 삭제 로직 구현 (예: DB에서 삭제)
-    }
+        // 각 즐겨찾기 항목에 대해 공고 정보를 호출하여 리스트로 반환
+        return entities.stream()
+                .map(entity -> {
+                    try {
+                        // 사람인 API를 통해 채용공고 상세 정보 조회
+                        JobPostingResponse jobPostingResponse = jobPostingService.getJobPostingDetail(entity.getJobPostingId());
+                        JobPostingResponse.Job job = jobPostingResponse.getJobs().getJob().get(0); // 첫 번째 Job 정보
 
-    // 즐겨찾기 여부 확인
-    public boolean isFavorite(String uuid, String jobPostingId) {
-        // 즐겨찾기 여부 확인 로직 구현 (예: DB에서 확인)
-        return false; // 예시: 항상 false 반환
-    }
-
-    // 외부 사람인 API 호출하여 채용공고 목록 검색
-    public JobPostingResponse searchJobPostings(String jobType, String locMcd, String eduLv, String jobCd,
-                                                int count, int start, int total, String sort) {
-        String fullUri = UriComponentsBuilder.fromHttpUrl(apiUrl)
-                .queryParam("access-key", apiKey)
-                .queryParam("job_type", jobType)
-                .queryParam("loc_mcd", locMcd)
-                .queryParam("edu_lv", eduLv)
-                .queryParam("job_cd", jobCd)
-                .queryParam("count", count)
-                .queryParam("start", start)
-                .queryParam("total", total)
-                .queryParam("sort", sort)
-                .toUriString();
-
-        try {
-            return restTemplate.getForObject(fullUri, JobPostingResponse.class);
-        } catch (Exception e) {
-            System.err.println("API 호출 실패: " + e.getMessage());
-            throw new RuntimeException("API 호출 실패: " + e.getMessage(), e);
-        }
-    }
-        public JobPostingResponse getJobPostingById(String jobPostingId) {
-            RestTemplate restTemplate = new RestTemplate();
-
-            // 요청 URL 생성
-            String url = UriComponentsBuilder.fromHttpUrl(apiUrl)
-                    .queryParam("access-key", apiKey)
-                    .queryParam("id", jobPostingId)
-
-                    .toUriString();
-
-            // API 호출
-            ResponseEntity<JobPostingResponse> response = restTemplate.getForEntity(url, JobPostingResponse.class);
-
-            return response.getBody();
+                        // JobPostingResponse.Job 정보를 이용해 JobFavorites DTO 생성
+                        return JobFavorites.toDto(entity, job);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        // 예외가 발생하면 null 또는 기본값을 반환 (유효성 검사 필요)
+                        return JobFavorites.toDto(entity, null); // 기본값으로 null 처리
+                    }
+                })
+                .collect(Collectors.toList());
     }
 }

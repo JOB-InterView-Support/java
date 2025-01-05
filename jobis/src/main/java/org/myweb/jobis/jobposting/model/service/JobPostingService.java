@@ -5,16 +5,22 @@ import lombok.extern.slf4j.Slf4j;
 import org.myweb.jobis.jobposting.model.dto.JobPosting;
 import org.myweb.jobis.jobposting.model.dto.JobPostingResponse;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class JobPostingService {
+    private final RestTemplate restTemplate;
 
     @Value("${saramins.api.key}")
     private String apiKey;
@@ -22,91 +28,88 @@ public class JobPostingService {
     @Value("${saramins.api.url}")
     private String apiUrl;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    public JobPostingResponse searchJobPosting(
+            String job_mid_cd, String loc_mcd, String edu_lv,
+            String job_type, int start, int count) {
 
-    public Object searchJobPostings(String jobType, String locMcd, String eduLv, String jobCd,
-                                    int count, int start, int total, String sort) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Accept", "application/json");
 
-        String fullUri = UriComponentsBuilder.fromHttpUrl(apiUrl)
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(apiUrl)
                 .queryParam("access-key", apiKey)
-                .queryParam("job_type", jobType)
-                .queryParam("loc_mcd", locMcd)
-                .queryParam("edu_lv", eduLv)
-                .queryParam("job_cd", jobCd)
-                .queryParam("count", count)
                 .queryParam("start", start)
-                .queryParam("total", total)
-                .queryParam("sort", sort)
-                .toUriString();
+                .queryParam("count", count);
 
-        try {
-            return restTemplate.getForObject(fullUri, Object.class);
-        } catch (Exception e) {
-            throw new RuntimeException("API 호출 실패: " + e.getMessage(), e);
+        // Optional parameters
+        if (job_mid_cd != null && !job_mid_cd.isEmpty()) {
+            builder.queryParam("job_mid_cd", job_mid_cd);
         }
+        if (loc_mcd != null && !loc_mcd.isEmpty()) {
+            builder.queryParam("loc_mcd", loc_mcd);
+        }
+        if (edu_lv != null && !edu_lv.isEmpty()) {
+            builder.queryParam("edu_lv", edu_lv);
+        }
+        if (job_type != null && !job_type.isEmpty()) {
+            builder.queryParam("job_type", job_type);
+        }
+
+        // Log the constructed URL
+        log.info("Request URL: {}", builder.build().toUri());
+
+        HttpEntity<?> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<JobPostingResponse> response = restTemplate.exchange(
+                builder.build().toUri(),
+                HttpMethod.GET,
+                entity,
+                JobPostingResponse.class
+        );
+
+        // Log the API response
+        log.info("API Response: {}", response.getBody());
+
+        JobPostingResponse jobPostingResponse = response.getBody();
+        if (jobPostingResponse == null) {
+            jobPostingResponse = new JobPostingResponse();
+        }
+
+        // Initialize jobs if null
+        if (jobPostingResponse.getJobs() == null) {
+            jobPostingResponse.setJobs(new JobPostingResponse.Jobs());
+        }
+
+        return response.getBody();
     }
 
-    // 채용공고 목록 가져오기
-    public JobPostingResponse getJobPostings(int page, int size) {
-        int start = (page - 1) * size;
-        String url = UriComponentsBuilder.fromHttpUrl("apiUrl")
+
+    public JobPostingResponse getJobPostingDetail(String id) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Accept", "application/json");
+
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(apiUrl)
                 .queryParam("access-key", apiKey)
-                .queryParam("page", page)  // 페이지 번호
-                .queryParam("size", size)  // 한 페이지 당 항목 수
-                .toUriString();
+                .queryParam("id", id);
 
-        // 외부 API 호출
-        JobPostingResponse response = restTemplate.getForObject(url, JobPostingResponse.class);
+        HttpEntity<?> entity = new HttpEntity<>(headers);
 
-        // 응답 처리
-        if (response != null && response.getJobs() != null) {
-            int totalItems = response.getTotalCount(); // 총 채용공고 수
-            int totalPages = (int) Math.ceil((double) totalItems / size); // 전체 페이지 수 계산
+        ResponseEntity<JobPostingResponse> response = restTemplate.exchange(
+                builder.build().toUri(),
+                HttpMethod.GET,
+                entity,
+                JobPostingResponse.class
+        );
 
-            return new JobPostingResponse(
-                    response.getJobs(),
-                    totalItems,  // 전체 항목 수
-                    totalPages,  // 전체 페이지 수
-                    page,        // 현재 페이지
-                    size         // 페이지 크기
-            );
+        JobPostingResponse jobPostingResponse = response.getBody();
+        if (jobPostingResponse == null) {
+            jobPostingResponse = new JobPostingResponse();
         }
 
-        // API 응답이 없거나 비정상일 경우
-        return new JobPostingResponse(List.of(), 0, 0, page, size);
-    }
-
-    // 채용공고 상세보기
-    public JobPosting getJobPostingById(Long id) {
-        // 사람인 API에서 상세정보를 가져올 수 있도록 수정 필요
-        // 사람인 API에서는 특정 채용공고 ID로 상세 조회를 지원하지 않으므로
-        // 목록에서 해당 ID에 맞는 채용공고를 반환하는 방식으로 처리
-        int page = 1; // 페이지 번호 (여기서는 1부터 시작)
-
-        while (true) {
-            // 해당 페이지에서 채용공고 목록 가져오기
-            JobPostingResponse response = getJobPostings(page, 50); // 한 페이지당 50개 항목
-
-            // 해당 ID에 맞는 채용공고 찾기
-            JobPosting jobPosting = response.getJobs().stream()
-                    .filter(job -> job.getId().equals(id))
-                    .findFirst()
-                    .orElse(null);
-
-            if (jobPosting != null) {
-                // 해당 채용공고가 있으면 반환
-                return jobPosting;
-            }
-
-            // 다음 페이지로 이동
-            if (page >= response.getTotalPages()) {
-                // 마지막 페이지에 도달하면 종료
-                break;
-            }
-            page++; // 페이지 번호 증가
+        // jobs가 null인 경우 빈 Jobs 객체로 초기화
+        if (jobPostingResponse.getJobs() == null) {
+            jobPostingResponse.setJobs(new JobPostingResponse.Jobs());
         }
 
-        // 해당 ID로 채용공고를 찾을 수 없는 경우 예외 처리
-        throw new RuntimeException("채용공고를 찾을 수 없습니다.");
+        return response.getBody();
     }
 }
