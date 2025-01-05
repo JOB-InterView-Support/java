@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.myweb.jobis.payment.jpa.repository.PaymentRepository;
 import org.myweb.jobis.payment.model.dto.Payment;
 import org.myweb.jobis.payment.model.dto.PaymentRequest;
+import org.myweb.jobis.payment.model.dto.PaymentResponse;
 import org.myweb.jobis.payment.model.service.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -43,8 +44,18 @@ public class PaymentController {
         }
     }
 
+    @PostMapping("/paymentSuccess")
+    public ResponseEntity<?> handlePaymentSuccess(@RequestBody Map<String, Object> requestData) {
+        String paymentKey = (String) requestData.get("paymentKey");
+        String orderId = (String) requestData.get("orderId");
 
-    @PostMapping("/payment/confirm")
+        log.info("결제 성공 처리: paymentKey={}, orderId={}", paymentKey, orderId);
+        // 추가 로직 구현
+        return ResponseEntity.ok("결제 성공");
+    }
+
+
+    @PostMapping("/confirm")
     public ResponseEntity<?> confirmPayment(@RequestBody Map<String, Object> requestData) {
         log.info("Confirm Payment API called with data: {}", requestData);
 
@@ -80,6 +91,17 @@ public class PaymentController {
                     "code", "UNKNOWN_ERROR",
                     "message", "An unexpected error occurred"
             ));
+        }
+    }
+
+    @PostMapping("/save")
+    public ResponseEntity<?> savePaymentData(@RequestBody PaymentResponse response) {
+        try {
+            paymentService.savePaymentData(response);
+            log.info("save - paymentResponse : " + response);
+            return ResponseEntity.ok("Payment data saved successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to save payment data.");
         }
     }
 
