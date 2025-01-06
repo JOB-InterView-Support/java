@@ -116,6 +116,7 @@ public class SecurityConfig implements WebMvcConfigurer {
                         .requestMatchers("/updateUser").authenticated()
                         // /admin으로 시작하는 경로는 ROLE_ADMIN 권한 필요
                         .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/interviewCommonQuestions/**").hasRole("ADMIN")
                         // 나머지 모든 요청은 인증 필요
 
                         .requestMatchers("/payments/**").hasAnyRole("USER", "ADMIN")
