@@ -390,8 +390,8 @@ public class NoticeController {
             }
 
             // Content-Disposition 설정
-            boolean isImage = contentType.startsWith("image/");
-            String contentDisposition = isImage
+            boolean isPreviewable = contentType.startsWith("image/") || contentType.equals("application/pdf");
+            String contentDisposition = isPreviewable
                     ? "inline; filename=\"" + UriUtils.encode(filename, StandardCharsets.UTF_8) + "\""
                     : "attachment; filename=\"" + UriUtils.encode(filename, StandardCharsets.UTF_8) + "\"";
 
@@ -406,6 +406,7 @@ public class NoticeController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
 
 
 
