@@ -22,15 +22,16 @@ public class JobFavoritesRepositoryCustomImpl implements JobFavoritesRepositoryC
         return query.getResultList();
     }
 
-    // 즐겨찾기 여부 확인
     @Override
-    public boolean checkIfFavoriteExists(String uuid, String jobPostingId) {
-        String jpql = "SELECT COUNT(j) FROM JobFavoritesEntity j WHERE j.uuid = :uuid AND j.jobPostingId = :jobPostingId";
-        TypedQuery<Long> query = entityManager.createQuery(jpql, Long.class);
-        query.setParameter("uuid", uuid);
-        query.setParameter("jobPostingId", jobPostingId);
-        Long count = query.getSingleResult();
-        return count > 0; // 즐겨찾기 여부 반환
+    public boolean existsByUuidAndJobPostingId(String uuid, String jobPostingId) {
+        // JPQL을 사용해서 uuid와 jobPostingId로 즐겨찾기 중복 여부를 확인
+        String jpql = "SELECT COUNT(jf) FROM JobFavoritesEntity jf WHERE jf.uuid = :uuid AND jf.jobPostingId = :jobPostingId";
+        Long count = entityManager.createQuery(jpql, Long.class)
+                .setParameter("uuid", uuid)
+                .setParameter("jobPostingId", jobPostingId)
+                .getSingleResult();
+
+        return count > 0;
     }
 
 

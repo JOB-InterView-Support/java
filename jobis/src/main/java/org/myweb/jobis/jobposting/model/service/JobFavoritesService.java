@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -29,43 +30,47 @@ public class JobFavoritesService {
     private final JobFavoritesRepository jobFavoritesRepository;
     private final JobPostingService jobPostingService;
 
+    // 즐겨찾기 추가
     @Transactional
     public JobFavorites addFavorite(JobFavorites jobFavorites) {
-        jobFavorites.setJobFavoritesNo(UUID.randomUUID().toString());
-        jobFavorites.setJobCreatedDate(LocalDateTime.now());
+        // 즐겨찾기 중복 체크
+        if (jobFavoritesRepository.existsByUuidAndJobPostingId(jobFavorites.getUuid(), jobFavorites.getJobPostingId())) {
+            // 중복된 즐겨찾기 존재 시 예외 처리
+            throw new IllegalArgumentException("This favorite already exists.");
+        }
 
-        JobFavoritesEntity entity = JobFavorites.toEntity(jobFavorites);
-        JobFavoritesEntity savedEntity = jobFavoritesRepository.save(entity);
+        // 새 즐겨찾기 추가
+        jobFavorites.setJobFavoritesNo(UUID.randomUUID().toString()); // 새 즐겨찾기 번호 생성
+        jobFavorites.setJobCreatedDate(LocalDateTime.now()); // 현재 시간으로 생성 일자 설정
 
-        return JobFavorites.toDto(savedEntity, null);
+        JobFavoritesEntity entity = JobFavorites.toEntity(jobFavorites); // DTO -> Entity 변환
+        JobFavoritesEntity savedEntity = jobFavoritesRepository.save(entity); // DB에 저장
+
+        return JobFavorites.toDto(savedEntity, null); // Entity -> DTO 변환하여 반환
     }
 
+    // 즐겨찾기 삭제
     @Transactional
     public void deleteFavorite(String uuid, String jobFavoritesNo) {
-        jobFavoritesRepository.deleteByUuidAndJobFavoritesNo(uuid, jobFavoritesNo);
+        Optional<JobFavoritesEntity> entityOptional = jobFavoritesRepository.findById(jobFavoritesNo);
+
+        if (entityOptional.isEmpty()) {
+            throw new RuntimeException("Favorite not found.");
+        }
+
+        JobFavoritesEntity entity = entityOptional.get();
+        if (!entity.getUuid().equals(uuid)) {
+            throw new RuntimeException("This favorite does not belong to the user.");
+        }
+
+        jobFavoritesRepository.delete(entity);
     }
 
-    @Transactional(readOnly = true)
+    // 즐겨찾기 목록 조회
     public List<JobFavorites> getFavorites(String uuid) {
-        // UUID로 즐겨찾기 목록을 찾는다.
-        List<JobFavoritesEntity> entities = jobFavoritesRepository.findByUuid(uuid);
-
-        // 각 즐겨찾기 항목에 대해 공고 정보를 호출하여 리스트로 반환
-        return entities.stream()
-                .map(entity -> {
-                    try {
-                        // 사람인 API를 통해 채용공고 상세 정보 조회
-                        JobPostingResponse jobPostingResponse = jobPostingService.getJobPostingDetail(entity.getJobPostingId());
-                        JobPostingResponse.Job job = jobPostingResponse.getJobs().getJob().get(0); // 첫 번째 Job 정보
-
-                        // JobPostingResponse.Job 정보를 이용해 JobFavorites DTO 생성
-                        return JobFavorites.toDto(entity, job);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        // 예외가 발생하면 null 또는 기본값을 반환 (유효성 검사 필요)
-                        return JobFavorites.toDto(entity, null); // 기본값으로 null 처리
-                    }
-                })
+        List<JobFavoritesEntity> entityList = jobFavoritesRepository.findByUuid(uuid);
+        return entityList.stream()
+                .map(JobFavorites::toDto)
                 .collect(Collectors.toList());
     }
 }

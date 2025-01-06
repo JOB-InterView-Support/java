@@ -10,5 +10,5 @@ public interface JobFavoritesRepositoryCustom {
     List<JobFavoritesEntity> findFavoritesByUserWithCustomConditions(String uuid);
 
     // 특정 사용자가 해당 채용공고를 즐겨찾기 했는지 확인하는 커스텀 메서드 (다양한 조건으로 체크 가능)
-    boolean checkIfFavoriteExists(String uuid, String jobPostingId);
+    boolean existsByUuidAndJobPostingId(String uuid, String jobPostingId);
 }

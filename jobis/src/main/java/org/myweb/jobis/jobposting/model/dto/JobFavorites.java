@@ -48,4 +48,13 @@ public class JobFavorites {
                 // 여기서 JobPostingResponse.Job 객체를 사용하여 필요한 데이터 설정 가능
         );
     }
+
+    public static JobFavorites toDto(JobFavoritesEntity entity) {
+        return new JobFavorites(
+                entity.getJobFavoritesNo(),
+                entity.getUuid(),
+                entity.getJobPostingId(),
+                entity.getJobCreatedDate()
+        );
+    }
 }

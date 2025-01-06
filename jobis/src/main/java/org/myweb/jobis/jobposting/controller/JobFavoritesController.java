@@ -3,7 +3,6 @@ package org.myweb.jobis.jobposting.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.myweb.jobis.jobposting.model.dto.JobFavorites;
-import org.myweb.jobis.jobposting.model.dto.JobPosting;
 import org.myweb.jobis.jobposting.model.service.JobFavoritesService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

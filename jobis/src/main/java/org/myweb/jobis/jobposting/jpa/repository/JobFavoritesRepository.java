@@ -12,5 +12,4 @@ import java.util.Optional;
 public interface JobFavoritesRepository extends JpaRepository<JobFavoritesEntity, String>, JobFavoritesRepositoryCustom {
     List<JobFavoritesEntity> findByUuid(String uuid);
     void deleteByUuidAndJobFavoritesNo(String uuid, String jobFavoritesNo);
-
 }
