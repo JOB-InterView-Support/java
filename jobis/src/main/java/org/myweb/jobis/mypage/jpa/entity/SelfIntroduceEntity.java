@@ -60,7 +60,7 @@ public class SelfIntroduceEntity {
     @PrePersist
     private void generateIntroNo() {
         if (this.introNo == null || this.introNo.isEmpty()) {
-            this.introNo = "INTRO_"+ uuid + System.currentTimeMillis();
+            this.introNo = "INTNO_"+ uuid + System.currentTimeMillis();
         }
     }
 
