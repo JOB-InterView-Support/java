@@ -18,13 +18,13 @@ public class Payment {
     private String uuid;
     private String orderId;
     private String orderName;
-    private String mid;
-    private String currenoy;
+    private String mId;
+    private String currency;
     private int totalAmount;
     private String status;
 
     @JsonFormat(pattern = "yyyy-MM-dd")
-    private Timestamp requestAt;
+    private Timestamp requestedAt;
 
     @JsonFormat(pattern = "yyyy-MM-dd")
     private Timestamp approvedAt;
@@ -39,11 +39,11 @@ public class Payment {
                 .uuid(uuid)
                 .orderId(orderId)
                 .orderName(orderName)
-                .mid(mid)
-                .currenoy(currenoy)
+                .mId(mId)
+                .currency(currency)
                 .totalAmount(totalAmount)
                 .status(status)
-                .requestAt(requestAt)
+                .requestedAt(requestedAt)
                 .approvedAt(approvedAt)
                 .cancelYN(cancelYN)
                 .build();
