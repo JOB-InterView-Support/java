@@ -322,7 +322,14 @@ public class QnaController {
         }
     }
 
-
-
+    // 검색 API
+    @GetMapping("/search")
+    public ResponseEntity<List<Qna>> searchQna(
+            @RequestParam("keyword") String keyword,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size) {
+        List<Qna> results = qnaService.searchQna(keyword, page, size);
+        return ResponseEntity.ok(results);
+    }
 
 }

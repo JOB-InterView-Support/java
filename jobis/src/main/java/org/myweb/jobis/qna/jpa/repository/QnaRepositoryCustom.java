@@ -1,6 +1,7 @@
 package org.myweb.jobis.qna.jpa.repository;
 
 import org.myweb.jobis.qna.jpa.entity.QnaEntity;
+import org.myweb.jobis.qna.model.dto.Qna;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -11,7 +12,7 @@ import java.util.Optional;
 public interface QnaRepositoryCustom {
     Page<QnaEntity> findByQIsDeleted(String qIsDeleted, Pageable pageable);
     Optional<QnaEntity> findByQno(String qno);
-
+    List<QnaEntity> searchByKeyword(String keyword, Pageable pageable);
 
     //    String findLastQnaNo();
 //    long countSearchTitle(String keyword);

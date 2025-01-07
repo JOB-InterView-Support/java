@@ -3,10 +3,13 @@ package org.myweb.jobis.qna.jpa.repository;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.myweb.jobis.qna.jpa.entity.QQnaEntity;
 import org.myweb.jobis.qna.jpa.entity.QnaEntity;
+import org.myweb.jobis.qna.model.dto.Qna;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -21,26 +24,12 @@ import java.util.Optional;
 public class QnaRepositoryCustomImpl implements QnaRepositoryCustom {
 
     private final JPAQueryFactory queryFactory;
+    @PersistenceContext
     private final EntityManager entityManager; // JPQL 용
 
     private final QQnaEntity qna = QQnaEntity.qnaEntity; // QueryDSL Q 클래스 매핑
 
-//    @Override
-//    public Page<QnaEntity> findByQIsDeleted(String qIsDeleted, Pageable pageable) {
-//        String query = "SELECT q FROM QnaEntity q WHERE q.qIsDeleted = :qIsDeleted";
-//        List<QnaEntity> resultList = entityManager.createQuery(query, QnaEntity.class)
-//                .setParameter("qIsDeleted", qIsDeleted)
-//                .setFirstResult((int) pageable.getOffset())
-//                .setMaxResults(pageable.getPageSize())
-//                .getResultList();
-//
-//        String countQuery = "SELECT COUNT(q) FROM QnaEntity q WHERE q.qIsDeleted = :qIsDeleted";
-//        Long totalCount = entityManager.createQuery(countQuery, Long.class)
-//                .setParameter("qIsDeleted", qIsDeleted)
-//                .getSingleResult();
-//
-//        return new PageImpl<>(resultList, pageable, totalCount);
-//    }
+
 
     @Override
     public Page<QnaEntity> findByQIsDeleted(String qIsDeleted, Pageable pageable) {
@@ -58,57 +47,6 @@ public class QnaRepositoryCustomImpl implements QnaRepositoryCustom {
     }
 
 
-
-//    @Override
-//    public String findLastQnaNo() {
-//        QnaEntity qnaEntity = queryFactory
-//                .selectFrom(qna)
-//                .from(qna)
-//                .orderBy(qna.qNo.desc())
-//                .fetchFirst(); // 가장 마지막 등록 글 1개 조회
-//        return qnaEntity.getQNo();
-//    }
-
-//    @Override
-//    public long countSearchTitle(String keyword) {
-//        return queryFactory
-//                .selectFrom(qna)
-//                .where(qna.qTitle.containsIgnoreCase(keyword))
-//                .fetchCount();
-//    }
-//
-//    @Override
-//    public long countSearchWriter(String keyword) {
-//        return queryFactory
-//                .selectFrom(qna)
-//                .where(qna.qWriter.containsIgnoreCase(keyword))
-//                .fetchCount();
-//    }
-
-
-
-//    @Override
-//    public List<QnaEntity> findSearchTitle(String keyword, Pageable pageable) {
-//        return queryFactory
-//                .selectFrom(qna)
-//                .where(qna.qTitle.containsIgnoreCase(keyword))
-//                .orderBy(qna.qNo.desc())
-//                .offset(pageable.getOffset())
-//                .limit(pageable.getPageSize())
-//                .fetch();
-//    }
-//
-//    @Override
-//    public List<QnaEntity> findSearchWriter(String keyword, Pageable pageable) {
-//        return queryFactory
-//                .selectFrom(qna)
-//                .where(qna.qWriter.containsIgnoreCase(keyword))
-//                .orderBy(qna.qNo.desc())
-//                .offset(pageable.getOffset())
-//                .limit(pageable.getPageSize())
-//                .fetch();
-//    }
-
     @Override
     public Optional<QnaEntity> findByQno(String qno) {
         QnaEntity result = queryFactory
@@ -121,17 +59,17 @@ public class QnaRepositoryCustomImpl implements QnaRepositoryCustom {
     }
 
 
+    @Override
+    public List<QnaEntity> searchByKeyword(String keyword, Pageable pageable) {
+        String queryStr = "SELECT q FROM QnaEntity q WHERE q.qTitle LIKE :keyword OR q.qContent LIKE :keyword";
+        TypedQuery<QnaEntity> query = entityManager.createQuery(queryStr, QnaEntity.class);
+        query.setParameter("keyword", "%" + keyword + "%");
+        query.setFirstResult((int) pageable.getOffset());
+        query.setMaxResults(pageable.getPageSize());
+        return query.getResultList();
+    }
+
+
 }
 
-    //날짜 검색 부분 .. 수정중
-//    @Override
-//    public List<QnaEntity> findSearchDate(Date begin, Date end, Pageable pageable) {
-//        return queryFactory
-//                .selectFrom(qna)
-//            //    .where(qna.qWDate.between(begin.toLocalDate().atStartOfDay(), end.toLocalDate().atStartOfDay()))
-//                .orderBy(qna.qNo.desc())
-//                .offset(pageable.getOffset())
-//                .limit(pageable.getPageSize())
-//                .fetch();
-//    }
 

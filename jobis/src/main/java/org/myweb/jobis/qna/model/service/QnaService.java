@@ -5,12 +5,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.myweb.jobis.qna.jpa.entity.QnaEntity;
 import org.myweb.jobis.qna.jpa.repository.QnaRepository;
 import org.myweb.jobis.qna.model.dto.Qna;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -71,9 +75,21 @@ public class QnaService {
         }
     }
 
+    // 검색 기능
+    public List<Qna> searchQna(String keyword, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        List<QnaEntity> entities = qnaRepository.searchByKeyword(keyword, pageable);
+        return entities.stream()
+                .map(entity -> new Qna(
+                        entity.getQNo(), // 수정: getQNo
+                        entity.getQTitle(),
+                        entity.getQContent(),
+                        entity.getQWriter(),
+                        entity.getQWDate() // Timestamp -> LocalDateTime 변환
+                ))
+                .collect(Collectors.toList());
+    }
 
-//    public QnaEntity findQnaEntityByQno(String qno) {
-//    }
 }
 
 

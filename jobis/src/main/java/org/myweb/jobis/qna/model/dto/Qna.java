@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import org.myweb.jobis.qna.jpa.entity.QnaEntity;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 // Qna DTO
 @JsonInclude(JsonInclude.Include.NON_NULL) // null 값 제외
@@ -59,6 +60,14 @@ public class Qna {
                 .qIsSecret(qIsSecret)
                 .qUpdateYN(qUpdateYN)
                 .build();
+    }
+
+    public Qna(String qNo, String qTitle, String qContent, String qWriter, Timestamp qWDate) {
+        this.qNo = qNo;
+        this.qTitle = qTitle;
+        this.qContent = qContent;
+        this.qWriter = qWriter;
+        this.qWDate = qWDate;
     }
 }
 
