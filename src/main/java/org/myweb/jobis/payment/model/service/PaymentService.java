@@ -268,22 +268,23 @@ public class PaymentService {
 
             // ticketEndDate 계산
             Timestamp ticketEndDate;
-            if (productEntity.getProdNumber() == 1) {
+            int prodNumber = productEntity.getProdNumber();
+            if (prodNumber == 1) {
                 ticketEndDate = Timestamp.valueOf(approvedAtLocalDateTime.plusMonths(6));
-            } else if (productEntity.getProdNumber() == 2) {
+            } else if (prodNumber == 2) {
                 ticketEndDate = Timestamp.valueOf(approvedAtLocalDateTime.plusMonths(3));
-            } else if (productEntity.getProdNumber() == 3) {
+            } else if (prodNumber == 3) {
                 ticketEndDate = Timestamp.valueOf(approvedAtLocalDateTime.plusHours(24));
             } else {
-                throw new IllegalArgumentException("Invalid prodNumber: " + productEntity.getProdNumber());
+                throw new IllegalArgumentException("Invalid prodNumber: " + prodNumber);
             }
 
             // ticketCount 및 numberOfTime 계산
-            int ticketCount = switch (productEntity.getProdNumber()) {
+            int ticketCount = switch (prodNumber) {
                 case 1 -> 6;
                 case 2 -> 3;
                 case 3 -> 1;
-                default -> throw new IllegalArgumentException("Invalid prodNumber: " + productEntity.getProdNumber());
+                default -> throw new IllegalArgumentException("Invalid prodNumber: " + prodNumber);
             };
 
             // 엔티티 빌더를 사용하여 데이터 저장
@@ -291,8 +292,7 @@ public class PaymentService {
                     .ticketKey(UUID.randomUUID().toString())
                     .uuid(uuid)
                     .paymentKey(response.getPaymentKey())
-                    .prodNumber(productEntity.getProdNumber()) // prodNumber 추가
-                    .product(productEntity) // ProductsEntity를 직접 설정
+                    .prodNumber(prodNumber) // prodNumber를 직접 설정
                     .ticketName(response.getOrderName())
                     .ticketAmount(response.getTotalAmount())
                     .ticketPeriod(productEntity.getProdPeriod())
@@ -310,7 +310,4 @@ public class PaymentService {
             throw new RuntimeException("Failed to save ticket data", e);
         }
     }
-
-
-
-}
+} // 25.01.07 최종 수정

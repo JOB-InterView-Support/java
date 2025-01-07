@@ -53,15 +53,7 @@ public class TicketService {
                         // 조건 만족하면 prodNumberOfTime 감소
                         ticket.setProdNumberOfTime(ticket.getProdNumberOfTime() - 1);
 
-                        // 관련 ProductsEntity 조회 및 설정
-                        ProductsEntity product = ticket.getProduct(); // 연관된 ProductsEntity 가져오기
-                        if (product == null) {
-                            throw new RuntimeException("ProductsEntity가 Ticket에 연결되어 있지 않습니다.");
-                        }
-                        log.info("연결된 ProductsEntity: {}", product);
-
                         log.info("티켓 저장 전 상태: {}", ticket);
-                        ticket.setProduct(product); // product 연관 관계 설정
                         ticketRepository.save(ticket); // 변경사항 저장
                         log.info("티켓 차감 완료: {}", ticket);
                         return true;
@@ -73,6 +65,4 @@ public class TicketService {
             return false;
         }
     }
-
-
-}
+} // 25.01.07 최종 수정

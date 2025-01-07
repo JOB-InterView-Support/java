@@ -38,7 +38,7 @@ public class Ticket {
                 .ticketKey(ticketKey)
                 .uuid(uuid)
                 .paymentKey(paymentKey)
-                .product(product) // ProductsEntity를 직접 설정
+                .prodNumber(prodNumber) // ProductsEntity를 직접 설정
                 .ticketName(ticketName)
                 .ticketAmount(ticketAmount)
                 .ticketPeriod(ticketPeriod)
@@ -48,4 +48,4 @@ public class Ticket {
                 .prodNumberOfTime(prodNumberOfTime)
                 .build();
     }
-}
+} // 25.01.07 최종 수정

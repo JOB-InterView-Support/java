@@ -28,11 +28,6 @@ public class TicketEntity {
     @Column(name = "PAYMENT_KEY", length = 400, nullable = false)
     private String paymentKey;
 
-    // ProductsEntity와의 관계 설정
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "PROD_NUMBER", referencedColumnName = "PROD_NUMBER", nullable = false, insertable = false, updatable = false)
-    private ProductsEntity product; // 연관 관계 매핑
-
     @Column(name = "PROD_NUMBER", nullable = false)
     private int prodNumber; // 명시적으로 prodNumber를 추가
 
@@ -73,5 +68,5 @@ public class TicketEntity {
                 .prodNumberOfTime(prodNumberOfTime)
                 .build();
     }
-}
+} // 25.01.07 최종 수정
 
