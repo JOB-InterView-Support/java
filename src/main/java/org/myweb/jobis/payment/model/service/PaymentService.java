@@ -245,6 +245,7 @@ public class PaymentService {
             if (userId == null) {
                 throw new RuntimeException("유효하지 않은 userId");
             }
+
             // UserRepository에서 userId로 UserEntity를 조회
             UserEntity userEntity = userRepository.findByUserId(userId)
                     .orElseThrow(() -> new RuntimeException("User not found for userId: " + userId));
@@ -253,80 +254,55 @@ public class PaymentService {
             String uuid = userEntity.getUuid();
             log.info("User uuid: {}", uuid);
 
-            // Products에서 prodName과 orderName이 일치하는 prodNumber 조회
+            // Products에서 prodName과 orderName이 일치하는 ProductsEntity 조회
             ProductsEntity productEntity = productsRepository.findByProdName(response.getOrderName())
                     .orElseThrow(() -> new RuntimeException("Product not found for orderName: " + response.getOrderName()));
-            log.info("Products : {}", productEntity);
-
-            // productEntity에서 prodNumber을 추출
-            int prodNumber = productEntity.getProdNumber();
-            String prodPeriod = productEntity.getProdPeriod();
-            log.info("Product prodNumber: {}", prodNumber);
+            log.info("ProductsEntity: {}", productEntity);
 
             // DateTimeFormatter를 사용하여 String을 LocalDateTime으로 변환
             DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
             LocalDateTime approvedAtLocalDateTime = LocalDateTime.parse(response.getApprovedAt(), formatter);
 
-
             // LocalDateTime을 Timestamp로 변환
-            // ticketStartDate 를 approvedAt 으로 변환
-            Timestamp approvedAtTimestamp = Timestamp.valueOf(approvedAtLocalDateTime);;
+            Timestamp approvedAtTimestamp = Timestamp.valueOf(approvedAtLocalDateTime);
 
             // ticketEndDate 계산
             Timestamp ticketEndDate;
-            if (prodNumber == 1) {
-                // 6개월 추가
+            if (productEntity.getProdNumber() == 1) {
                 ticketEndDate = Timestamp.valueOf(approvedAtLocalDateTime.plusMonths(6));
-            } else if (prodNumber == 2) {
-                // 3개월 추가
+            } else if (productEntity.getProdNumber() == 2) {
                 ticketEndDate = Timestamp.valueOf(approvedAtLocalDateTime.plusMonths(3));
-            } else if (prodNumber == 3) {
-                // 24시간 추가
+            } else if (productEntity.getProdNumber() == 3) {
                 ticketEndDate = Timestamp.valueOf(approvedAtLocalDateTime.plusHours(24));
             } else {
-                throw new IllegalArgumentException("Invalid prodNumber: " + prodNumber);
+                throw new IllegalArgumentException("Invalid prodNumber: " + productEntity.getProdNumber());
             }
 
-            log.info("Ticket End Date: {}", ticketEndDate);
-
-            // ticketCount 조건식
-            int ticketCount = 0;
-            if(prodNumber == 1) {
-                ticketCount = 6;
-            } else if (prodNumber == 2) {
-                ticketCount = 3;
-            } else if (prodNumber == 3) {
-                ticketCount = 1;
-            }
-            log.info("Ticket Count : ", ticketCount);
-
-            // ticketCount 조건식
-            int numberOfTime = 0;
-            if(prodNumber == 1) {
-                numberOfTime = 6;
-            } else if (prodNumber == 2) {
-                numberOfTime = 3;
-            } else if (prodNumber == 3) {
-                numberOfTime = 1;
-            }
-            log.info("Ticket Count and NumberOfTime : ", numberOfTime);
+            // ticketCount 및 numberOfTime 계산
+            int ticketCount = switch (productEntity.getProdNumber()) {
+                case 1 -> 6;
+                case 2 -> 3;
+                case 3 -> 1;
+                default -> throw new IllegalArgumentException("Invalid prodNumber: " + productEntity.getProdNumber());
+            };
 
             // 엔티티 빌더를 사용하여 데이터 저장
             TicketEntity ticketEntity = TicketEntity.builder()
                     .ticketKey(UUID.randomUUID().toString())
-                    .uuid(uuid) // 추출된 userId 저장
+                    .uuid(uuid)
                     .paymentKey(response.getPaymentKey())
-                    .prodNumber(prodNumber)
+                    .prodNumber(productEntity.getProdNumber()) // prodNumber 추가
+                    .product(productEntity) // ProductsEntity를 직접 설정
                     .ticketName(response.getOrderName())
                     .ticketAmount(response.getTotalAmount())
-                    .ticketPeriod(prodPeriod)
+                    .ticketPeriod(productEntity.getProdPeriod())
                     .ticketCount(ticketCount)
-                    .ticketStartDate(approvedAtTimestamp) // 엔티티의 totalAmount와 매핑
+                    .ticketStartDate(approvedAtTimestamp)
                     .ticketEndDate(ticketEndDate)
-                    .prodNumberOfTime(numberOfTime)
+                    .prodNumberOfTime(ticketCount)
                     .build();
 
-            log.info("ticketEntity: {}", ticketEntity);
+            log.info("TicketEntity: {}", ticketEntity);
             ticketRepository.save(ticketEntity);
             log.info("Ticket data saved: {}", ticketEntity);
         } catch (Exception e) {
@@ -334,6 +310,7 @@ public class PaymentService {
             throw new RuntimeException("Failed to save ticket data", e);
         }
     }
+
 
 
 }

@@ -16,7 +16,7 @@ public class Cancel {
     private String cancelKey;
     private String uuid;
     private int prodNumber;
-    private String payPaymentKey;
+    private String paymentKey;
 
     @JsonFormat(pattern = "yyyy-MM-dd")
     private Timestamp cancelRequestedAt;
@@ -24,6 +24,7 @@ public class Cancel {
     @JsonFormat(pattern = "yyyy-MM-dd")
     private Timestamp cancelApprovedAt;
 
+    private String cancelReason;
 
     // Entity 객체로 변환하는 메서드
     public CancelEntity toEntity() {
@@ -31,9 +32,10 @@ public class Cancel {
                 .cancelKey(cancelKey)
                 .uuid(uuid)
                 .prodNumber(prodNumber)
-                .payPaymentKey(payPaymentKey)
+                .paymentKey(paymentKey)
                 .cancelRequestedAt(cancelRequestedAt)
                 .cancelApprovedAt(cancelApprovedAt)
+                .cancelReason(cancelReason)
                 .build();
     }
 }

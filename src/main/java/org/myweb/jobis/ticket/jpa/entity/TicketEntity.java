@@ -5,47 +5,53 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.myweb.jobis.products.jpa.entity.ProductsEntity;
 import org.myweb.jobis.ticket.model.dto.Ticket;
 
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @Entity
-@Table(name="Ticket")
+@Table(name = "Ticket")
 public class TicketEntity {
+
     @Id
-    @Column(name = "TICKET_KEY", length = 100, nullable = false )
+    @Column(name = "TICKET_KEY", length = 100, nullable = false)
     private String ticketKey;
 
-    @Column(name = "UUID", length = 50, nullable = false )
+    @Column(name = "UUID", length = 50, nullable = false)
     private String uuid;
 
-    @Column(name = "PAYMENT_KEY", length = 400, nullable = false )
+    @Column(name = "PAYMENT_KEY", length = 400, nullable = false)
     private String paymentKey;
 
-    @Column(name = "PROD_NUMBER", length = 50, nullable = false )
-    private int prodNumber;
+    // ProductsEntity와의 관계 설정
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "PROD_NUMBER", referencedColumnName = "PROD_NUMBER", nullable = false, insertable = false, updatable = false)
+    private ProductsEntity product; // 연관 관계 매핑
 
-    @Column(name = "TICKET_NAME", length = 100, nullable = false )
+    @Column(name = "PROD_NUMBER", nullable = false)
+    private int prodNumber; // 명시적으로 prodNumber를 추가
+
+    @Column(name = "TICKET_NAME", length = 100, nullable = false)
     private String ticketName;
 
-    @Column(name = "TICKET_AMOUNT", length = 50, nullable = false )
+    @Column(name = "TICKET_AMOUNT", length = 50, nullable = false)
     private int ticketAmount;
 
-    @Column(name = "TICKET_PERIOD", length = 50, nullable = false )
+    @Column(name = "TICKET_PERIOD", length = 50, nullable = false)
     private String ticketPeriod;
 
-    @Column(name = "TICKET_COUNT", length = 50, nullable = false )
+    @Column(name = "TICKET_COUNT", length = 50, nullable = false)
     private int ticketCount;
 
-    @Column(name = "TICKET_START_DATE", length = 50, nullable = false )
+    @Column(name = "TICKET_START_DATE", length = 50, nullable = false)
     private Timestamp ticketStartDate;
 
-    @Column(name = "TICKET_END_DATE", length = 50, nullable = false )
+    @Column(name = "TICKET_END_DATE", length = 50, nullable = false)
     private Timestamp ticketEndDate;
 
     @Column(name = "PROD_NUMBEROFTIME", nullable = false)
@@ -57,7 +63,7 @@ public class TicketEntity {
                 .ticketKey(ticketKey)
                 .uuid(uuid)
                 .paymentKey(paymentKey)
-                .prodNumber(prodNumber)
+                .prodNumber(prodNumber) // 명시적으로 prodNumber 사용
                 .ticketName(ticketName)
                 .ticketAmount(ticketAmount)
                 .ticketPeriod(ticketPeriod)
@@ -67,5 +73,5 @@ public class TicketEntity {
                 .prodNumberOfTime(prodNumberOfTime)
                 .build();
     }
-
 }
+

@@ -5,6 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface CancelRepository extends JpaRepository<CancelEntity, String>, CancelRepositoryCustom {
+public interface CancelRepository extends JpaRepository<CancelEntity, Long>{
     // 기본 JPA 메소드 사용 가능
 }
