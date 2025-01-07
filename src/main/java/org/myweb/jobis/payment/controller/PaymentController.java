@@ -112,4 +112,4 @@ public class PaymentController {
         // 주입된 paymentRepository 인스턴스를 통해 메서드 호출
         return paymentRepository.existsByPaymentKeyAndOrderId(paymentKey, orderId);
     }
-}
+} // 25.01.07 최종 수정본
