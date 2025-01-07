@@ -96,10 +96,13 @@ public class PaymentController {
 
     @PostMapping("/save")
     public ResponseEntity<?> savePaymentData(@RequestBody PaymentResponse response) {
+        log.info("save - paymentResponse : " + response);
         try {
+            log.info("mid" , response.getMId());
             paymentService.savePaymentData(response);
-            log.info("save - paymentResponse : " + response);
-            return ResponseEntity.ok("Payment data saved successfully.");
+            log.info("paymentData saved success");
+            paymentService.saveTicketData(response);
+            return ResponseEntity.ok("Payment data and Ticket data saved successfully.");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to save payment data.");
         }
@@ -109,4 +112,4 @@ public class PaymentController {
         // 주입된 paymentRepository 인스턴스를 통해 메서드 호출
         return paymentRepository.existsByPaymentKeyAndOrderId(paymentKey, orderId);
     }
-}
+} // 25.01.07 최종 수정본

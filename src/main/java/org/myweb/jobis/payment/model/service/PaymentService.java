@@ -3,25 +3,28 @@ package org.myweb.jobis.payment.model.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-
-import com.fasterxml.jackson.databind.introspect.TypeResolutionContext;
 import jakarta.annotation.PostConstruct;
-import jakarta.persistence.Basic;
+
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.myweb.jobis.payment.jpa.entity.PaymentEntity;
 import org.myweb.jobis.payment.jpa.repository.PaymentRepository;
 import org.myweb.jobis.payment.model.dto.PaymentRequest;
 import org.myweb.jobis.payment.model.dto.PaymentResponse;
+import org.myweb.jobis.products.jpa.entity.ProductsEntity;
+import org.myweb.jobis.products.jpa.repository.ProductsRepository;
+
+import org.myweb.jobis.security.jwt.JWTUtil;
+import org.myweb.jobis.ticket.jpa.entity.TicketEntity;
+import org.myweb.jobis.ticket.jpa.repository.TicketRepository;
+import org.myweb.jobis.ticket.model.dto.Ticket;
+import org.myweb.jobis.user.jpa.entity.UserEntity;
+import org.myweb.jobis.user.jpa.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
-import javax.sql.DataSource;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -33,6 +36,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -41,7 +45,23 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PaymentService {
     private static final String TOSS_PAYMENTS_URL = "https://api.tosspayments.com/v1/payments/confirm";
     private final PaymentRepository paymentRepository;
+    private final ProductsRepository productsRepository;
+    private final UserRepository userRepository; // Inject the UserRepository
+    private final TicketRepository ticketRepository;
+
     private final HttpServletRequest httpServletRequest;
+    private final JWTUtil jwtUtil; // JWTUtil 객체 선언
+
+
+    @Autowired
+    public PaymentService(PaymentRepository paymentRepository, ProductsRepository productsRepository, HttpServletRequest httpServletRequest, JWTUtil jwtUtil, UserRepository userRepository, TicketRepository ticketRepository) {
+        this.paymentRepository = paymentRepository;
+        this.productsRepository = productsRepository;
+        this.userRepository = userRepository;
+        this.ticketRepository = ticketRepository;
+        this.httpServletRequest = httpServletRequest;
+        this.jwtUtil = jwtUtil;
+    }
 
     @Value("${tossSecretKey}")
     private String tossSecretKey;
@@ -56,6 +76,17 @@ public class PaymentService {
 
     private final Set<String> processingKeys = ConcurrentHashMap.newKeySet();
 
+    private String getTokenFromRequest(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        log.info("Authorization Header: {}", bearerToken);  // 헤더 출력
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            String token = bearerToken.substring(7);  // "Bearer " 제외한 토큰 부분 추출
+            log.info("Extracted Token: {}", token);  // 토큰 확인
+            return token;
+        }
+        log.info("Authorization header not found or invalid format.");
+        return null; // 토큰이 없으면 null 반환
+    }
 
     public void processPayment(PaymentRequest paymentRequest) throws Exception {
         // 결제 요청 처리
@@ -127,13 +158,6 @@ public class PaymentService {
         }
     }
 
-
-    @Autowired
-    public PaymentService(PaymentRepository paymentRepository, HttpServletRequest httpServletRequest) {
-        this.paymentRepository = paymentRepository;
-        this.httpServletRequest = httpServletRequest;
-    }
-
     private void logRequestHeaders(HttpServletRequest request) {
         log.info("Request Headers:");
         request.getHeaderNames().asIterator()
@@ -142,27 +166,65 @@ public class PaymentService {
                 );
     }
 
+
+
     public void savePaymentData(PaymentResponse response) {
         try {
-            // 요청 헤더 로깅
-            logRequestHeaders(httpServletRequest);
+            // HTTP 요청에서 토큰 추출
+            String token = getTokenFromRequest(httpServletRequest);
+
+            // JWTUtil을 사용하여 토큰에서 userId 추출
+            String userId = jwtUtil.getUserIdFromToken(token);
+            log.info("Extracted userId from token: {}", userId);
+
+            if (userId == null) {
+                throw new RuntimeException("유효하지 않은 userId");
+            }
+            // UserRepository에서 userId로 UserEntity를 조회
+            UserEntity userEntity = userRepository.findByUserId(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found for userId: " + userId));
+
+            // UserEntity에서 uuid를 추출
+            String uuid = userEntity.getUuid();
+            log.info("User uuid: {}", uuid);
+
+            // Products에서 prodName과 orderName이 일치하는 prodNumber 조회
+            ProductsEntity productEntity = productsRepository.findByProdName(response.getOrderName())
+                    .orElseThrow(() -> new RuntimeException("Product not found for orderName: " + response.getOrderName()));
+            log.info("Products : {}", productEntity);
+
+            // productEntity에서 prodNumber을 추출
+            int prodNumber = productEntity.getProdNumber();
+            log.info("User prodNumber: {}", prodNumber);
 
             // DateTimeFormatter를 사용하여 String을 LocalDateTime으로 변환
             DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
             LocalDateTime approvedAtLocalDateTime = LocalDateTime.parse(response.getApprovedAt(), formatter);
+            LocalDateTime requestedAtLocalDateTime = LocalDateTime.parse(response.getRequestedAt(), formatter);
+
 
             // LocalDateTime을 Timestamp로 변환
             Timestamp approvedAtTimestamp = Timestamp.valueOf(approvedAtLocalDateTime);
+            Timestamp requestedAtTimestamp = Timestamp.valueOf(requestedAtLocalDateTime);
+
 
             // 엔티티 빌더를 사용하여 데이터 저장
             PaymentEntity paymentEntity = PaymentEntity.builder()
                     .paymentKey(response.getPaymentKey())
+                    .prodNumber(prodNumber)
+                    .uuid(uuid) // 추출된 userId 저장
                     .orderId(response.getOrderId())
-                    .totalAmount(response.getAmount()) // 엔티티의 totalAmount와 매핑
+                    .orderName(response.getOrderName())
+                    .mId("tvivarepublica")
+                    .currency(response.getCurrency())
+                    .totalAmount(response.getTotalAmount()) // 엔티티의 totalAmount와 매핑
                     .status(response.getStatus())
+                    .requestedAt(requestedAtTimestamp)
                     .approvedAt(approvedAtTimestamp) // 변환된 Timestamp 설정
+                    .cancelYN("N")
                     .build();
 
+            log.info("paymentEntity: {}", paymentEntity);
             paymentRepository.save(paymentEntity);
             log.info("Payment data saved: {}", paymentEntity);
         } catch (Exception e) {
@@ -170,5 +232,108 @@ public class PaymentService {
             throw new RuntimeException("Failed to save payment data", e);
         }
     }
+
+    public void saveTicketData(PaymentResponse response) {
+        try {
+            // HTTP 요청에서 토큰 추출
+            String token = getTokenFromRequest(httpServletRequest);
+
+            // JWTUtil을 사용하여 토큰에서 userId 추출
+            String userId = jwtUtil.getUserIdFromToken(token);
+            log.info("Extracted userId from token: {}", userId);
+
+            if (userId == null) {
+                throw new RuntimeException("유효하지 않은 userId");
+            }
+            // UserRepository에서 userId로 UserEntity를 조회
+            UserEntity userEntity = userRepository.findByUserId(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found for userId: " + userId));
+
+            // UserEntity에서 uuid를 추출
+            String uuid = userEntity.getUuid();
+            log.info("User uuid: {}", uuid);
+
+            // Products에서 prodName과 orderName이 일치하는 prodNumber 조회
+            ProductsEntity productEntity = productsRepository.findByProdName(response.getOrderName())
+                    .orElseThrow(() -> new RuntimeException("Product not found for orderName: " + response.getOrderName()));
+            log.info("Products : {}", productEntity);
+
+            // productEntity에서 prodNumber을 추출
+            int prodNumber = productEntity.getProdNumber();
+            String prodPeriod = productEntity.getProdPeriod();
+            log.info("Product prodNumber: {}", prodNumber);
+
+            // DateTimeFormatter를 사용하여 String을 LocalDateTime으로 변환
+            DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
+            LocalDateTime approvedAtLocalDateTime = LocalDateTime.parse(response.getApprovedAt(), formatter);
+
+
+            // LocalDateTime을 Timestamp로 변환
+            // ticketStartDate 를 approvedAt 으로 변환
+            Timestamp approvedAtTimestamp = Timestamp.valueOf(approvedAtLocalDateTime);;
+
+            // ticketEndDate 계산
+            Timestamp ticketEndDate;
+            if (prodNumber == 1) {
+                // 6개월 추가
+                ticketEndDate = Timestamp.valueOf(approvedAtLocalDateTime.plusMonths(6));
+            } else if (prodNumber == 2) {
+                // 3개월 추가
+                ticketEndDate = Timestamp.valueOf(approvedAtLocalDateTime.plusMonths(3));
+            } else if (prodNumber == 3) {
+                // 24시간 추가
+                ticketEndDate = Timestamp.valueOf(approvedAtLocalDateTime.plusHours(24));
+            } else {
+                throw new IllegalArgumentException("Invalid prodNumber: " + prodNumber);
+            }
+
+            log.info("Ticket End Date: {}", ticketEndDate);
+
+            // ticketCount 조건식
+            int ticketCount = 0;
+            if(prodNumber == 1) {
+                ticketCount = 6;
+            } else if (prodNumber == 2) {
+                ticketCount = 3;
+            } else if (prodNumber == 3) {
+                ticketCount = 1;
+            }
+            log.info("Ticket Count : ", ticketCount);
+
+            // ticketCount 조건식
+            int numberOfTime = 0;
+            if(prodNumber == 1) {
+                numberOfTime = 6;
+            } else if (prodNumber == 2) {
+                numberOfTime = 3;
+            } else if (prodNumber == 3) {
+                numberOfTime = 1;
+            }
+            log.info("Ticket Count and NumberOfTime : ", numberOfTime);
+
+            // 엔티티 빌더를 사용하여 데이터 저장
+            TicketEntity ticketEntity = TicketEntity.builder()
+                    .ticketKey(UUID.randomUUID().toString())
+                    .uuid(uuid) // 추출된 userId 저장
+                    .paymentKey(response.getPaymentKey())
+                    .prodNumber(prodNumber)
+                    .ticketName(response.getOrderName())
+                    .ticketAmount(response.getTotalAmount())
+                    .ticketPeriod(prodPeriod)
+                    .ticketCount(ticketCount)
+                    .ticketStartDate(approvedAtTimestamp) // 엔티티의 totalAmount와 매핑
+                    .ticketEndDate(ticketEndDate)
+                    .prodNumberOfTime(numberOfTime)
+                    .build();
+
+            log.info("ticketEntity: {}", ticketEntity);
+            ticketRepository.save(ticketEntity);
+            log.info("Ticket data saved: {}", ticketEntity);
+        } catch (Exception e) {
+            log.error("Error saving ticket data: {}", e.getMessage());
+            throw new RuntimeException("Failed to save ticket data", e);
+        }
+    }
+
 
 }

@@ -43,13 +43,13 @@ public class TicketEntity {
     private int ticketCount;
 
     @Column(name = "TICKET_START_DATE", length = 50, nullable = false )
-    private LocalDateTime ticketStartDate;
+    private Timestamp ticketStartDate;
 
     @Column(name = "TICKET_END_DATE", length = 50, nullable = false )
-    private LocalDateTime ticketEndDate;
+    private Timestamp ticketEndDate;
 
     @Column(name = "PROD_NUMBEROFTIME", nullable = false)
-    private Integer prodNumberOfTime;
+    private int prodNumberOfTime;
 
     // Entity에서 DTO로 변환
     public Ticket toDto() {

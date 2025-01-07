@@ -33,10 +33,10 @@ public class PaymentEntity {
     private String orderName;
 
     @Column(name = "MID", length = 40, nullable = false )
-    private String mid;
+    private String mId;
 
-    @Column(name = "CURRENOY", length = 50, nullable = false )
-    private String currenoy;
+    @Column(name = "CURRENCY", length = 50, nullable = false )
+    private String currency;
 
     @Column(name = "TOTAL_AMOUNT", length = 50, nullable = false )
     private int totalAmount;
@@ -44,8 +44,8 @@ public class PaymentEntity {
     @Column(name = "STATUS", length = 20, nullable = false )
     private String status;
 
-    @Column(name = "REQUEST_AT", nullable = false )
-    private Timestamp requestAt;
+    @Column(name = "REQUESTED_AT", nullable = false )
+    private Timestamp requestedAt;
 
     @Column(name = "APPROVED_AT", nullable = false )
     private Timestamp approvedAt;
@@ -53,13 +53,6 @@ public class PaymentEntity {
     @Column(name = "CANCELYN", length = 2)
     private String cancelYN;
 
-
-    @PrePersist
-    public void onPrePersist() {
-        if (requestAt == null) {
-            this.requestAt = new Timestamp(System.currentTimeMillis());  // Set current date + time
-        }
-    }
 
     // Entity에서 DTO로 변환
     public Payment toDto() {
@@ -69,11 +62,11 @@ public class PaymentEntity {
                 .uuid(uuid)
                 .orderId(orderId)
                 .orderName(orderName)
-                .mid(mid)
-                .currenoy(currenoy)
+                .mId(mId)
+                .currency(currency)
                 .totalAmount(totalAmount)
                 .status(status)
-                .requestAt(requestAt)
+                .requestedAt(requestedAt)
                 .approvedAt(approvedAt)
                 .cancelYN(cancelYN)
                 .build();

@@ -27,10 +27,10 @@ public class Ticket {
     private int ticketCount;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime ticketStartDate;
+    private Timestamp ticketStartDate;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime ticketEndDate;
+    private Timestamp ticketEndDate;
 
     private int prodNumberOfTime;
 
