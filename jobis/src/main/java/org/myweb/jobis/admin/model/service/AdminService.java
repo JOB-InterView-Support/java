@@ -2,6 +2,7 @@ package org.myweb.jobis.admin.model.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.myweb.jobis.payment.jpa.repository.PaymentRepository;
 import org.myweb.jobis.user.jpa.entity.UserEntity;
 import org.myweb.jobis.user.jpa.repository.UserRepository;
 import org.springframework.data.domain.Page;
@@ -9,12 +10,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.Map;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class AdminService {
 
     private final UserRepository userRepository;
+    private final PaymentRepository paymentRepository;
 
     public Page<UserEntity> getPagedUsers(Pageable pageable) {
         // count 쿼리와 페이징 데이터 확인
@@ -55,7 +60,6 @@ public class AdminService {
         user.setUserRestrictionReason(null);
         userRepository.save(user);
     }
-
 
 
     @Transactional
@@ -102,5 +106,19 @@ public class AdminService {
         user.setAdminYn("N");
         userRepository.save(user);
     }
+
+    public Page<Map<String, Object>> getFilteredSalesHistory(
+            String filter, String search, String cancelYN, Pageable pageable
+    ) {
+        if ("이름".equals(filter)) {
+            return paymentRepository.findFilteredSalesHistory(cancelYN, search, null, pageable);
+        } else if ("상품명".equals(filter)) {
+            return paymentRepository.findFilteredSalesHistory(cancelYN, null, search, pageable);
+        } else {
+            return paymentRepository.findFilteredSalesHistory(cancelYN, null, null, pageable);
+        }
+    }
+
+
 
 }

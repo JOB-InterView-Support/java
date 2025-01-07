@@ -149,6 +149,24 @@ public class AdminController {
     }
 
 
+    @GetMapping("/salesHistory")
+    public Page<Map<String, Object>> getSalesHistory(
+            @RequestParam(required = false) String filter,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String cancelYN,
+            Pageable pageable
+    ) {
+        log.info("필터: {}, 검색어: {}, 환불 여부: {}", filter, search, cancelYN);
+
+        // AdminService를 통해 필터링된 데이터 반환
+        return adminService.getFilteredSalesHistory(filter, search, cancelYN, pageable);
+    }
+
+
+
+
+
+
 
 
 }
