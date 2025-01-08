@@ -30,19 +30,31 @@ public class PaymentController {
 
     private PaymentRequest paymentRequest;
 
-    @PostMapping("/request")
-    public ResponseEntity<?> requestPayment(@RequestBody PaymentRequest paymentRequest) {
-        try {
-            // PaymentService에서 결제 요청 처리
-            paymentService.processPayment(paymentRequest);
-            log.info("paymentRequest" + paymentRequest);
-            return ResponseEntity.ok().body("결제 요청 성공");
-        } catch (Exception e) {
-            // 예외 처리
-            log.error("결제 요청 처리 실패", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("결제 요청 처리 실패");
-        }
-    }
+//    @PostMapping("/request")
+//    public ResponseEntity<?> handlePaymentRequest(@RequestHeader("uuid") String uuid, @RequestBody PaymentRequest paymentRequest) {
+//        try {
+//            // 1. UUID를 기반으로 TicketEntity 검증
+//            boolean isTicketValid = paymentService.validateTicketAndPayment(uuid);
+//
+//            // 2. 이미 이용 중인 티켓이 있는 경우 처리
+//            if (!isTicketValid) {
+//                return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+//                        "response", "already have ticket"
+//                ));
+//            }
+//
+//            // 3. 결제 처리 로직 (결제 API 실행 등)
+//            paymentService.processPayment(paymentRequest);
+//
+//            return ResponseEntity.ok(Map.of(
+//                    "response", "payment processed successfully"
+//            ));
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+//                    "message", "결제 요청 처리 중 오류 발생: " + e.getMessage()
+//            ));
+//        }
+//    }
 
     @PostMapping("/paymentSuccess")
     public ResponseEntity<?> handlePaymentSuccess(@RequestBody Map<String, Object> requestData) {
