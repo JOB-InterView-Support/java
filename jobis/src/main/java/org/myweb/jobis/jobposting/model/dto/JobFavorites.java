@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.myweb.jobis.jobposting.jpa.entity.JobFavoritesEntity;
 
 import java.time.LocalDateTime;
 
@@ -13,48 +12,13 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class JobFavorites {
-    private String jobFavoritesNo; // 즐겨찾기 번호
+    private String jobFavoritesNo; // 즐겨찾기 ID
     private String uuid; // 사용자 UUID
-    private String jobPostingId; // 공고 ID (사람인 API의 공고 ID와 일치)
-    private LocalDateTime jobCreatedDate; // 즐겨찾기 생성 일자
+    private String jobPostingId; // 사람인 공고 ID
+    private LocalDateTime jobCreatedDate; // 즐겨찾기 추가 날짜
 
-    public JobFavorites(String jobFavoritesNo, String uuid, String jobPostingId, LocalDateTime jobCreatedDate,
-                        String title, String companyName, String location, String job_type,
-                        String loc_mcd, String job_mid_cd, String edu_lv) {
-        this.jobFavoritesNo = jobFavoritesNo;
-        this.uuid = uuid;
-        this.jobPostingId = jobPostingId;
-        this.jobCreatedDate = jobCreatedDate;
-    }
-
-    // Entity -> DTO 변환
-    public static JobFavoritesEntity toEntity(JobFavorites jobFavorites) {
-        return new JobFavoritesEntity(
-                jobFavorites.getJobFavoritesNo(),
-                jobFavorites.getUuid(),
-                jobFavorites.getJobPostingId(),
-                jobFavorites.getJobCreatedDate(),
-                null // UserEntity는 외부에서 설정해야 할 수 있음
-        );
-    }
-
-    // DTO -> Entity 변환
-    public static JobFavorites toDto(JobFavoritesEntity entity, JobPostingResponse.Job job) {
-        return new JobFavorites(
-                entity.getJobFavoritesNo(),
-                entity.getUuid(),
-                entity.getJobPostingId(),
-                entity.getJobCreatedDate()
-                // 여기서 JobPostingResponse.Job 객체를 사용하여 필요한 데이터 설정 가능
-        );
-    }
-
-    public static JobFavorites toDto(JobFavoritesEntity entity) {
-        return new JobFavorites(
-                entity.getJobFavoritesNo(),
-                entity.getUuid(),
-                entity.getJobPostingId(),
-                entity.getJobCreatedDate()
-        );
-    }
+    // 추가 필드
+    private String title; // 공고 제목
+    private String companyName; // 회사 이름
+    private String location; // 지역 정보
 }

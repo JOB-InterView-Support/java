@@ -4,6 +4,8 @@ package org.myweb.jobis.ticket.jpa.repository;
 import org.myweb.jobis.payment.jpa.entity.PaymentEntity;
 import org.myweb.jobis.ticket.jpa.entity.TicketEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -18,4 +20,6 @@ public interface TicketRepository extends JpaRepository<TicketEntity, String>{
 
     // UUID로 Ticket 목록 조회
     List<TicketEntity> findByUuid(String uuid);
+
+
 }
