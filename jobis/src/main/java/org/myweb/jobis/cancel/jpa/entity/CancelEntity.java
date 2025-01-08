@@ -27,8 +27,8 @@ public class CancelEntity {
     @Column(name = "PROD_NUMBER", length = 50, nullable = false )
     private int prodNumber;
 
-    @Column(name = "PAY_PAYMENT_KEY", length = 400, nullable = false )
-    private String payPaymentKey;
+    @Column(name = "PAYMENT_KEY", length = 400, nullable = false )
+    private String paymentKey;
 
     @Column(name = "CANCEL_REQUESTED_AT", nullable = true )
     private Timestamp cancelRequestedAt;
@@ -36,15 +36,19 @@ public class CancelEntity {
     @Column(name = "CANCEL_APPROVED_AT", nullable = true )
     private Timestamp cancelApprovedAt;
 
+    @Column(name = "CANCEL_REASON", length = 400, nullable = false )
+    private String cancelReason;
+
     // Entity에서 DTO로 변환
     public Cancel toDto() {
         return Cancel.builder()
                 .cancelKey(cancelKey)
                 .uuid(uuid)
                 .prodNumber(prodNumber)
-                .payPaymentKey(payPaymentKey)
+                .paymentKey(paymentKey)
                 .cancelRequestedAt(cancelRequestedAt)
                 .cancelApprovedAt(cancelApprovedAt)
+                .cancelReason(cancelReason)
                 .build();
     }
 

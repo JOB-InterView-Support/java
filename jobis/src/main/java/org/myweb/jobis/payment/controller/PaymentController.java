@@ -96,11 +96,13 @@ public class PaymentController {
 
     @PostMapping("/save")
     public ResponseEntity<?> savePaymentData(@RequestBody PaymentResponse response) {
-            log.info("save - paymentResponse : " + response);
+        log.info("save - paymentResponse : " + response);
         try {
             log.info("mid" , response.getMId());
             paymentService.savePaymentData(response);
-            return ResponseEntity.ok("Payment data saved successfully.");
+            log.info("paymentData saved success");
+            paymentService.saveTicketData(response);
+            return ResponseEntity.ok("Payment data and Ticket data saved successfully.");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to save payment data.");
         }

@@ -15,6 +15,9 @@ import org.myweb.jobis.products.jpa.entity.ProductsEntity;
 import org.myweb.jobis.products.jpa.repository.ProductsRepository;
 
 import org.myweb.jobis.security.jwt.JWTUtil;
+import org.myweb.jobis.ticket.jpa.entity.TicketEntity;
+import org.myweb.jobis.ticket.jpa.repository.TicketRepository;
+import org.myweb.jobis.ticket.model.dto.Ticket;
 import org.myweb.jobis.user.jpa.entity.UserEntity;
 import org.myweb.jobis.user.jpa.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +36,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -42,18 +46,21 @@ public class PaymentService {
     private static final String TOSS_PAYMENTS_URL = "https://api.tosspayments.com/v1/payments/confirm";
     private final PaymentRepository paymentRepository;
     private final ProductsRepository productsRepository;
+    private final UserRepository userRepository; // Inject the UserRepository
+    private final TicketRepository ticketRepository;
+
     private final HttpServletRequest httpServletRequest;
     private final JWTUtil jwtUtil; // JWTUtil 객체 선언
-    private UserRepository userRepository; // Inject the UserRepository
 
 
     @Autowired
-    public PaymentService(PaymentRepository paymentRepository, ProductsRepository productsRepository, HttpServletRequest httpServletRequest, JWTUtil jwtUtil, UserRepository userRepository) {
+    public PaymentService(PaymentRepository paymentRepository, ProductsRepository productsRepository, HttpServletRequest httpServletRequest, JWTUtil jwtUtil, UserRepository userRepository, TicketRepository ticketRepository) {
         this.paymentRepository = paymentRepository;
         this.productsRepository = productsRepository;
+        this.userRepository = userRepository;
+        this.ticketRepository = ticketRepository;
         this.httpServletRequest = httpServletRequest;
         this.jwtUtil = jwtUtil;
-        this.userRepository = userRepository;
     }
 
     @Value("${tossSecretKey}")
@@ -226,5 +233,81 @@ public class PaymentService {
         }
     }
 
+    public void saveTicketData(PaymentResponse response) {
+        try {
+            // HTTP 요청에서 토큰 추출
+            String token = getTokenFromRequest(httpServletRequest);
 
-}
+            // JWTUtil을 사용하여 토큰에서 userId 추출
+            String userId = jwtUtil.getUserIdFromToken(token);
+            log.info("Extracted userId from token: {}", userId);
+
+            if (userId == null) {
+                throw new RuntimeException("유효하지 않은 userId");
+            }
+
+            // UserRepository에서 userId로 UserEntity를 조회
+            UserEntity userEntity = userRepository.findByUserId(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found for userId: " + userId));
+
+            // UserEntity에서 uuid를 추출
+            String uuid = userEntity.getUuid();
+            log.info("User uuid: {}", uuid);
+
+            // Products에서 prodName과 orderName이 일치하는 ProductsEntity 조회
+            ProductsEntity productEntity = productsRepository.findByProdName(response.getOrderName())
+                    .orElseThrow(() -> new RuntimeException("Product not found for orderName: " + response.getOrderName()));
+            log.info("ProductsEntity: {}", productEntity);
+
+            // DateTimeFormatter를 사용하여 String을 LocalDateTime으로 변환
+            DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
+            LocalDateTime approvedAtLocalDateTime = LocalDateTime.parse(response.getApprovedAt(), formatter);
+
+            // LocalDateTime을 Timestamp로 변환
+            Timestamp approvedAtTimestamp = Timestamp.valueOf(approvedAtLocalDateTime);
+
+            // ticketEndDate 계산
+            Timestamp ticketEndDate;
+            int prodNumber = productEntity.getProdNumber();
+            if (prodNumber == 1) {
+                ticketEndDate = Timestamp.valueOf(approvedAtLocalDateTime.plusMonths(6));
+            } else if (prodNumber == 2) {
+                ticketEndDate = Timestamp.valueOf(approvedAtLocalDateTime.plusMonths(3));
+            } else if (prodNumber == 3) {
+                ticketEndDate = Timestamp.valueOf(approvedAtLocalDateTime.plusHours(24));
+            } else {
+                throw new IllegalArgumentException("Invalid prodNumber: " + prodNumber);
+            }
+
+            // ticketCount 및 numberOfTime 계산
+            int ticketCount = switch (prodNumber) {
+                case 1 -> 6;
+                case 2 -> 3;
+                case 3 -> 1;
+                default -> throw new IllegalArgumentException("Invalid prodNumber: " + prodNumber);
+            };
+
+            // 엔티티 빌더를 사용하여 데이터 저장
+            TicketEntity ticketEntity = TicketEntity.builder()
+                    .ticketKey(UUID.randomUUID().toString())
+                    .uuid(uuid)
+                    .paymentKey(response.getPaymentKey())
+                    .prodNumber(prodNumber) // prodNumber를 직접 설정
+                    .ticketName(response.getOrderName())
+                    .ticketAmount(response.getTotalAmount())
+                    .ticketPeriod(productEntity.getProdPeriod())
+                    .ticketCount(ticketCount)
+                    .ticketStartDate(approvedAtTimestamp)
+                    .ticketEndDate(ticketEndDate)
+                    .prodNumberOfTime(ticketCount)
+                    .build();
+
+            log.info("TicketEntity: {}", ticketEntity);
+            ticketRepository.save(ticketEntity);
+            log.info("Ticket data saved: {}", ticketEntity);
+        } catch (Exception e) {
+            log.error("Error saving ticket data: {}", e.getMessage());
+            throw new RuntimeException("Failed to save ticket data", e);
+        }
+    }
+} // 25.01.07 최종 수정
