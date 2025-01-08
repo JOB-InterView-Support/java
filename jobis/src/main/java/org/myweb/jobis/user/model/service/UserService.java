@@ -203,4 +203,18 @@ public class UserService {
         }
         return null;
     }
+
+    public String findUserIdByEmail(String email) {
+        UserEntity userEntity = userRepository.findByUserDefaultEmail(email);
+        return userEntity != null ? userEntity.getUserId() : null;
+    }
+
+    public void updatePassword(String userId, String newPassword) {
+        UserEntity user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다: " + userId));
+
+        String encryptedPassword = passwordEncoder.encode(newPassword);
+        user.setUserPw(encryptedPassword);
+        userRepository.save(user);
+    }
 }

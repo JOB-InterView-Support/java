@@ -31,4 +31,10 @@ public class EmailService {
             e.printStackTrace();
         }
     }
+
+    public void sendTemporaryPassword(String toEmail, String tempPassword) {
+        String subject = "Jobis 임시 비밀번호 발급";
+        String body = "귀하의 임시 비밀번호는 " + tempPassword + " 입니다. 로그인 후 바로 비밀번호를 변경해 주세요.";
+        sendEmail(toEmail, subject, body);
+    }
 }

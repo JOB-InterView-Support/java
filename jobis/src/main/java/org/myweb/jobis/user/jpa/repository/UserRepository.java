@@ -42,4 +42,6 @@ public interface UserRepository extends JpaRepository<UserEntity, String> {
 
     // 네이버 이메일로 사용자 찾기
     Optional<UserEntity> findByUserNaverEmail(String userNaverEmail);
+
+    UserEntity findByUserDefaultEmail(String email);
 }

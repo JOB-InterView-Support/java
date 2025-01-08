@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -154,6 +155,65 @@ public class UserController {
             return ResponseEntity.status(400).body(e.getMessage());
         }
     }
+    @PostMapping("/findId")
+    public ResponseEntity<?> findUserIdByEmail(@RequestBody User userRequest) {
+        log.info("받은 이메일 : " + userRequest.getUserDefaultEmail());
+        String userId = userService.findUserIdByEmail(userRequest.getUserDefaultEmail());
+        log.info("찾은 아이디 : " + userId);
+        if (userId != null) {
+            return ResponseEntity.ok().body(new UserResponse(userId));
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
 
+    public static class UserResponse {
+        private String userId;
+
+        public UserResponse(String userId) {
+            this.userId = userId;
+        }
+
+        public String getUserId() {
+            return userId;
+        }
+
+        public void setUserId(String userId) {
+            this.userId = userId;
+        }
+    }
+
+    // 비밀번호 재설정 요청 처리
+    private static final String CHAR_LOWER = "abcdefghijklmnopqrstuvwxyz";
+    private static final String CHAR_UPPER = CHAR_LOWER.toUpperCase();
+    private static final String NUMBER = "0123456789";
+    private static final String OTHER_CHAR = "!@#$%&*()_+-=[]?";
+    private static final String PASSWORD_ALLOW_BASE = CHAR_LOWER + CHAR_UPPER + NUMBER + OTHER_CHAR;
+    private static final SecureRandom random = new SecureRandom();
+
+    @PostMapping("/resetPw")
+    public ResponseEntity<String> resetPassword(@RequestBody Map<String, String> request) {
+        String userId = request.get("userId");
+        String email = request.get("email");
+        String tempPassword = generateRandomPassword(10);
+
+        userService.updatePassword(userId, tempPassword);
+        emailService.sendTemporaryPassword(email, tempPassword);
+
+        return ResponseEntity.ok("비밀번호 재설정 요청이 처리되었습니다. 임시 비밀번호가 " + email + "로 발송되었습니다.");
+    }
+
+    private String generateRandomPassword(int length) {
+        if (length < 1) throw new IllegalArgumentException();
+
+        StringBuilder sb = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            int rndCharAt = random.nextInt(PASSWORD_ALLOW_BASE.length());
+            char rndChar = PASSWORD_ALLOW_BASE.charAt(rndCharAt);
+            sb.append(rndChar);
+        }
+
+        return sb.toString();
+    }
 
 }

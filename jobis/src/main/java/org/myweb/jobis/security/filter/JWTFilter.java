@@ -41,6 +41,9 @@ public class JWTFilter extends OncePerRequestFilter {
                 requestURI.equals("/users/checkPhoneNumber") ||
                 requestURI.equals("/users/sendVerificationEmail") ||
                 requestURI.equals("/users/verifyCode") ||
+                requestURI.equals("/users/findId") ||
+                requestURI.equals("/users/resetPw") ||
+
                 requestURI.equals("/reissue") || // 추가
                 requestURI.equals("/kakao/apicode") || // 추가
                 requestURI.equals("/kakaoLogin") || // 추가
