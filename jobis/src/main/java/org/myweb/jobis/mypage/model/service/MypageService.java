@@ -131,6 +131,11 @@ public class MypageService {
         return selfIntroduceRepository.findByUuidAndIntroIsDeletedAndIntroIsEdited(uuid, "N", introIsEdited);
     }
 
+    public List<SelfIntroduceEntity> getAllIntroList(String uuid) {
+        return selfIntroduceRepository.findByUuidAndIntroIsDeleted(uuid, "N");
+    }
+
+
     public boolean canCreateMoreIntroductions(String uuid, int maxCount) {
         long currentCount = selfIntroduceRepository.countByUuidAndIntroIsDeletedAndIntroIsEdited(uuid, "N", "N");
         return currentCount < maxCount;
