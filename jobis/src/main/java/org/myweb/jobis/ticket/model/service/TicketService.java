@@ -47,11 +47,11 @@ public class TicketService {
             // 조건 확인 및 Ticket 업데이트
             return userTickets.stream()
                     .filter(ticket -> ticket.getTicketEndDate().after(selectedTimestamp)) // ticketEndDate가 선택한 날짜 이후인지 확인
-                    .filter(ticket -> ticket.getProdNumberOfTime() > 0) // prodNumberOfTime이 0이 아닌지 확인
+                    .filter(ticket -> ticket.getTicketCount() > 0) // TicketCount가 0이 아닌지 확인
                     .max(Comparator.comparing(TicketEntity::getTicketStartDate)) // 가장 최근 Ticket 가져오기
                     .map(ticket -> {
                         // 조건 만족하면 prodNumberOfTime 감소
-                        ticket.setProdNumberOfTime(ticket.getProdNumberOfTime() - 1);
+                        ticket.setTicketCount(ticket.getTicketCount() - 1);
 
                         log.info("티켓 저장 전 상태: {}", ticket);
                         ticketRepository.save(ticket); // 변경사항 저장

@@ -310,4 +310,19 @@ public class PaymentService {
             throw new RuntimeException("Failed to save ticket data", e);
         }
     }
+
+    public void processRefund(String paymentKey) {
+        PaymentEntity payment = paymentRepository.findByPaymentKey(paymentKey)
+                .orElseThrow(() -> new RuntimeException("결제를 찾을 수 없습니다."));
+
+        if ("Y".equals(payment.getCancelYN())) {
+            throw new IllegalStateException("이미 환불된 결제입니다.");
+        }
+
+        // 환불 상태 업데이트
+        payment.setCancelYN("Y");
+        paymentRepository.save(payment);
+        log.info("환불이 성공적으로 처리되었습니다. paymentKey: {}", paymentKey);
+    }
+
 } // 25.01.07 최종 수정

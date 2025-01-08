@@ -20,7 +20,7 @@ public interface PaymentRepository extends JpaRepository<PaymentEntity, Long> {
     boolean existsByOrderId(String orderId);
     // 기본 JPA 메소드 사용 가능
 
-    Optional<Object> findByPaymentKey(String paymentKey);
+    Optional<PaymentEntity> findByPaymentKey(String paymentKey);
 
     @Query("SELECT new map(p.prodNumber as prodNumber, p.uuid as uuid, u.userName as userName, " +
             "p.currency as currency, p.totalAmount as totalAmount, p.status as status, " +

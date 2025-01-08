@@ -108,8 +108,22 @@ public class PaymentController {
         }
     }
 
+    @PutMapping("/refund/{paymentKey}")
+    public ResponseEntity<?> processRefund(@PathVariable String paymentKey) {
+        try {
+            paymentService.processRefund(paymentKey);
+            return ResponseEntity.ok("환불이 성공적으로 처리되었습니다.");
+        } catch (Exception e) {
+            log.error("환불 처리 실패", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("환불 처리 중 문제가 발생했습니다.");
+        }
+    }
+
     private boolean isAlreadyProcessed(String paymentKey, String orderId) {
         // 주입된 paymentRepository 인스턴스를 통해 메서드 호출
         return paymentRepository.existsByPaymentKeyAndOrderId(paymentKey, orderId);
     }
+
+
 }
