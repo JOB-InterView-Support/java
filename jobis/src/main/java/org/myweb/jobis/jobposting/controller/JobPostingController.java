@@ -1,21 +1,20 @@
 package org.myweb.jobis.jobposting.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.myweb.jobis.jobposting.model.dto.JobPosting;
 import org.myweb.jobis.jobposting.model.dto.JobPostingResponse;
 import org.myweb.jobis.jobposting.model.service.JobPostingService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/jobposting")
+@RequiredArgsConstructor
 @Slf4j
 public class JobPostingController {
 
-    @Autowired
-    private JobPostingService jobPostingService;
+    private final JobPostingService jobPostingService;
 
     @GetMapping("/search")
     public ResponseEntity<JobPostingResponse> searchJobPostings(
@@ -23,23 +22,29 @@ public class JobPostingController {
             @RequestParam(required = false) String locMcd,
             @RequestParam(required = false) String eduLv,
             @RequestParam(required = false) String jobType,
-            @RequestParam(defaultValue = "10") Integer count,
-            @RequestParam(defaultValue = "1") Integer start,
-            @RequestParam(required = false) String total,
-            @RequestParam(defaultValue = "pd") String sort
-    ) {
-        log.info("Searching job postings with parameters: jobMidCd={}, locMcd={}, eduLv={}, jobType={}, count={}, start={}, sort={}",
-                jobMidCd, locMcd, eduLv, jobType, count, start, sort);
+            HttpServletRequest request) {
 
-        JobPostingResponse response = jobPostingService.searchJobPostings(
-                jobType, locMcd, eduLv, jobMidCd, count, start, total, sort);
+        // 헤더에서 UUID 추출
+        String uuid = request.getHeader("X-User-UUID");
+        if (uuid == null || uuid.isEmpty()) {
+            return ResponseEntity.badRequest().body(null);
+        }
+
+        JobPostingResponse response = jobPostingService.searchJobPostings(jobMidCd, locMcd, eduLv, jobType, uuid);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<JobPostingResponse> getJobPostingDetail(@PathVariable String id) {
-        log.info("Fetching job posting details for id: {}", id);
-        JobPostingResponse response = jobPostingService.getJobPostingDetail(id);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<JobPostingResponse.Job> getJobPostingDetail(
+            @PathVariable String id, HttpServletRequest request) {
+
+        // 헤더에서 UUID 추출
+        String uuid = request.getHeader("X-User-UUID");
+        if (uuid == null || uuid.isEmpty()) {
+            return ResponseEntity.badRequest().body(null);
+        }
+
+        JobPostingResponse.Job job = jobPostingService.getJobPostingDetail(id, uuid);
+        return ResponseEntity.ok(job);
     }
 }

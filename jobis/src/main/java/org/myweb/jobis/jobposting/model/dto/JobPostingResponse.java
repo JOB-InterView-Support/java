@@ -21,7 +21,7 @@ public class JobPostingResponse {
                 private int count;
                 private int start;
                 private String total;
-                private List<Job> job = new ArrayList<>(); // 기본 값 설정
+                private List<Job> job; // 기본 값 설정
         }
 
         @Data
@@ -44,6 +44,11 @@ public class JobPostingResponse {
                 private CloseType closeType;
                 private int readCnt;
                 private int applyCnt;
+                private boolean isFavorite; // 즐겨찾기 여부
+
+                public void setIsFavorite(boolean contains) {
+                        this.isFavorite = contains;
+                }
         }
 
         @Data

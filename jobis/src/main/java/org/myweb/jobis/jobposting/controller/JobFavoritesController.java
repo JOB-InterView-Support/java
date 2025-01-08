@@ -9,28 +9,29 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Slf4j
 @RestController
 @RequestMapping("/favorites")
 @RequiredArgsConstructor
+@Slf4j
 public class JobFavoritesController {
+
     private final JobFavoritesService jobFavoritesService;
 
     @PostMapping
     public ResponseEntity<JobFavorites> addFavorite(@RequestBody JobFavorites jobFavorites) {
-        return ResponseEntity.ok(jobFavoritesService.addFavorite(jobFavorites));
-    }
-
-    @DeleteMapping("/delete")
-    public ResponseEntity<Void> deleteFavorite(
-            @RequestParam String uuid,
-            @RequestParam String jobFavoritesNo) {
-        jobFavoritesService.deleteFavorite(uuid, jobFavoritesNo);
-        return ResponseEntity.ok().build();
+        JobFavorites addedFavorite = jobFavoritesService.addFavorite(jobFavorites.getUuid(), jobFavorites.getJobPostingId());
+        return ResponseEntity.ok(addedFavorite);
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<JobFavorites>> getFavorites(@RequestParam String uuid) {
-        return ResponseEntity.ok(jobFavoritesService.getFavorites(uuid));
+    public ResponseEntity<List<JobFavorites>> getFavoritesWithDetails(@RequestParam String uuid) {
+        List<JobFavorites> favorites = jobFavoritesService.getFavoritesWithDetails(uuid);
+        return ResponseEntity.ok(favorites);
+    }
+
+    @DeleteMapping("/delete")
+    public ResponseEntity<Void> removeFavorite(@RequestParam String jobFavoritesNo) {
+        jobFavoritesService.removeFavorite(jobFavoritesNo);
+        return ResponseEntity.noContent().build();
     }
 }
