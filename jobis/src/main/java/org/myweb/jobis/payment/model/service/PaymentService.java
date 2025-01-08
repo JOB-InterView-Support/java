@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.net.URI;
@@ -311,18 +312,23 @@ public class PaymentService {
         }
     }
 
+    @Transactional
     public void processRefund(String paymentKey) {
-        PaymentEntity payment = paymentRepository.findByPaymentKey(paymentKey)
-                .orElseThrow(() -> new RuntimeException("결제를 찾을 수 없습니다."));
+        log.info("환불 요청 처리 중 paymentKey: {}", paymentKey);
 
+        // paymentKey로 결제 정보 조회
+        PaymentEntity payment = paymentRepository.findByPaymentKey(paymentKey)
+                .orElseThrow(() -> new RuntimeException("해당 paymentKey로 결제를 찾을 수 없습니다. paymentKey: " + paymentKey));
+
+        // 이미 환불된 경우 확인
         if ("Y".equals(payment.getCancelYN())) {
-            throw new IllegalStateException("이미 환불된 결제입니다.");
+            log.error("이미 환불된 결제입니다. paymentKey: {}", paymentKey);
+            throw new IllegalStateException("이미 환불된 결제입니다. paymentKey: " + paymentKey);
         }
 
-        // 환불 상태 업데이트
+        // cancelYN 값을 Y로 변경
         payment.setCancelYN("Y");
         paymentRepository.save(payment);
         log.info("환불이 성공적으로 처리되었습니다. paymentKey: {}", paymentKey);
     }
-
 } // 25.01.07 최종 수정
