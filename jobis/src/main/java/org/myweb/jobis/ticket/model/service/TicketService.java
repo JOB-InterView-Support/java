@@ -68,7 +68,7 @@ public class TicketService {
     }
 
     public List<Integer> getTicketCountsByUuid(String uuid) {
-        List<TicketEntity> tickets = ticketRepository.findByUuid(uuid);
+        List<TicketEntity> tickets = ticketRepository.findAllByUuidOrderByTicketStartDateDesc(uuid);
         return tickets.stream()
                 .map(TicketEntity::getTicketCount)
                 .collect(Collectors.toList());
