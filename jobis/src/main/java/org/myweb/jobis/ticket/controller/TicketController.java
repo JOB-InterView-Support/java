@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 
@@ -63,4 +64,39 @@ public class TicketController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("status", "FAIL", "message", "서버 오류가 발생했습니다."));
         }
     }
+
+    @GetMapping("/check")
+    public ResponseEntity<Map<String, Object>> checkAvailableTickets(HttpServletRequest request) {
+        try {
+            String token = request.getHeader("Authorization");
+            if (token == null || !token.startsWith("Bearer ")) {
+                log.error("Authorization 헤더가 없거나 잘못된 형식입니다.");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("status", "FAIL", "message", "토큰이 유효하지 않습니다."));
+            }
+
+            token = token.substring(7);
+            Claims claims = jwtUtil.getClaimsFromToken(token);
+            String userId = claims.getSubject();
+            log.info("토큰에서 추출한 userId: {}", userId);
+
+            UserEntity userEntity = userRepository.findByUserId(userId)
+                    .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 userId: " + userId));
+            log.info("UserEntity 조회 성공: {}", userEntity);
+
+            // getTicketCountsByUuid 메서드 사용
+            List<Integer> ticketCounts = ticketService.getTicketCountsByUuid(userEntity.getUuid());
+            log.info("사용 가능한 티켓 카운트 목록: {}", ticketCounts);
+
+            return ResponseEntity.ok(Map.of(
+                    "status", "SUCCESS",
+                    "message", "사용 가능한 이용권 확인 완료",
+                    "ticketCounts", ticketCounts
+            ));
+        } catch (Exception e) {
+            log.error("Error processing /check request: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("status", "FAIL", "message", "서버 오류가 발생했습니다."));
+        }
+    }
+
+
 } // 25.01.07 최종 수정

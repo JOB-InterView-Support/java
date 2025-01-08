@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -64,5 +65,12 @@ public class TicketService {
             log.error("startMockInterview 중 오류 발생: ", e);
             return false;
         }
+    }
+
+    public List<Integer> getTicketCountsByUuid(String uuid) {
+        List<TicketEntity> tickets = ticketRepository.findByUuid(uuid);
+        return tickets.stream()
+                .map(TicketEntity::getTicketCount)
+                .collect(Collectors.toList());
     }
 } // 25.01.07 최종 수정
