@@ -131,6 +131,16 @@ public class MypageController {
         return ResponseEntity.ok(introList);
     }
 
+    @GetMapping("/intro/all/{uuid}")
+    public ResponseEntity<List<SelfIntroduce>> getAllIntros(@PathVariable String uuid) {
+        List<SelfIntroduce> introList = mypageService.getAllIntroList(uuid)
+                .stream()
+                .map(SelfIntroduceEntity::toDto) // Entity를 DTO로 변환
+                .toList();
+        log.info("모든 자기소개서 리스트 반환: {}", introList);
+        return ResponseEntity.ok(introList);
+    }
+
     // 작성가능 수 10개 제한 로직
     @GetMapping("/intro/check-limit/{uuid}")
     public ResponseEntity<String> checkIntroductionLimit(@PathVariable String uuid) {
