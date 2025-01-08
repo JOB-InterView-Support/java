@@ -26,7 +26,8 @@ public class SelfIntroduce {
     private String certificate; // 보유 자격증
     private String introIsDeleted; // 자기소개서 삭제 여부
     private LocalDateTime introDeletedDate; // 자기소개서 삭제 일자
-    private String introIsEdited;
+    private String introIsEdited; // 첨삭 여부
+    private String introFeedback; // 첨삭 - 피드백
 
 
     /**
@@ -47,6 +48,7 @@ public class SelfIntroduce {
                 .introIsDeleted(this.introIsDeleted)
                 .introDeletedDate(this.introDeletedDate)
                 .introIsEdited(this.introIsEdited)
+                .introFeedback(this.introFeedback)
                 .build();
     }
 

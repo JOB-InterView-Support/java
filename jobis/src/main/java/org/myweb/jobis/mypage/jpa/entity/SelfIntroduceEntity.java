@@ -56,6 +56,9 @@ public class SelfIntroduceEntity {
     @Column(name = "INTRO_IS_EDITED", length = 1, nullable = false)
     private String introIsEdited = "N";
 
+    @Column(name = "INTRO_FEEDBACK")
+    private String introFeedback;
+
 
     @PrePersist
     private void generateIntroNo() {
@@ -80,6 +83,7 @@ public class SelfIntroduceEntity {
                 .introIsDeleted(this.introIsDeleted)
                 .introDeletedDate(this.introDeletedDate)
                 .introIsEdited(this.introIsEdited)
+                .introFeedback(this.introFeedback)
                 .build();
     }
 }
