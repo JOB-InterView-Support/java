@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.net.URI;
@@ -34,10 +35,7 @@ import java.net.http.HttpResponse;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Base64;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -90,23 +88,51 @@ public class PaymentService {
     }
 
     public void processPayment(PaymentRequest paymentRequest) throws Exception {
-        // 결제 요청 처리
-        log.info("Processing payment for order: {}", paymentRequest.getOrderId());
+        try {
+            // 1. HTTP 요청에서 토큰 추출
+            String token = getTokenFromRequest(httpServletRequest);
 
-        // 실제 결제 API 호출 등의 로직을 여기에 추가
-        // 예: TossPayments API를 호출하여 결제 요청을 전송하는 코드
+            // 2. JWTUtil을 사용하여 userId 추출
+            String userId = jwtUtil.getUserIdFromToken(token);
+            log.info("Extracted userId from token: {}", userId);
 
-        // 결제 성공 시 처리
-        log.info("결제 요청 성공");
+            if (userId == null) {
+                throw new RuntimeException("유효하지 않은 userId");
+            }
 
-        // 결제 실패 시 예외를 던져서 컨트롤러에서 처리하도록 할 수도 있음
-        if (paymentRequest.equals(null)) {
-            throw new Exception("결제 실패");
+            // 3. UserEntity 조회
+            UserEntity userEntity = userRepository.findByUserId(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found for userId: " + userId));
+            String uuid = userEntity.getUuid();
+            log.info("User uuid: {}", uuid);
+
+            // 4. PaymentEntity에서 uuid로 결제 정보 조회
+            List<PaymentEntity> existingPayments = paymentRepository.findByUuidAndCancelYN(uuid, "N");
+            if (!existingPayments.isEmpty()) {
+                for (PaymentEntity payment : existingPayments) {
+                    String paymentKey = payment.getPaymentKey();
+                    log.info("Existing payment found with paymentKey: {}", paymentKey);
+
+                    // 5. TicketEntity에서 paymentKey로 티켓 조회
+                    Optional<TicketEntity> ticket = ticketRepository.findTicketByPaymentKey(paymentKey);
+                    if (ticket.isPresent() && ticket.get().getTicketCount() > 0) {
+                        log.warn("이용권을 이미 가지고 있습니다. ticketKey: {}, ticketCount: {}",
+                                ticket.get().getTicketKey(), ticket.get().getTicketCount());
+                        throw new IllegalStateException("이용권을 이미 가지고 있습니다.");
+                    }
+                }
+            }
+            // 6. 결제 요청 처리
+            log.info("Processing payment for order: {}", paymentRequest.getOrderId());
+            // 결제 API 호출 로직 추가
+            log.info("Payment processed successfully for order: {}", paymentRequest.getOrderId());
+        } catch (IllegalStateException e) {
+            log.error("결제 요청 실패: {}", e.getMessage());
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage()); // 409 상태 코드와 메시지 반환
+        } catch (Exception e) {
+            log.error("결제 요청 처리 중 오류 발생: {}", e.getMessage());
+            throw e;
         }
-
-        // 결제 처리 성공 시 로깅 등 추가 작업
-        log.info("Payment processed successfully for order: {}", paymentRequest.getOrderId());
-        log.info("PaymentRequest: {}", paymentRequest);
     }
 
 

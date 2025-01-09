@@ -2,6 +2,7 @@ package org.myweb.jobis.payment.controller;
 
 
 import lombok.extern.slf4j.Slf4j;
+import org.myweb.jobis.payment.jpa.entity.PaymentEntity;
 import org.myweb.jobis.payment.jpa.repository.PaymentRepository;
 import org.myweb.jobis.payment.model.dto.Payment;
 import org.myweb.jobis.payment.model.dto.PaymentRequest;
@@ -33,14 +34,18 @@ public class PaymentController {
     @PostMapping("/request")
     public ResponseEntity<?> requestPayment(@RequestBody PaymentRequest paymentRequest) {
         try {
-            // PaymentService에서 결제 요청 처리
             paymentService.processPayment(paymentRequest);
-            log.info("paymentRequest" + paymentRequest);
             return ResponseEntity.ok().body("결제 요청 성공");
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", e.getMessage()
+            )); // 409 상태와 메시지 반환
         } catch (Exception e) {
-            // 예외 처리
             log.error("결제 요청 처리 실패", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("결제 요청 처리 실패");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    "message", "결제 요청 처리 실패",
+                    "error", e.getMessage()
+            ));
         }
     }
 
@@ -105,6 +110,24 @@ public class PaymentController {
             return ResponseEntity.ok("Payment data and Ticket data saved successfully.");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to save payment data.");
+        }
+    }
+
+    @GetMapping("/checkRefund/{paymentKey}")
+    public ResponseEntity<?> checkRefundStatus(@PathVariable String paymentKey) {
+        try {
+            PaymentEntity payment = paymentRepository.findByPaymentKey(paymentKey)
+                    .orElseThrow(() -> new RuntimeException("결제를 찾을 수 없습니다."));
+
+            Map<String, Object> response = Map.of(
+                    "cancelYN", payment.getCancelYN(),
+                    "paymentKey", payment.getPaymentKey()
+            );
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("환불 상태 확인 중 오류 발생: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "환불 상태 확인 중 오류가 발생했습니다."));
         }
     }
 

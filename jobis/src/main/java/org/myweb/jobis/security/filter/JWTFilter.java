@@ -70,8 +70,10 @@ public class JWTFilter extends OncePerRequestFilter {
                 requestURI.equals("/api/payments/request")|| // 12.30 추가 건열
                 requestURI.equals("/paymentSuccess")|| // 12.30 추가 건열
                 requestURI.equals("/api/payments/save")|| // 12.30 추가 건열
-
                 requestURI.equals("/api/payments/check")|| // 01.08 건열 추가
+                requestURI.startsWith("/api/payments/checkRefund/") ||
+                requestURI.startsWith("/api/payments/refund/") ||
+
 
 
 
