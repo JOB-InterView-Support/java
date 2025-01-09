@@ -342,19 +342,29 @@ public class PaymentService {
     public void processRefund(String paymentKey) {
         log.info("환불 요청 처리 중 paymentKey: {}", paymentKey);
 
-        // paymentKey로 결제 정보 조회
+        // 1. PaymentEntity 조회
         PaymentEntity payment = paymentRepository.findByPaymentKey(paymentKey)
                 .orElseThrow(() -> new RuntimeException("해당 paymentKey로 결제를 찾을 수 없습니다. paymentKey: " + paymentKey));
 
-        // 이미 환불된 경우 확인
+        // 2. 이미 환불된 경우 확인
         if ("Y".equals(payment.getCancelYN())) {
             log.error("이미 환불된 결제입니다. paymentKey: {}", paymentKey);
             throw new IllegalStateException("이미 환불된 결제입니다. paymentKey: " + paymentKey);
         }
 
-        // cancelYN 값을 Y로 변경
+        // 3. PaymentEntity의 cancelYN 값을 Y로 변경
         payment.setCancelYN("Y");
         paymentRepository.save(payment);
+        log.info("PaymentEntity 환불 처리 완료. paymentKey: {}", paymentKey);
+
+        // 4. TicketEntity의 ticketCount를 0으로 설정
+        TicketEntity ticket = ticketRepository.findTicketByPaymentKey(paymentKey)
+                .orElseThrow(() -> new RuntimeException("해당 paymentKey로 티켓을 찾을 수 없습니다. paymentKey: " + paymentKey));
+
+        ticket.setTicketCount(0); // ticketCount를 0으로 설정
+        ticketRepository.save(ticket);
+        log.info("TicketEntity 업데이트 완료. ticketKey: {}, ticketCount: 0", ticket.getTicketKey());
+
         log.info("환불이 성공적으로 처리되었습니다. paymentKey: {}", paymentKey);
     }
 } // 25.01.07 최종 수정
