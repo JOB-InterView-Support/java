@@ -1,51 +1,42 @@
 package org.myweb.jobis.jobposting.model.service;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.myweb.jobis.jobposting.jpa.entity.JobFavoritesEntity;
 import org.myweb.jobis.jobposting.jpa.repository.JobFavoritesRepository;
-import org.myweb.jobis.jobposting.model.dto.JobFavorites;
+import org.myweb.jobis.jobposting.model.dto.JobFavoriteRequest;
+import org.myweb.jobis.jobposting.model.dto.JobFavoriteResponse;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
 public class JobFavoritesService {
 
     private final JobFavoritesRepository jobFavoritesRepository;
 
-    public JobFavorites addFavorite(String uuid, String jobPostingId) {
-        if (jobFavoritesRepository.existsByUuidAndJobPostingId(uuid, jobPostingId)) {
-            throw new IllegalArgumentException("이미 즐겨찾기에 추가된 공고입니다.");
-        }
+    public JobFavoritesService(JobFavoritesRepository jobFavoritesRepository) {
+        this.jobFavoritesRepository = jobFavoritesRepository;
+    }
 
-        String jobFavoritesNo = UUID.randomUUID().toString();
-        JobFavoritesEntity entity = JobFavoritesEntity.fromDto(jobFavoritesNo, uuid, jobPostingId);
-        jobFavoritesRepository.save(entity);
-
-        return JobFavorites.builder()
-                .jobFavoritesNo(entity.getJobFavoritesNo())
-                .uuid(entity.getUuid())
-                .jobPostingId(entity.getJobPostingId())
-                .jobCreatedDate(entity.getJobCreatedDate())
+    public void addFavorite(JobFavoriteRequest request) {
+        JobFavoritesEntity entity = JobFavoritesEntity.builder()
+                .uuid(request.getUuid())
+                .jobPostingId(request.getJobPostingId())
                 .build();
+        jobFavoritesRepository.save(entity);
     }
 
-    public List<JobFavorites> getFavoritesWithDetails(String uuid) {
+    public List<JobFavoriteResponse> getFavorites(String uuid) {
         return jobFavoritesRepository.findByUuid(uuid).stream()
-                .map(entity -> JobFavorites.builder()
-                        .jobFavoritesNo(entity.getJobFavoritesNo())
-                        .uuid(entity.getUuid())
-                        .jobPostingId(entity.getJobPostingId())
-                        .jobCreatedDate(entity.getJobCreatedDate())
-                        .build())
-                .toList();
+                .map(JobFavoritesEntity::toDto)
+                .collect(Collectors.toList());
     }
 
-    public void removeFavorite(String jobFavoritesNo) {
-        jobFavoritesRepository.deleteById(jobFavoritesNo);
+    public void deleteFavorite(JobFavoriteRequest request) {
+        jobFavoritesRepository.deleteByUuidAndJobPostingId(request.getUuid(), request.getJobPostingId());
+    }
+
+    public boolean isFavorite(String uuid, String jobPostingId) {
+        return jobFavoritesRepository.existsByUuidAndJobPostingId(uuid, jobPostingId);
     }
 }

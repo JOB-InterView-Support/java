@@ -1,9 +1,9 @@
 package org.myweb.jobis.jobposting.controller;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.myweb.jobis.jobposting.model.dto.JobFavorites;
+import org.myweb.jobis.jobposting.model.dto.JobFavoriteRequest;
+import org.myweb.jobis.jobposting.model.dto.JobFavoriteResponse;
 import org.myweb.jobis.jobposting.model.service.JobFavoritesService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,27 +11,37 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/favorites")
-@RequiredArgsConstructor
-@Slf4j
 public class JobFavoritesController {
 
     private final JobFavoritesService jobFavoritesService;
 
+    public JobFavoritesController(JobFavoritesService jobFavoritesService) {
+        this.jobFavoritesService = jobFavoritesService;
+    }
+
     @PostMapping
-    public ResponseEntity<JobFavorites> addFavorite(@RequestBody JobFavorites jobFavorites) {
-        JobFavorites addedFavorite = jobFavoritesService.addFavorite(jobFavorites.getUuid(), jobFavorites.getJobPostingId());
-        return ResponseEntity.ok(addedFavorite);
+    public ResponseEntity<Void> addFavorite(@RequestBody JobFavoriteRequest request) {
+        jobFavoritesService.addFavorite(request);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<JobFavorites>> getFavoritesWithDetails(@RequestParam String uuid) {
-        List<JobFavorites> favorites = jobFavoritesService.getFavoritesWithDetails(uuid);
+    public ResponseEntity<List<JobFavoriteResponse>> getFavorites(@RequestParam String uuid) {
+        List<JobFavoriteResponse> favorites = jobFavoritesService.getFavorites(uuid);
         return ResponseEntity.ok(favorites);
     }
 
     @DeleteMapping("/delete")
-    public ResponseEntity<Void> removeFavorite(@RequestParam String jobFavoritesNo) {
-        jobFavoritesService.removeFavorite(jobFavoritesNo);
+    public ResponseEntity<Void> deleteFavorite(@RequestBody JobFavoriteRequest request) {
+        jobFavoritesService.deleteFavorite(request);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/check")
+    public ResponseEntity<Boolean> checkFavorite(
+            @RequestParam String uuid,
+            @RequestParam String jobPostingId) {
+        boolean isFavorite = jobFavoritesService.isFavorite(uuid, jobPostingId);
+        return ResponseEntity.ok(isFavorite);
     }
 }
