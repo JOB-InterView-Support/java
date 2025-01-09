@@ -1,32 +1,58 @@
 package org.myweb.jobis.jobposting.jpa.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.myweb.jobis.jobposting.model.dto.JobFavoriteResponse;
+import jakarta.persistence.*;
+import lombok.*;
+import org.myweb.jobis.jobposting.model.dto.JobFavorites;
+import org.myweb.jobis.user.jpa.entity.UserEntity;
 
-@Entity
+import java.time.LocalDateTime;
+
 @Data
-@Builder
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
+@Builder
+@Entity
+@Table(name = "JOB_FAVORITES")
 public class JobFavoritesEntity {
-
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "job_favorites_no")
+    private String jobFavoritesNo;
 
+    @Column(name = "UUID", length = 50, nullable = false)
     private String uuid;
+
+    @Column(name = "job_posting_id", nullable = false)
     private String jobPostingId;
 
-    public JobFavoriteResponse toDto() {
-        return JobFavoriteResponse.builder()
-                .jobPostingId(jobPostingId)
+    @Column(name = "job_created_date", nullable = false)
+    private LocalDateTime jobCreatedDate;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "UUID", referencedColumnName = "UUID", insertable = false, updatable = false)
+    private UserEntity user;
+
+    @PrePersist
+    protected void onCreate() {
+        jobCreatedDate = LocalDateTime.now();
+    }
+
+    // toDto 메서드 추가
+    public JobFavorites toDto() {
+        return new JobFavorites(
+                this.jobFavoritesNo,
+                this.uuid,
+                this.jobPostingId,
+                this.jobCreatedDate
+        );
+    }
+
+    // toEntity 메서드 추가
+    public static JobFavoritesEntity toEntity(JobFavorites dto) {
+        return JobFavoritesEntity.builder()
+                .jobFavoritesNo(dto.getJobFavoritesNo())
+                .uuid(dto.getUuid())
+                .jobPostingId(dto.getJobPostingId())
+                .jobCreatedDate(dto.getJobCreatedDate())
                 .build();
     }
 }
