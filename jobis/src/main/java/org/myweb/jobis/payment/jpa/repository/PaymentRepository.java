@@ -19,6 +19,7 @@ public interface PaymentRepository extends JpaRepository<PaymentEntity, Long> {
 
     boolean existsByOrderId(String orderId);
     // 기본 JPA 메소드 사용 가능
+    Optional<PaymentEntity> findByPaymentKeyAndCancelYN(String paymentKey, String cancelYN);
 
     Optional<PaymentEntity> findByPaymentKey(String paymentKey);
 

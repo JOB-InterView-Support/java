@@ -85,7 +85,7 @@ public class TicketController {
 
             // getTicketCountsByUuid 메서드 사용
             List<Integer> ticketCounts = ticketService.getTicketCountsByUuid(userEntity.getUuid());
-            log.info("사용 가능한 티켓 카운트 목록: {}", ticketCounts);
+            // log.info("사용 가능한 티켓 카운트 목록: {}", ticketCounts);
 
             return ResponseEntity.ok(Map.of(
                     "status", "SUCCESS",
