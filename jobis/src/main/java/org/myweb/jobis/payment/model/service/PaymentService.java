@@ -293,26 +293,29 @@ public class PaymentService {
             // LocalDateTime을 Timestamp로 변환
             Timestamp approvedAtTimestamp = Timestamp.valueOf(approvedAtLocalDateTime);
 
-            // ticketEndDate 계산
+            int prodNumber = productEntity.getProdNumber();// ticketEndDate 계산
+
             Timestamp ticketEndDate;
-            int prodNumber = productEntity.getProdNumber();
-            if (prodNumber == 1) {
-                ticketEndDate = Timestamp.valueOf(approvedAtLocalDateTime.plusMonths(6));
-            } else if (prodNumber == 2) {
-                ticketEndDate = Timestamp.valueOf(approvedAtLocalDateTime.plusMonths(3));
-            } else if (prodNumber == 3) {
-                ticketEndDate = Timestamp.valueOf(approvedAtLocalDateTime.plusHours(24));
+            String prodPeriod = productEntity.getProdPeriod();
+
+            if (prodPeriod.endsWith("개월")) {
+                // "개월" 이전 숫자 추출
+                int months = Integer.parseInt(prodPeriod.replace("개월", "").trim());
+                ticketEndDate = Timestamp.valueOf(approvedAtLocalDateTime.plusMonths(months));
+            } else if (prodPeriod.endsWith("시간")) {
+                // "시간" 이전 숫자 추출
+                int hours = Integer.parseInt(prodPeriod.replace("시간", "").trim());
+                ticketEndDate = Timestamp.valueOf(approvedAtLocalDateTime.plusHours(hours));
             } else {
-                throw new IllegalArgumentException("Invalid prodNumber: " + prodNumber);
+                throw new IllegalArgumentException("Invalid prodPeriod format: " + prodPeriod);
             }
 
             // ticketCount 및 numberOfTime 계산
-            int ticketCount = switch (prodNumber) {
-                case 1 -> 6;
-                case 2 -> 3;
-                case 3 -> 1;
-                default -> throw new IllegalArgumentException("Invalid prodNumber: " + prodNumber);
-            };
+            int ticketCount = productEntity.getProdNumberOfTime();
+
+            if (ticketCount <= 0) {
+                throw new IllegalArgumentException("Invalid prodNumberOfTime: " + ticketCount);
+            }
 
             // 엔티티 빌더를 사용하여 데이터 저장
             TicketEntity ticketEntity = TicketEntity.builder()

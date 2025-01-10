@@ -20,8 +20,19 @@ import java.util.List;
 public class ProductsService {
     private final ProductsRepository productsRepository;
 
+
+    public int getNextProdNumber() {
+        int maxProdNumber = productsRepository.findMaxProdNumber();
+        return maxProdNumber + 1; // 다음 숫자 계산
+    }
+
     @PersistenceContext
     private EntityManager entityManager;
+
+    public List<Products> getSellableProductsSortedByPrice() {
+        List<ProductsEntity> entities = productsRepository.findSellableProductsOrderByPrice();
+        return entities.stream().map(ProductsEntity::toDto).toList(); // DTO로 변환
+    }
 
     public List<Products> getProdInfo() {
         // 예외 처리 포함하여 데이터 조회

@@ -19,8 +19,9 @@ public interface TicketRepository extends JpaRepository<TicketEntity, String>{
     Optional<PaymentEntity> findByPaymentKey(String paymentKey);
     Optional<TicketEntity> findTicketByPaymentKey(String paymentKey);
 
+    Optional<TicketEntity> findFirstByUuidOrderByTicketStartDateDesc(String uuid);
+
     // UUID로 Ticket 목록 조회
     List<TicketEntity> findByUuid(String uuid);
-
 
 }

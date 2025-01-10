@@ -4,7 +4,10 @@ import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.myweb.jobis.products.jpa.entity.ProductsEntity;
+import org.myweb.jobis.products.jpa.repository.ProductsRepository;
 import org.myweb.jobis.security.jwt.JWTUtil;
+import org.myweb.jobis.ticket.jpa.entity.TicketEntity;
 import org.myweb.jobis.ticket.model.service.TicketService;
 import org.myweb.jobis.user.jpa.entity.UserEntity;
 import org.myweb.jobis.user.jpa.repository.UserRepository;
@@ -25,7 +28,78 @@ public class TicketController {
     private final TicketService ticketService;
     private final JWTUtil jwtUtil; // JWTUtil 주입
     private final UserRepository userRepository; // UserRepository 주입
+    private final ProductsRepository productsRepository;
 
+    @GetMapping("/latest")
+    public ResponseEntity<?> getLatestActiveTicket(HttpServletRequest request) {
+        try {
+            // Authorization 헤더에서 토큰 가져오기
+            String token = request.getHeader("Authorization");
+            if (token == null || !token.startsWith("Bearer ")) {
+                log.error("Authorization 헤더가 없거나 잘못된 형식입니다.");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                        "status", "FAIL",
+                        "message", "유효하지 않은 인증 토큰입니다."
+                ));
+            }
+
+            // Bearer 제거
+            token = token.substring(7);
+
+            // 토큰에서 클레임 추출
+            Claims claims = jwtUtil.getClaimsFromToken(token);
+            String userId = claims.getSubject(); // userId 추출
+            if (userId == null || userId.isEmpty()) {
+                log.error("토큰에서 userId를 추출하지 못했습니다.");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                        "status", "FAIL",
+                        "message", "유효하지 않은 사용자 정보입니다."
+                ));
+            }
+
+            // userId로 UserEntity 조회
+            UserEntity userEntity = userRepository.findByUserId(userId)
+                    .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 userId: " + userId));
+            log.info("UserEntity 조회 성공: {}", userEntity);
+
+            // UserEntity에서 UUID 추출
+            String userUuid = userEntity.getUuid();
+            String userName = userEntity.getUserName(); // 사용자 이름 추출
+            log.info("추출한 UUID: {}", userUuid);
+
+            // UUID를 사용해 최신 티켓 조회
+            TicketEntity latestTicket = ticketService.findLatestActiveTicketByUuid(userUuid);
+
+            if (latestTicket == null) {
+                log.info("사용자 UUID: {}에 대한 활성 티켓이 없습니다.", userUuid);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                        "status", "FAIL",
+                        "message", "활성 이용권이 없습니다."
+                ));
+            }
+
+            // prodNumber를 기반으로 ProductsEntity에서 prodDescription 조회
+            int prodNumber = latestTicket.getProdNumber();
+            ProductsEntity productEntity = productsRepository.findByProdNumber(prodNumber)
+                    .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 prodNumber: " + prodNumber));
+            String prodDescription = productEntity.getProdDescription();
+            log.info("ProductEntity 조회 성공: {}", productEntity);
+
+            // 성공 응답
+            return ResponseEntity.ok(Map.of(
+                    "status", "SUCCESS",
+                    "data", latestTicket,
+                    "userName", userName,
+                    "prodDescription", prodDescription
+            ));
+        } catch (Exception e) {
+            log.error("Error fetching latest active ticket", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    "status", "FAIL",
+                    "message", "서버 오류가 발생했습니다. 다시 시도해주세요."
+            ));
+        }
+    }
 
     @PostMapping("/start")
     public ResponseEntity<Map<String, String>> startMockInterview(
@@ -97,6 +171,4 @@ public class TicketController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("status", "FAIL", "message", "서버 오류가 발생했습니다."));
         }
     }
-
-
 } // 25.01.07 최종 수정

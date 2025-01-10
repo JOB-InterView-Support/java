@@ -73,8 +73,10 @@ public class JWTFilter extends OncePerRequestFilter {
                 requestURI.equals("/api/payments/check")|| // 01.08 건열 추가
                 requestURI.startsWith("/api/payments/checkRefund/") ||
                 requestURI.startsWith("/api/payments/refund/") ||
+                requestURI.startsWith("/products/register") ||
+                requestURI.startsWith("/products/sellable") ||
 
-
+                requestURI.startsWith("/ticket/latest")||
 
 
 

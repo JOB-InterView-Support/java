@@ -73,4 +73,11 @@ public class TicketService {
                 .map(TicketEntity::getTicketCount)
                 .collect(Collectors.toList());
     }
+
+    public TicketEntity findLatestActiveTicketByUuid(String uuid) {
+        return ticketRepository.findAllByUuidOrderByTicketStartDateDesc(uuid).stream()
+                .filter(ticket -> ticket.getTicketCount() > 0)
+                .findFirst()
+                .orElse(null);
+    }
 } // 25.01.07 최종 수정
