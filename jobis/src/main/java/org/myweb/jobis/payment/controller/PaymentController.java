@@ -1,6 +1,7 @@
 package org.myweb.jobis.payment.controller;
 
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.myweb.jobis.payment.jpa.entity.PaymentEntity;
 import org.myweb.jobis.payment.jpa.repository.PaymentRepository;
@@ -16,7 +17,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.Enumeration;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -49,6 +52,12 @@ public class PaymentController {
         }
     }
 
+
+    private void logRequestHeaders(HttpServletRequest request) {
+        request.getHeaderNames().asIterator()
+                .forEachRemaining(headerName -> log.info("{}: {}", headerName, request.getHeader(headerName)));
+    }
+
     @PostMapping("/paymentSuccess")
     public ResponseEntity<?> handlePaymentSuccess(@RequestBody Map<String, Object> requestData) {
         String paymentKey = (String) requestData.get("paymentKey");
@@ -66,8 +75,10 @@ public class PaymentController {
 
         try {
             String paymentKey = (String) requestData.get("paymentKey");
+            log.info("Received paymentKey: {}", paymentKey);
             int amount = (int) requestData.get("amount");
             String orderId = (String) requestData.get("orderId");
+            log.info("Received orderId: {}", orderId);
 
             boolean isAlreadyProcessed = paymentRepository.existsByOrderId(orderId);
             if (isAlreadyProcessed) {
@@ -98,7 +109,6 @@ public class PaymentController {
             ));
         }
     }
-
     @PostMapping("/save")
     public ResponseEntity<?> savePaymentData(@RequestBody PaymentResponse response) {
         log.info("save - paymentResponse : " + response);

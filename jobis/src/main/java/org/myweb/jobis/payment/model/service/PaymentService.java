@@ -76,15 +76,12 @@ public class PaymentService {
     private final Set<String> processingKeys = ConcurrentHashMap.newKeySet();
 
     private String getTokenFromRequest(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-        log.info("Authorization Header: {}", bearerToken);  // 헤더 출력
-        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            String token = bearerToken.substring(7);  // "Bearer " 제외한 토큰 부분 추출
-            log.info("Extracted Token: {}", token);  // 토큰 확인
-            return token;
+        String authorizationHeader = request.getHeader("Authorization");
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            log.error("Authorization 헤더가 없거나 잘못된 형식입니다.");
+            return null;
         }
-        log.info("Authorization header not found or invalid format.");
-        return null; // 토큰이 없으면 null 반환
+        return authorizationHeader.substring(7);
     }
 
     public void processPayment(PaymentRequest paymentRequest) throws Exception {
@@ -134,6 +131,7 @@ public class PaymentService {
             throw e;
         }
     }
+
 
 
     public Map<String, Object> confirmPayment(String paymentKey, int amount, String orderId) throws IOException {

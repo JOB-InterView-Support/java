@@ -16,3 +16,4 @@ public class PaymentRequest {
     private String status;
     private String approvedAt; // ISO-8601 형식을 받을 경우 String으로 설정
 }
+
