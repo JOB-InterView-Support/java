@@ -103,6 +103,7 @@ public class MypageController {
     @PutMapping("/secession/{userId}")
     public ResponseEntity<String> updateUserSecessionStatus(
             @PathVariable String userId,
+
             @RequestBody Map<String, String> requestBody) {
         log.info("Received secession request for userId: {}", userId);
 
