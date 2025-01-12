@@ -3,6 +3,7 @@ package org.myweb.jobis.jobposting.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.myweb.jobis.jobposting.model.dto.JobFavorites;
+import org.myweb.jobis.jobposting.model.dto.JobPosting;
 import org.myweb.jobis.jobposting.model.service.JobFavoritesService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -33,10 +34,11 @@ public class JobFavoritesController {
     @GetMapping("/search")
     public ResponseEntity<List<JobFavorites>> getFavorites(@RequestParam String uuid) {
         try {
-            List<JobFavorites> favorites = jobFavoritesService.getFavorites(uuid);
-            return ResponseEntity.ok(favorites);
+            List<JobFavorites> favoritePostings = jobFavoritesService.getFavorites(uuid);
+            return ResponseEntity.ok(favoritePostings);
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(null); // 예외 처리 필요
+            log.error("즐겨찾기 목록 조회 실패: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body(null);
         }
     }
 

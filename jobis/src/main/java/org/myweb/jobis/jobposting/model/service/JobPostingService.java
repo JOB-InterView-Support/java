@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.myweb.jobis.jobposting.model.dto.JobPosting;
 import org.myweb.jobis.jobposting.model.dto.JobPostingResponse;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -24,6 +26,9 @@ public class JobPostingService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
+    @Cacheable(value = "searchResults",
+            key = "{#jobType, #locMcd, #eduLv, #jobMidCd, #count, #start, #sort}",
+            unless = "#result == null")
     public Object searchJobPostings(String jobType, String locMcd, String eduLv, String jobMidCd,
                                     int count, int start, String sort) {
 
@@ -41,7 +46,8 @@ public class JobPostingService {
         try {
             return restTemplate.getForObject(fullUri, Object.class);
         } catch (Exception e) {
-            throw new RuntimeException("API 호출 실패: " + e.getMessage(), e);
+            log.error("API 호출 실패", e);
+            return null;
         }
     }
 
@@ -77,7 +83,9 @@ public class JobPostingService {
     }
 
     // 채용공고 상세보기
+    @Cacheable(value = "jobPostings", key = "#id", condition = "#id != null")
     public JobPosting getJobPostingById(String jobPostingId) {
+
         // 사람인 API에서 상세정보를 가져올 수 있도록 수정 필요
         // 사람인 API에서는 특정 채용공고 ID로 상세 조회를 지원하지 않으므로
         // 목록에서 해당 ID에 맞는 채용공고를 반환하는 방식으로 처리
@@ -109,5 +117,16 @@ public class JobPostingService {
 
         // 해당 ID로 채용공고를 찾을 수 없는 경우 예외 처리
         throw new RuntimeException("채용공고를 찾을 수 없습니다.");
+    }
+
+    // 캐시 수동 삭제 메서드
+    @CacheEvict(value = "jobPostings", allEntries = true)
+    public void clearJobPostingsCache() {
+        log.info("채용공고 캐시 전체 삭제");
+    }
+
+    @CacheEvict(value = "searchResults", allEntries = true)
+    public void clearSearchResultsCache() {
+        log.info("검색결과 캐시 전체 삭제");
     }
 }

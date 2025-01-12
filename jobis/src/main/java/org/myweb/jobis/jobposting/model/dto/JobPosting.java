@@ -10,10 +10,8 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 public class JobPosting {
-    private String jobPostingId;  // 공고 ID
-    private String jobTitle;  // 직무명
-    private String companyName;  // 회사명
-    private String jobLocation;  // 직무 위치
+    private String title;  // 직무명
+    private String location;  // 직무 위치
     private String url;
     private Integer active;
     private Company company;
@@ -30,6 +28,7 @@ public class JobPosting {
     private CloseType closeType;
     private Integer readCnt;
     private Integer applyCnt;
+
 
     @Data
     public static class Company {
