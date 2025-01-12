@@ -74,7 +74,8 @@ public class JWTFilter extends OncePerRequestFilter {
                 requestURI.startsWith("/api/payments/refund") ||
                 requestURI.startsWith("/paymentSuccess") ||
 
-                requestURI.equals("/products/**") ||
+                requestURI.startsWith("/products/**") ||
+                requestURI.startsWith("/products/insert")||
 
 
 
