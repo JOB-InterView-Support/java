@@ -19,7 +19,7 @@ public class JobFavoritesController {
     private final JobFavoritesService jobFavoritesService;
 
     // 즐겨찾기 추가
-    @PostMapping
+    @PostMapping()
     public ResponseEntity<JobFavorites> addFavorite(@RequestBody JobFavorites favoriteDto) {
         try {
             JobFavorites addedFavorite = jobFavoritesService.addFavorite(favoriteDto);

@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.myweb.jobis.jobposting.jpa.entity.JobFavoritesEntity;
 import org.myweb.jobis.jobposting.jpa.repository.JobFavoritesRepository;
 import org.myweb.jobis.jobposting.model.dto.JobFavorites;
+import org.myweb.jobis.jobposting.model.dto.JobPosting;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,24 +20,29 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class JobFavoritesService {
     private final JobFavoritesRepository jobFavoritesRepository;
+    private final JobPostingService jobPostingService;
+
 
     // 즐겨찾기 추가
-    public JobFavorites addFavorite(JobFavorites favorites) {
-
+    public JobFavorites addFavorite(JobFavorites favorite) {
         // UUID 생성
-        favorites.setJobFavoritesNo(UUID.randomUUID().toString());
+        favorite.setJobFavoritesNo(UUID.randomUUID().toString());
 
         // 중복 체크
         Optional<JobFavoritesEntity> existing = jobFavoritesRepository
-                .findByUuidAndJobPostingId(favorites.getUuid(), favorites.getJobPostingId());
+                .findByUuidAndJobPostingId(favorite.getUuid(), favorite.getJobPostingId());
         if (existing.isPresent()) {
             throw new RuntimeException("이미 즐겨찾기에 추가된 채용공고입니다.");
         }
 
-        // 데이터 저장
-        JobFavoritesEntity savedEntity = jobFavoritesRepository.save(favorites.toEntity());
+        // 채용공고 정보 가져오기
+        JobPosting jobPosting = jobPostingService.getJobPostingById(favorite.getJobPostingId());  // 채용공고 조회
 
-        return savedEntity.toDto();
+        // 즐겨찾기 저장
+        JobFavoritesEntity savedEntity = jobFavoritesRepository.save(favorite.toEntity());
+
+        // DTO 변환 시 JobPosting 포함
+        return JobFavorites.fromEntity(savedEntity, jobPosting);  // JobPosting 정보를 함께 반환
     }
 
     // 즐겨찾기 목록 조회
@@ -47,7 +53,13 @@ public class JobFavoritesService {
 
         // DTO 변환 후 반환
         return entities.stream()
-                .map(JobFavoritesEntity::toDto)
+                .map(favorite -> {
+                    // 해당 jobPostingId로 채용공고 상세 조회
+                    JobPosting jobPosting = jobPostingService.getJobPostingById(favorite.getJobPostingId());
+
+                    // JobFavoritesDTO 반환 시 JobPosting 정보 포함
+                    return JobFavorites.fromEntity(favorite, jobPosting);  // JobPosting 정보를 함께 반환
+                })
                 .collect(Collectors.toList());
     }
 

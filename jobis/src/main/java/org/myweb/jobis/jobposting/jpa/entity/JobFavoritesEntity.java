@@ -3,6 +3,7 @@ package org.myweb.jobis.jobposting.jpa.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.myweb.jobis.jobposting.model.dto.JobFavorites;
+import org.myweb.jobis.jobposting.model.dto.JobPosting;
 import org.myweb.jobis.user.jpa.entity.UserEntity;
 
 import java.time.LocalDateTime;
@@ -36,6 +37,16 @@ public class JobFavoritesEntity {
         jobCreatedDate = LocalDateTime.now();
     }
 
+    // JobFavorites DTO를 Entity로 변환
+    public static JobFavoritesEntity toEntity(JobFavorites dto) {
+        return JobFavoritesEntity.builder()
+                .jobFavoritesNo(dto.getJobFavoritesNo())
+                .uuid(dto.getUuid())
+                .jobPostingId(dto.getJobPostingId())
+                .jobCreatedDate(dto.getJobCreatedDate())
+                .build();
+    }
+
     // toDto 메서드 추가
     public JobFavorites toDto() {
         return new JobFavorites(
@@ -46,13 +57,4 @@ public class JobFavoritesEntity {
         );
     }
 
-    // toEntity 메서드 추가
-    public static JobFavoritesEntity toEntity(JobFavorites dto) {
-        return JobFavoritesEntity.builder()
-                .jobFavoritesNo(dto.getJobFavoritesNo())
-                .uuid(dto.getUuid())
-                .jobPostingId(dto.getJobPostingId())
-                .jobCreatedDate(dto.getJobCreatedDate())
-                .build();
-    }
 }

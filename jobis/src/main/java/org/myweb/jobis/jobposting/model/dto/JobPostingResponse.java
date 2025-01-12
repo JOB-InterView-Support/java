@@ -2,6 +2,7 @@ package org.myweb.jobis.jobposting.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -11,13 +12,17 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class JobPostingResponse {
-        private List<JobPosting> jobs;
+        private Jobs jobs;
 
-        private int totalPages;
 
-        private int totalElements;
-
-        private int currentPage;
-
-        private int size;
+        @Data
+        @AllArgsConstructor
+        @NoArgsConstructor
+        @Builder
+        public static class Jobs {
+                private Integer count;
+                private Integer start;
+                private String total;
+                private List<JobPosting> job;
+        }
 }

@@ -46,44 +46,51 @@ public class JobPostingService {
     }
 
     // 채용공고 목록 가져오기
-    public JobPostingResponse getJobPostings(int page, int size) {
+    public JobPostingResponse getJobPostings(int start, int count) {
         // 사람인 API 요청 URL 생성
         String url = UriComponentsBuilder.fromHttpUrl(apiUrl)
                 .queryParam("access-key", apiKey)
-                .queryParam("page", page)
-                .queryParam("size", size)
+                .queryParam("start", start)
+                .queryParam("count", count)
                 .toUriString();
 
         // 외부 API 호출
         JobPostingResponse response = restTemplate.getForObject(url, JobPostingResponse.class);
+
         // response가 null이 아닐 경우
         if (response != null) {
-            // 페이지 정보와 함께 반환
+            // Jobs 객체를 래핑하여 반환
             return new JobPostingResponse(
-                    response.getJobs(),
-                    response.getTotalPages(),
-                    response.getTotalElements(),
-                    response.getCurrentPage(),
-                    response.getSize()
+                    new JobPostingResponse.Jobs(
+                            response.getJobs().getCount(),  // 전체 개수
+                            response.getJobs().getStart(),  // 시작 위치
+                            response.getJobs().getTotal(),  // 총 개수
+                            response.getJobs().getJob()     // 실제 채용공고 리스트
+                    )
             );
         }
-        return new JobPostingResponse(List.of(), 0, 0, page, size);  // 빈 리스트와 0 값으로 반환
+
+        // 빈 리스트와 0 값으로 반환
+        return new JobPostingResponse(
+                new JobPostingResponse.Jobs(0, 0, "0", List.of())
+        );
     }
 
     // 채용공고 상세보기
-    public JobPosting getJobPostingById(String id) {
+    public JobPosting getJobPostingById(String jobPostingId) {
         // 사람인 API에서 상세정보를 가져올 수 있도록 수정 필요
         // 사람인 API에서는 특정 채용공고 ID로 상세 조회를 지원하지 않으므로
         // 목록에서 해당 ID에 맞는 채용공고를 반환하는 방식으로 처리
-        int page = 1; // 페이지 번호 (여기서는 1부터 시작)
+        int start = 1; // 페이지 번호 (여기서는 1부터 시작)
+        int count = 10; // 한 페이지 당 항목 수
 
         while (true) {
             // 해당 페이지에서 채용공고 목록 가져오기
-            JobPostingResponse response = getJobPostings(page, 50); // 한 페이지당 50개 항목
+            JobPostingResponse response = getJobPostings(start, count); // 한 페이지당 count 개 항목
 
             // 해당 ID에 맞는 채용공고 찾기
-            JobPosting jobPosting = response.getJobs().stream()
-                    .filter(job -> job.getId().equals(id))
+            JobPosting jobPosting = response.getJobs().getJob().stream()
+                    .filter(job -> job.getId().equals(jobPostingId))
                     .findFirst()
                     .orElse(null);
 
@@ -93,11 +100,11 @@ public class JobPostingService {
             }
 
             // 다음 페이지로 이동
-            if (page >= response.getTotalPages()) {
+            if (start * count >= Integer.parseInt(response.getJobs().getTotal())) {
                 // 마지막 페이지에 도달하면 종료
                 break;
             }
-            page++; // 페이지 번호 증가
+            start++; // 페이지 번호 증가
         }
 
         // 해당 ID로 채용공고를 찾을 수 없는 경우 예외 처리
