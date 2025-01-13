@@ -105,6 +105,19 @@ public class ProductsController {
         }
     }
 
+    @DeleteMapping("/{prodNumber}")
+    public ResponseEntity<String> deleteProduct(@PathVariable int prodNumber) {
+        try {
+            // 상품 삭제 서비스 호출
+            productsService.deleteProduct(prodNumber);
+            log.info("상품 삭제 성공: {}", prodNumber);
+            return ResponseEntity.ok("상품이 성공적으로 삭제되었습니다.");
+        } catch (Exception e) {
+            log.error("상품 삭제 중 오류 발생: ", e);
+            return ResponseEntity.status(500).body("상품 삭제에 실패했습니다.");
+        }
+    }
+
 //    @PutMapping("/updateProd/{prodNumber}")
 //    public ResponseEntity<String> debugUpdateProduct(@RequestBody(required = false) String rawRequestBody) {
 //        log.info("Raw Request Body: {}", rawRequestBody);

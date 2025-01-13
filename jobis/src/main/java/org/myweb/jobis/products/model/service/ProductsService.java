@@ -78,5 +78,13 @@ public class ProductsService {
         productsRepository.save(existingProduct);
         log.info("상품 업데이트 완료: {}", updatedProduct.getProdNumber());
     }
+
+    // 상품 삭제
+    public void deleteProduct(int prodNumber) {
+        if (!productsRepository.existsById((long) prodNumber)) {
+            throw new IllegalArgumentException("해당 상품이 존재하지 않습니다.");
+        }
+        productsRepository.deleteById((long) prodNumber);
+    }
 }
 
