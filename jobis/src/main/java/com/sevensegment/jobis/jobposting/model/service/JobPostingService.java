@@ -59,11 +59,8 @@ public class JobPostingService {
                 .queryParam("start", start)
                 .queryParam("count", count)
                 .toUriString();
-
         // 외부 API 호출
         JobPostingResponse response = restTemplate.getForObject(url, JobPostingResponse.class);
-
-        // response가 null이 아닐 경우
         if (response != null) {
             // Jobs 객체를 래핑하여 반환
             return new JobPostingResponse(
@@ -75,8 +72,6 @@ public class JobPostingService {
                     )
             );
         }
-
-        // 빈 리스트와 0 값으로 반환
         return new JobPostingResponse(
                 new JobPostingResponse.Jobs(0, 0, "0", List.of())
         );
@@ -85,37 +80,34 @@ public class JobPostingService {
     // 채용공고 상세보기
     @Cacheable(value = "jobPostings", key = "#id", condition = "#id != null")
     public JobPosting getJobPostingById(String jobPostingId) {
-
-        // 사람인 API에서 상세정보를 가져올 수 있도록 수정 필요
-        // 사람인 API에서는 특정 채용공고 ID로 상세 조회를 지원하지 않으므로
-        // 목록에서 해당 ID에 맞는 채용공고를 반환하는 방식으로 처리
         int start = 1; // 페이지 번호 (여기서는 1부터 시작)
-        int count = 10; // 한 페이지 당 항목 수
+        int count = 50; // 한 페이지 당 항목 수 (이 값을 증가시켜 더 많은 데이터를 요청)
 
         while (true) {
-            // 해당 페이지에서 채용공고 목록 가져오기
-            JobPostingResponse response = getJobPostings(start, count); // 한 페이지당 count 개 항목
+            // 한 페이지당 count 개 항목을 요청
+            JobPostingResponse response = getJobPostings(start, count);
 
-            // 해당 ID에 맞는 채용공고 찾기
+            // 해당 jobPostingId를 가진 채용공고를 찾음
             JobPosting jobPosting = response.getJobs().getJob().stream()
                     .filter(job -> job.getId().equals(jobPostingId))
                     .findFirst()
                     .orElse(null);
 
+            // 채용공고를 찾으면 바로 반환
             if (jobPosting != null) {
-                // 해당 채용공고가 있으면 반환
                 return jobPosting;
             }
 
-            // 다음 페이지로 이동
+            // 마지막 페이지에 도달했으면 종료
             if (start * count >= Integer.parseInt(response.getJobs().getTotal())) {
-                // 마지막 페이지에 도달하면 종료
                 break;
             }
-            start++; // 페이지 번호 증가
+
+            // 페이지 번호 증가
+            start++;
         }
 
-        // 해당 ID로 채용공고를 찾을 수 없는 경우 예외 처리
+        // 채용공고를 찾을 수 없으면 예외를 던짐
         throw new RuntimeException("채용공고를 찾을 수 없습니다.");
     }
 

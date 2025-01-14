@@ -48,29 +48,22 @@ public class JobFavoritesService {
 
     // 즐겨찾기 목록 조회
     public List<JobFavorites> getFavorites(String uuid) {
-        log.info("즐겨찾기 목록 조회 시작 - UUID: {}", uuid);
-
         // 데이터 조회
         List<JobFavoritesEntity> entities = jobFavoritesRepository.searchFavorites(uuid);
-        log.info("조회된 즐겨찾기 수: {}", entities.size());
 
         // 모든 jobPostingId를 리스트로 추출
         List<String> jobPostingIds = entities.stream()
                 .map(JobFavoritesEntity::getJobPostingId)
                 .collect(Collectors.toList());
-        log.info("채용공고 ID 리스트: {}", jobPostingIds);
-
         // 캐싱 로직 추가
         Map<String, JobPosting> jobPostingCache = new HashMap<>(); // 캐싱을 위한 맵 생성
 
         for (String id : jobPostingIds) {
             if (!jobPostingCache.containsKey(id)) { // 캐싱에 없는 경우만 API 호출
-                log.info("캐시 미사용 - 채용공고 조회 시작: {}", id);
                 try {
                     JobPosting posting = jobPostingService.getJobPostingById(id);
                     if (posting != null) {
                         jobPostingCache.put(id, posting); // 캐시에 저장
-                        log.info("채용공고 캐시 저장 성공: {}", id);
                     } else {
                         log.warn("채용공고 조회 실패: {}", id);
                     }
